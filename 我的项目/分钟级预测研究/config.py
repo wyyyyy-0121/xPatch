@@ -17,25 +17,25 @@ class Config:
     
     # 数据配置
     DATA_PATH = str(DATA_DIR / "AAPL_1min.csv")
-    SEQUENCE_LENGTH = 60  # 输入序列长度（分钟）
-    PREDICTION_LENGTH = 5  # 预测长度（分钟）
+    SEQUENCE_LENGTH = 96    # 输入序列长度（分钟）
+    PREDICTION_LENGTH = 24  # 预测长度（分钟）
     TRAIN_RATIO = 0.8
     VAL_RATIO = 0.1
     TEST_RATIO = 0.1
     
     # 模型配置
-    HIDDEN_SIZE = 128
-    NUM_LAYERS = 2
-    NUM_HEADS = 4
-    D_FF = 256
+    HIDDEN_SIZE = 256
+    NUM_LAYERS = 4
+    NUM_HEADS = 8
+    D_FF = 512
     DROPOUT = 0.1
-    PATCH_SIZES = [5, 10, 20]  # 更小的patch size
+    PATCH_SIZES = [5, 10, 20, 48]  # 多尺度patch
     EMA_ALPHA = 0.1
     
     # 训练配置
-    BATCH_SIZE = 32
-    NUM_EPOCHS = 5  # 设置为5个epoch
-    LEARNING_RATE = 0.001
+    BATCH_SIZE = 128
+    NUM_EPOCHS = 50
+    LEARNING_RATE = 0.0005
     WEIGHT_DECAY = 1e-5
     DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
     
@@ -53,11 +53,11 @@ class Config:
     EMA_PERIODS = [5, 10, 20, 50, 100]
     
     # 训练配置
-    WARMUP_STEPS = 1000  # 预热步数
-    MAX_GRAD_NORM = 1.0  # 梯度裁剪阈值
+    WARMUP_STEPS = 1000
+    MAX_GRAD_NORM = 1.0
     
     # 早停配置
-    EARLY_STOPPING_PATIENCE = 5  # 早停耐心值
+    EARLY_STOPPING_PATIENCE = 10  # 早停耐心值
     
     # 技术指标参数
     SMA_WINDOW = 20  # 简单移动平均窗口
@@ -88,4 +88,4 @@ class Config:
         # 创建必要的目录
         for dir_path in [self.DATA_DIR, self.MODEL_DIR, self.CHECKPOINT_DIR, 
                         self.PLOT_DIR, self.LOG_DIR]:
-            dir_path.mkdir(parents=True, exist_ok=True) 
+            dir_path.mkdir(parents=True, exist_ok=True)

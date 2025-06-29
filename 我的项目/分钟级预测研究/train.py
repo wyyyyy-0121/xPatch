@@ -17,6 +17,7 @@ import logging
 from data_processor import DataProcessor
 from config import Config
 import gc
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 # 配置日志
 logging.basicConfig(
@@ -154,6 +155,15 @@ class Trainer:
         
         return total_loss / len(val_loader)
     
+    def evaluate_metrics(self, y_true, y_pred):
+        """计算多种评估指标"""
+        y_true = y_true.flatten()
+        y_pred = y_pred.flatten()
+        mae = mean_absolute_error(y_true, y_pred)
+        rmse = mean_squared_error(y_true, y_pred, squared=False)
+        r2 = r2_score(y_true, y_pred)
+        return {'MAE': mae, 'RMSE': rmse, 'R2': r2}
+
     def train(self):
         """训练模型"""
         logger.info("开始训练...")
@@ -163,6 +173,10 @@ class Trainer:
         
         # 训练循环
         best_val_loss = float('inf')
+        patience = 5
+        counter = 0
+        best_epoch = 0
+        all_train_loss, all_val_loss = [], []
         for epoch in range(self.config.NUM_EPOCHS):
             logger.info(f"\nEpoch {epoch+1}/{self.config.NUM_EPOCHS}")
             
@@ -171,18 +185,36 @@ class Trainer:
             
             # 验证
             val_loss = self.validate(val_loader)
-            
-            logger.info(f"Epoch {epoch+1}/{self.config.NUM_EPOCHS} - "
-                       f"Train Loss: {train_loss:.6f} - "
-                       f"Val Loss: {val_loss:.6f}")
-            
-            # 保存最佳模型
+            all_train_loss.append(train_loss)
+            all_val_loss.append(val_loss)
+            logger.info(f"Epoch {epoch+1} - Train Loss: {train_loss:.6f} - Val Loss: {val_loss:.6f}")
+            # EarlyStopping
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
-                self.save_model()
-                logger.info("保存最佳模型")
-        
-        logger.info("训练完成！")
+                best_epoch = epoch+1
+                counter = 0
+                torch.save(self.model.state_dict(), self.config.BEST_MODEL_PATH)
+                logger.info(f"保存最佳模型到 {self.config.BEST_MODEL_PATH}")
+            else:
+                counter += 1
+                if counter >= patience:
+                    logger.info(f"Early stopping at epoch {epoch+1}")
+                    break
+        logger.info(f"训练结束，最佳Val Loss: {best_val_loss:.6f} (Epoch {best_epoch})")
+        # 可视化损失曲线
+        try:
+            import matplotlib.pyplot as plt
+            plt.figure()
+            plt.plot(all_train_loss, label='Train Loss')
+            plt.plot(all_val_loss, label='Val Loss')
+            plt.legend()
+            plt.title('Loss Curve')
+            plt.xlabel('Epoch')
+            plt.ylabel('Loss')
+            plt.savefig('plots/loss_curve.png')
+            plt.close()
+        except Exception as e:
+            logger.warning(f"损失曲线绘制失败: {str(e)}")
     
     def save_model(self):
         """保存模型"""
@@ -190,6 +222,129 @@ class Trainer:
         save_path.parent.mkdir(exist_ok=True)
         torch.save(self.model.state_dict(), save_path)
         logger.info(f"模型已保存到: {save_path}")
+
+def sliding_window_cv(config, window_size=0.6, val_size=0.2, test_size=0.2, n_splits=5):
+    """
+    滑动窗口交叉验证主控函数
+    window_size: 每次训练窗口占总样本比例（如0.6）
+    val_size: 验证集比例（如0.2）
+    test_size: 测试集比例（如0.2）
+    n_splits: 滑窗次数
+    """
+    from data_processor import DataProcessor
+    from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+    logger.info(f"滑动窗口交叉验证: window_size={window_size}, val_size={val_size}, test_size={test_size}, n_splits={n_splits}")
+    processor = DataProcessor(config)
+    df = processor.load_data()
+    features, labels = processor.prepare_features(df)
+    N = len(features)
+    train_len = int(window_size * N)
+    val_len = int(val_size * N)
+    test_len = int(test_size * N)
+    step = (N - train_len - val_len - test_len) // max(n_splits-1,1)
+    results = []
+    for i in range(n_splits):
+        start = i * step
+        train_X = features[start : start+train_len]
+        train_y = labels[start : start+train_len]
+        val_X = features[start+train_len : start+train_len+val_len]
+        val_y = labels[start+train_len : start+train_len+val_len]
+        test_X = features[start+train_len+val_len : start+train_len+val_len+test_len]
+        test_y = labels[start+train_len+val_len : start+train_len+val_len+test_len]
+        logger.info(f"滑窗{i+1}/{n_splits}: 训练{len(train_X)} 验证{len(val_X)} 测试{len(test_X)}")
+        # 初始化Trainer
+        trainer = Trainer(config)
+        trainer.processor = processor  # 复用同一数据处理器
+        # 训练
+        trainer.train()
+        # 预测与评估
+        trainer.model.eval()
+        with torch.no_grad():
+            X = torch.FloatTensor(test_X).to(trainer.device)
+            y = torch.FloatTensor(test_y).to(trainer.device)
+            outputs = trainer.model(X.view(X.size(0), -1))
+            feature_dim = outputs.shape[1] // config.PREDICTION_LENGTH
+            y_pred = outputs.view(X.size(0), config.PREDICTION_LENGTH, feature_dim).cpu().numpy().flatten()
+            y_true = y.cpu().numpy().flatten()
+            mae = mean_absolute_error(y_true, y_pred)
+            rmse = mean_squared_error(y_true, y_pred, squared=False)
+            r2 = r2_score(y_true, y_pred)
+            logger.info(f"滑窗{i+1} MAE={mae:.6f} RMSE={rmse:.6f} R2={r2:.6f}")
+            results.append([mae, rmse, r2])
+    results = np.array(results)
+    logger.info(f"滑动窗口交叉验证均值: MAE={results[:,0].mean():.6f}±{results[:,0].std():.6f} RMSE={results[:,1].mean():.6f}±{results[:,1].std():.6f} R2={results[:,2].mean():.6f}±{results[:,2].std():.6f}")
+    return results
+
+def get_model(model_name, input_dim, config):
+    if model_name == 'xpatch':
+        from models.xpatch import XPatch
+        return XPatch(input_dim, config)
+    elif model_name == 'lstm':
+        from models.LSTM import LSTMModel
+        return LSTMModel(input_dim, config.HIDDEN_SIZE, config.NUM_LAYERS, config.PREDICTION_LENGTH, config.DROPOUT)
+    elif model_name == 'gru':
+        from models.GRU import GRUModel
+        return GRUModel(input_dim, config.HIDDEN_SIZE, config.NUM_LAYERS, config.PREDICTION_LENGTH, config.DROPOUT)
+    elif model_name == 'mlp':
+        from models.MLP import MLPModel
+        return MLPModel(input_dim * config.SEQUENCE_LENGTH, config.HIDDEN_SIZE, config.PREDICTION_LENGTH, config.DROPOUT)
+    else:
+        raise ValueError(f"未知模型: {model_name}")
+
+
+def compare_models(config, model_list=['xpatch', 'lstm', 'gru', 'mlp']):
+    from data_processor import DataProcessor
+    from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+    processor = DataProcessor(config)
+    df = processor.load_data()
+    features, labels = processor.prepare_features(df)
+    N = len(features)
+    train_len = int(0.8 * N)
+    test_len = N - train_len
+    train_X = features[:train_len]
+    train_y = labels[:train_len]
+    test_X = features[train_len:]
+    test_y = labels[train_len:]
+    results = []
+    for model_name in model_list:
+        logger.info(f"\n==== 训练与评估模型: {model_name} ====")
+        input_dim = features.shape[1]
+        model = get_model(model_name, input_dim, config)
+        model = model.to(config.DEVICE)
+        optimizer = torch.optim.Adam(model.parameters(), lr=config.LEARNING_RATE)
+        criterion = torch.nn.MSELoss()
+        # 训练
+        X = torch.FloatTensor(train_X).to(config.DEVICE)
+        y = torch.FloatTensor(train_y).to(config.DEVICE)
+        for epoch in range(10):  # 只训练10轮做对比
+            model.train()
+            optimizer.zero_grad()
+            if model_name == 'mlp':
+                out = model(X.reshape(X.size(0), -1))
+            else:
+                out = model(X)
+            loss = criterion(out, y.reshape(out.shape))
+            loss.backward()
+            optimizer.step()
+        # 测试
+        model.eval()
+        X_test = torch.FloatTensor(test_X).to(config.DEVICE)
+        y_test = torch.FloatTensor(test_y).to(config.DEVICE)
+        with torch.no_grad():
+            if model_name == 'mlp':
+                pred = model(X_test.reshape(X_test.size(0), -1)).cpu().numpy().flatten()
+            else:
+                pred = model(X_test).cpu().numpy().flatten()
+            y_true = y_test.cpu().numpy().flatten()
+            mae = mean_absolute_error(y_true, pred)
+            rmse = mean_squared_error(y_true, pred, squared=False)
+            r2 = r2_score(y_true, pred)
+            logger.info(f"{model_name} MAE={mae:.6f} RMSE={rmse:.6f} R2={r2:.6f}")
+            results.append([model_name, mae, rmse, r2])
+    logger.info("\n==== 多模型对比结果 ====")
+    for r in results:
+        logger.info(f"{r[0]}: MAE={r[1]:.6f} RMSE={r[2]:.6f} R2={r[3]:.6f}")
+    return results
 
 def main():
     try:
@@ -207,4 +362,6 @@ def main():
         raise
 
 if __name__ == "__main__":
-    main() 
+    from config import Config
+    # compare_models(Config(), model_list=['xpatch', 'lstm', 'gru', 'mlp'])  # 取消注释可直接运行多模型对比
+    sliding_window_cv(Config(), window_size=0.6, val_size=0.2, test_size=0.2, n_splits=5)

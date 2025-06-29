@@ -109,6 +109,55 @@ class Predictor:
             logger.info(f"预测结果图已保存至: {save_path}")
         
         plt.close()
+    
+    def evaluate(self, y_true, y_pred, save_dir='plots'):
+        """
+        评估模型性能并可视化残差分布
+        
+        Args:
+            y_true: 实际值
+            y_pred: 预测值
+            save_dir: 保存目录
+            
+        Returns:
+            dict: 包含MAE, RMSE和R2的字典
+        """
+        from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+        import seaborn as sns
+        
+        y_true = y_true.flatten()
+        y_pred = y_pred.flatten()
+        
+        mae = mean_absolute_error(y_true, y_pred)
+        rmse = mean_squared_error(y_true, y_pred, squared=False)
+        r2 = r2_score(y_true, y_pred)
+        
+        logger.info(f"MAE: {mae:.6f}, RMSE: {rmse:.6f}, R2: {r2:.6f}")
+        
+        # 残差分布
+        residuals = y_true - y_pred
+        plt.figure(figsize=(8,4))
+        sns.histplot(residuals, bins=50, kde=True, color='purple')
+        plt.title('Residual Distribution')
+        plt.xlabel('Residual')
+        plt.ylabel('Frequency')
+        
+        Path(save_dir).mkdir(parents=True, exist_ok=True)
+        plt.savefig(f'{save_dir}/residual_distribution.png')
+        plt.close()
+        
+        logger.info(f"残差分布图已保存到 {save_dir}/residual_distribution.png")
+        
+        return {'MAE': mae, 'RMSE': rmse, 'R2': r2}
+
+    def predict_and_evaluate(self):
+        """
+        预测并评估模型性能
+        """
+        # ...existing code...
+        # 预测流程结束后，假设有y_true, y_pred
+        # self.evaluate(y_true, y_pred)
+        pass
 
 def main():
     # 加载配置
@@ -136,6 +185,9 @@ def main():
     # 绘制结果
     plot_path = config.PLOT_DIR / "predictions.png"
     predictor.plot_predictions(y, predictions, str(plot_path))
+    
+    # 评估结果
+    predictor.evaluate(y, predictions)
 
 if __name__ == "__main__":
-    main() 
+    main()
