@@ -22,28 +22,24 @@ def plot_training_metrics(train_losses, val_losses, train_accs, val_accs, save_d
     # 创建保存目录
     Path(save_dir).mkdir(parents=True, exist_ok=True)
     
-    # 设置中文字体
-    plt.rcParams['font.sans-serif'] = ['SimHei']
-    plt.rcParams['axes.unicode_minus'] = False
-    
     # 创建图表
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
     
     # 绘制损失曲线
-    ax1.plot(train_losses, label='训练损失', color='blue')
-    ax1.plot(val_losses, label='验证损失', color='red')
-    ax1.set_title('训练和验证损失')
+    ax1.plot(train_losses, label='Training Loss', color='blue')
+    ax1.plot(val_losses, label='Validation Loss', color='red')
+    ax1.set_title('Training and Validation Loss')
     ax1.set_xlabel('Epoch')
-    ax1.set_ylabel('损失')
+    ax1.set_ylabel('Loss')
     ax1.legend()
     ax1.grid(True)
     
     # 绘制准确率曲线
-    ax2.plot(train_accs, label='训练准确率', color='blue')
-    ax2.plot(val_accs, label='验证准确率', color='red')
-    ax2.set_title('训练和验证准确率')
+    ax2.plot(train_accs, label='Training Accuracy', color='blue')
+    ax2.plot(val_accs, label='Validation Accuracy', color='red')
+    ax2.set_title('Training and Validation Accuracy')
     ax2.set_xlabel('Epoch')
-    ax2.set_ylabel('准确率')
+    ax2.set_ylabel('Accuracy')
     ax2.legend()
     ax2.grid(True)
     
@@ -71,8 +67,10 @@ def plot_confusion_matrix(y_true, y_pred, save_dir='plots'):
     
     # 绘制混淆矩阵
     plt.figure(figsize=(10, 8))
+    plt.title('Confusion Matrix')
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
-    plt.title('混淆矩阵')
+    plt.xlabel('Predicted Label')
+    plt.ylabel('True Label')
     
     # 保存图表
     plt.savefig(f'{save_dir}/confusion_matrix.png')
@@ -95,15 +93,17 @@ def plot_feature_importance(model, feature_names, save_dir='plots'):
     
     # 创建特征重要性DataFrame
     importance_df = pd.DataFrame({
-        '特征': feature_names,
-        '重要性': importance
+        'Feature': feature_names,
+        'Importance': importance
     })
-    importance_df = importance_df.sort_values('重要性', ascending=False)
+    importance_df = importance_df.sort_values('Importance', ascending=False)
     
     # 绘制特征重要性
     plt.figure(figsize=(12, 6))
-    sns.barplot(x='重要性', y='特征', data=importance_df)
-    plt.title('特征重要性')
+    plt.title('Feature Importance')
+    sns.barplot(x='Importance', y='Feature', data=importance_df)
+    plt.xlabel('Importance Score')
+    plt.ylabel('Feature')
     
     # 保存图表
     plt.savefig(f'{save_dir}/feature_importance.png')
@@ -125,9 +125,9 @@ def plot_prediction_vs_actual(y_true, y_pred, save_dir='plots'):
     plt.figure(figsize=(10, 6))
     plt.scatter(y_true, y_pred, alpha=0.5)
     plt.plot([y_true.min(), y_true.max()], [y_true.min(), y_true.max()], 'r--')
-    plt.title('预测值 vs 实际值')
-    plt.xlabel('实际值')
-    plt.ylabel('预测值')
+    plt.title('Prediction vs Actual')
+    plt.xlabel('Actual Value')
+    plt.ylabel('Predicted Value')
     
     # 保存图表
     plt.savefig(f'{save_dir}/prediction_vs_actual.png')
@@ -141,4 +141,4 @@ if __name__ == '__main__':
     val_accs = [0.5393, 0.4898, 0.5406, 0.5393, 0.5393, 0.5393, 0.5309, 0.5408]
     
     # 绘制训练指标
-    plot_training_metrics(train_losses, val_losses, train_accs, val_accs) 
+    plot_training_metrics(train_losses, val_losses, train_accs, val_accs)

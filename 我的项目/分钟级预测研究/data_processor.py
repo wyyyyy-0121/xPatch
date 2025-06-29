@@ -40,6 +40,46 @@ class DataProcessor:
         self.target_column = config.TARGET_COLUMN
         self.batch_size = config.BATCH_SIZE
         
+    def feature_engineering(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        增加技术指标、时间特征，处理异常值和缺失值
+        
+        Args:
+            df: 原始数据
+            
+        Returns:
+            pd.DataFrame: 处理后的数据
+        """
+        # 技术指标
+        df['rsi'] = RSIIndicator(df['close'], window=14).rsi()
+        df['macd'] = MACD(df['close']).macd()
+        df['macd_signal'] = MACD(df['close']).macd_signal()
+        df['macd_diff'] = MACD(df['close']).macd_diff()
+        df['sma'] = SMAIndicator(df['close'], window=20).sma_indicator()
+        df['ema'] = EMAIndicator(df['close'], window=20).ema_indicator()
+        bb = BollingerBands(df['close'], window=20)
+        df['bb_high'] = bb.bollinger_hband()
+        df['bb_low'] = bb.bollinger_lband()
+        df['atr'] = AverageTrueRange(df['high'], df['low'], df['close']).average_true_range()
+        df['obv'] = OnBalanceVolumeIndicator(df['close'], df['volume']).on_balance_volume()
+        df['vwap'] = VolumeWeightedAveragePrice(df['high'], df['low'], df['close'], df['volume']).volume_weighted_average_price()
+        # KDJ
+        stoch = StochasticOscillator(df['high'], df['low'], df['close'])
+        df['kdj_k'] = stoch.stoch()
+        df['kdj_d'] = stoch.stoch_signal()
+        # 时间特征
+        df['hour'] = df.index.hour
+        df['weekday'] = df.index.weekday
+        # 缺失值填充
+        df = df.fillna(method='ffill').fillna(method='bfill')
+        # 异常值裁剪（如极端涨跌幅）
+        for col in ['open','high','low','close','volume']:
+            q_low = df[col].quantile(0.01)
+            q_high = df[col].quantile(0.99)
+            df[col] = df[col].clip(q_low, q_high)
+        
+        return df
+
     def load_data(self) -> pd.DataFrame:
         """
         加载数据
@@ -58,11 +98,12 @@ class DataProcessor:
             # 确保时间戳列是datetime类型
             df['timestamp'] = pd.to_datetime(df['timestamp'])
             df.set_index('timestamp', inplace=True)
-            
+            # 特征工程
+            df = self.feature_engineering(df)
             return df
         except Exception as e:
-            logger.error(f"加载数据失败: {str(e)}")
-            raise
+            logger.error(f"数据加载失败: {str(e)}")
+            raise e
     
     def add_time_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -331,4 +372,4 @@ class TimeSeriesDataset(Dataset):
         return len(self.X)
     
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        return self.X[idx], self.y[idx] 
+        return self.X[idx], self.y[idx]

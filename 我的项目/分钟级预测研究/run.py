@@ -110,22 +110,25 @@ def check_data():
         return False
 
 def run_script(script_name):
-    """运行Python脚本"""
+    """运行Python脚本（实时输出）"""
     logger.info(f"\n运行 {script_name}...")
     script_path = CURRENT_DIR / script_name
     try:
-        result = subprocess.run([sys.executable, str(script_path)], 
-                              capture_output=True, 
-                              text=True)
-        if result.returncode == 0:
+        process = subprocess.Popen(
+            [sys.executable, str(script_path)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1
+        )
+        for line in process.stdout:
+            print(line, end="")  # 直接输出到控制台，支持tqdm进度条
+        process.wait()
+        if process.returncode == 0:
             logger.info(f"{script_name} 运行成功")
-            if result.stdout:
-                logger.info("输出信息:")
-                logger.info(result.stdout)
             return True
         else:
-            logger.error(f"{script_name} 运行失败:")
-            logger.error(result.stderr)
+            logger.error(f"{script_name} 运行失败，返回码: {process.returncode}")
             return False
     except Exception as e:
         logger.error(f"运行 {script_name} 时出错: {str(e)}")
@@ -181,4 +184,4 @@ if __name__ == "__main__":
         logger.error(f"程序运行出错: {str(e)}", exc_info=True)
     finally:
         logger.info("程序运行结束")
-        input("按回车键退出...") 
+        input("按回车键退出...")
