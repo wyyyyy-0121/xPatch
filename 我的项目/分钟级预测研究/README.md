@@ -9,6 +9,7 @@
 - 自动生成交易信号
 - 包含完整的回测系统
 - 可视化预测结果和交易信号
+- **多模型横向对比**：支持xPatch、MLP、LSTM、GRU等主流结构，均已升级为深层、正则化、支持LayerNorm/Dropout/残差等，接口统一，便于实验对比。
 
 ## 项目结构
 
@@ -18,10 +19,10 @@
 ├── data_processor.py      # 数据处理模块
 ├── models/               # 模型目录
 │   ├── xpatch.py        # xPatch模型
-│   ├── ema_decomposition.py # EMA分解模块
-│   ├── patch_embedding.py   # Patch嵌入模块
-│   ├── trend_stream.py  # 趋势流模型
-│   └── residual_stream.py # 残差流模型
+│   ├── mlp.py           # 5层全连接MLP，含Dropout+LayerNorm+残差
+│   ├── lstm.py          # 4层LSTM，支持LayerNorm/Dropout，多步预测
+│   ├── gru.py           # 4层GRU，支持LayerNorm/Dropout，多步预测
+│   └── ...              # 其它模型与工具
 ├── train.py             # 训练脚本
 ├── predict.py           # 预测脚本
 ├── visualization.py     # 可视化模块
@@ -38,9 +39,24 @@
 - pandas
 - numpy
 - scikit-learn
-- ta (技术分析库)
 - matplotlib
 - seaborn
+- ta
+- tqdm
+- joblib
+- python-dotenv
+
+建议使用 requirements.txt 一键安装依赖：
+
+```bash
+pip install -r requirements.txt
+```
+
+## 升级说明
+
+- **MLP**：5层全连接（含Dropout+LayerNorm+ReLU+残差），每层宽度 config.HIDDEN_SIZE。
+- **LSTM/GRU**：4层堆叠，支持 LayerNorm/Dropout，输出 shape 支持多步预测（与 xPatch 对齐），隐藏单元 config.HIDDEN_SIZE。
+- 所有模型接口统一，便于 compare_models 横向对比。
 
 ## 快速开始
 
@@ -157,4 +173,4 @@ MIT License
 
 ## 联系方式
 
-如有问题或建议，请提交Issue或Pull Request。 
+如有问题或建议，请提交Issue或Pull Request。

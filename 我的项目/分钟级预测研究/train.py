@@ -281,13 +281,13 @@ def get_model(model_name, input_dim, config):
         return XPatch(input_dim, config)
     elif model_name == 'lstm':
         from models.LSTM import LSTMModel
-        return LSTMModel(input_dim, config.HIDDEN_SIZE, config.NUM_LAYERS, config.PREDICTION_LENGTH, config.DROPOUT)
+        return LSTMModel(input_dim, config.HIDDEN_SIZE, config.NUM_LAYERS, config.PREDICTION_LENGTH, config.DROPOUT, use_layernorm=True)
     elif model_name == 'gru':
         from models.GRU import GRUModel
-        return GRUModel(input_dim, config.HIDDEN_SIZE, config.NUM_LAYERS, config.PREDICTION_LENGTH, config.DROPOUT)
+        return GRUModel(input_dim, config.HIDDEN_SIZE, config.NUM_LAYERS, config.PREDICTION_LENGTH, config.DROPOUT, use_layernorm=True)
     elif model_name == 'mlp':
         from models.MLP import MLPModel
-        return MLPModel(input_dim * config.SEQUENCE_LENGTH, config.HIDDEN_SIZE, config.PREDICTION_LENGTH, config.DROPOUT)
+        return MLPModel(input_dim * config.SEQUENCE_LENGTH, config.HIDDEN_SIZE, config.PREDICTION_LENGTH, config.DROPOUT, use_layernorm=True)
     else:
         raise ValueError(f"未知模型: {model_name}")
 
