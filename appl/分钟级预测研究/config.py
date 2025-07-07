@@ -17,25 +17,25 @@ class Config:
     
     # 数据配置
     DATA_PATH = str(DATA_DIR / "AAPL_1min.csv")
-    SEQUENCE_LENGTH = 96    # 输入序列长度（分钟）
-    PREDICTION_LENGTH = 24  # 预测长度（分钟）
+    SEQUENCE_LENGTH = 48    # 减少输入序列长度（从96降到48）
+    PREDICTION_LENGTH = 12  # 减少预测长度（从24降到12）
     TRAIN_RATIO = 0.8
     VAL_RATIO = 0.1
     TEST_RATIO = 0.1
     
     # 模型配置
-    HIDDEN_SIZE = 256
+    HIDDEN_SIZE = 128       # 减少隐藏层大小（从256降到128）
     NUM_LAYERS = 4
     NUM_HEADS = 8
-    D_FF = 512
+    D_FF = 256             # 减少前馈网络维度（从512降到256）
     DROPOUT = 0.1
-    PATCH_SIZES = [5, 10, 20, 48]  # 多尺度patch
+    PATCH_SIZES = [5, 10, 20, 24]  # 调整patch大小
     EMA_ALPHA = 0.1
     
     # 训练配置
-    BATCH_SIZE = 128
-    NUM_EPOCHS = 50
-    LEARNING_RATE = 0.0005
+    BATCH_SIZE = 32        # 大幅减少批次大小（从128降到32）
+    NUM_EPOCHS = 5         # 训练轮数改为5
+    LEARNING_RATE = 0.001  # 调整学习率
     WEIGHT_DECAY = 1e-5
     DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
     

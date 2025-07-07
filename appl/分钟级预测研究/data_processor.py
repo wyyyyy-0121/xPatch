@@ -50,28 +50,33 @@ class DataProcessor:
         Returns:
             pd.DataFrame: 处理后的数据
         """
-        # 技术指标
+        # 基础技术指标（减少特征数量）
         df['rsi'] = RSIIndicator(df['close'], window=14).rsi()
         df['macd'] = MACD(df['close']).macd()
         df['macd_signal'] = MACD(df['close']).macd_signal()
-        df['macd_diff'] = MACD(df['close']).macd_diff()
         df['sma'] = SMAIndicator(df['close'], window=20).sma_indicator()
         df['ema'] = EMAIndicator(df['close'], window=20).ema_indicator()
+        
+        # 布林带
         bb = BollingerBands(df['close'], window=20)
         df['bb_high'] = bb.bollinger_hband()
         df['bb_low'] = bb.bollinger_lband()
-        df['atr'] = AverageTrueRange(df['high'], df['low'], df['close']).average_true_range()
-        df['obv'] = OnBalanceVolumeIndicator(df['close'], df['volume']).on_balance_volume()
-        df['vwap'] = VolumeWeightedAveragePrice(df['high'], df['low'], df['close'], df['volume']).volume_weighted_average_price()
-        # KDJ
-        stoch = StochasticOscillator(df['high'], df['low'], df['close'])
-        df['kdj_k'] = stoch.stoch()
-        df['kdj_d'] = stoch.stoch_signal()
+        
+        # 价格变化率
+        df['price_change'] = df['close'].pct_change()
+        df['price_change_5min'] = df['close'].pct_change(periods=5)
+        
+        # 成交量指标
+        df['volume_ma'] = df['volume'].rolling(window=20).mean()
+        df['volume_ratio'] = df['volume'] / df['volume_ma']
+        
         # 时间特征
         df['hour'] = df.index.hour
         df['weekday'] = df.index.weekday
-        # 缺失值填充
-        df = df.fillna(method='ffill').fillna(method='bfill')
+        
+        # 修复pandas警告：使用新的方法
+        df = df.ffill().bfill()
+        
         # 异常值裁剪（如极端涨跌幅）
         for col in ['open','high','low','close','volume']:
             q_low = df[col].quantile(0.01)

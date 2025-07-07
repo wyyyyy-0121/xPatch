@@ -93,14 +93,14 @@ class Predictor:
         plt.figure(figsize=(15, 8))
         
         # 绘制实际值
-        plt.plot(actual[:, 0, 3], label='实际收盘价', color='blue')
+        plt.plot(actual[:, 0, 3], label='Actual Closing Price', color='blue')
         
         # 绘制预测值
-        plt.plot(predicted[:, 0, 3], label='预测收盘价', color='red', linestyle='--')
+        plt.plot(predicted[:, 0, 3], label='Predicted Closing Price', color='red', linestyle='--')
         
-        plt.title('股票价格预测结果')
-        plt.xlabel('时间')
-        plt.ylabel('价格')
+        plt.title('Stock Price Prediction Result')
+        plt.xlabel('Time')
+        plt.ylabel('Price')
         plt.legend()
         plt.grid(True)
         

@@ -61,18 +61,40 @@ class Trainer:
         df = self.processor.load_data()
         features, _ = self.processor.prepare_features(df)
         feature_dim = features.shape[1]  # 单步特征数
-        input_dim = self.config.SEQUENCE_LENGTH * feature_dim
-        output_dim = self.config.PREDICTION_LENGTH * feature_dim
-        logger.info(f"模型输入维度: {input_dim}, 输出维度: {output_dim}")
-        model = nn.Sequential(
-            nn.Linear(input_dim, 512),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(512, 256),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(256, output_dim)
+        
+        # 使用LSTM架构，更适合时间序列
+        class LSTMModel(nn.Module):
+            def __init__(self, input_dim, hidden_dim, num_layers, output_dim, dropout=0.2):
+                super(LSTMModel, self).__init__()
+                self.hidden_dim = hidden_dim
+                self.num_layers = num_layers
+                
+                self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, 
+                                   batch_first=True, dropout=dropout)
+                self.dropout = nn.Dropout(dropout)
+                self.fc = nn.Linear(hidden_dim, output_dim)
+                
+            def forward(self, x):
+                # x shape: (batch_size, seq_len, input_dim)
+                lstm_out, _ = self.lstm(x)
+                # 取最后一个时间步的输出
+                last_output = lstm_out[:, -1, :]
+                out = self.dropout(last_output)
+                out = self.fc(out)
+                # 重塑为预测长度
+                batch_size = out.size(0)
+                out = out.view(batch_size, self.config.PREDICTION_LENGTH, -1)
+                return out
+        
+        model = LSTMModel(
+            input_dim=feature_dim,
+            hidden_dim=self.config.HIDDEN_SIZE,
+            num_layers=2,  # 减少层数
+            output_dim=self.config.PREDICTION_LENGTH * feature_dim,
+            dropout=0.2
         )
+        
+        logger.info(f"模型输入维度: {feature_dim}, 隐藏维度: {self.config.HIDDEN_SIZE}")
         return model
     
     def prepare_data(self):
@@ -110,28 +132,43 @@ class Trainer:
         
         # 使用tqdm创建进度条
         pbar = tqdm(train_loader, desc='Training', leave=False)
-        for batch_X, batch_y in pbar:
-            self.optimizer.zero_grad()
-            
-            # 前向传播
-            outputs = self.model(batch_X.view(batch_X.size(0), -1))
-            # reshape输出
-            batch_size = outputs.size(0)
-            outputs = outputs.view(batch_size, self.config.PREDICTION_LENGTH, -1)
-            loss = self.criterion(outputs, batch_y)
-            
-            # 反向传播
-            loss.backward()
-            self.optimizer.step()
-            
-            total_loss += loss.item()
-            
-            # 更新进度条
-            pbar.set_postfix({'loss': f'{loss.item():.6f}'})
-            
-            # 清理内存
-            del outputs, loss
-            torch.cuda.empty_cache() if torch.cuda.is_available() else gc.collect()
+        for batch_idx, (batch_X, batch_y) in enumerate(pbar):
+            try:
+                self.optimizer.zero_grad()
+                
+                # 前向传播
+                outputs = self.model(batch_X)
+                loss = self.criterion(outputs, batch_y)
+                
+                # 反向传播
+                loss.backward()
+                
+                # 梯度裁剪，防止梯度爆炸
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+                
+                self.optimizer.step()
+                
+                total_loss += loss.item()
+                
+                # 更新进度条
+                pbar.set_postfix({'loss': f'{loss.item():.6f}'})
+                
+                # 定期清理内存
+                if batch_idx % 10 == 0:
+                    del outputs, loss
+                    if torch.cuda.is_available():
+                        torch.cuda.empty_cache()
+                    else:
+                        gc.collect()
+                        
+            except RuntimeError as e:
+                if "out of memory" in str(e):
+                    logger.error(f"内存不足，跳过批次 {batch_idx}")
+                    if torch.cuda.is_available():
+                        torch.cuda.empty_cache()
+                    continue
+                else:
+                    raise e
         
         return total_loss / len(train_loader)
     
