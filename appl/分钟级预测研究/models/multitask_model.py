@@ -10,6 +10,7 @@ from typing import Dict, Tuple
 class MultiTaskLSTM(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers, prediction_length, dropout=0.2):
         super(MultiTaskLSTM, self).__init__()
+        self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.num_layers = num_layers
         self.prediction_length = prediction_length
@@ -24,7 +25,7 @@ class MultiTaskLSTM(nn.Module):
             nn.Linear(hidden_dim, hidden_dim // 2),
             nn.ReLU(),
             nn.Dropout(dropout),
-            nn.Linear(hidden_dim // 2, prediction_length)
+            nn.Linear(hidden_dim // 2, prediction_length * input_dim)
         )
         
         # 分类头：预测涨跌方向
@@ -44,6 +45,7 @@ class MultiTaskLSTM(nn.Module):
         
         # 回归预测
         regression_pred = self.regression_head(encoded)
+        regression_pred = regression_pred.view(-1, self.prediction_length, self.input_dim)
         
         # 分类预测
         classification_logits = self.classification_head(encoded)

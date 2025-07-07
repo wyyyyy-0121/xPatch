@@ -41,6 +41,7 @@ class TimeSeriesDataset(Dataset):
 class Trainer:
     def __init__(self, config):
         self.config = config
+        self.prediction_length = self.config.PREDICTION_LENGTH
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         logger.info(f"使用设备: {self.device}")
         
@@ -57,40 +58,16 @@ class Trainer:
     
     def init_model(self):
         """初始化模型"""
-        # 动态获取特征数
-        df = self.processor.load_data()
-        features, _ = self.processor.prepare_features(df)
-        feature_dim = features.shape[1]  # 单步特征数
+        from models.LSTM import LSTMModel
         
-        # 使用LSTM架构，更适合时间序列
-        class LSTMModel(nn.Module):
-            def __init__(self, input_dim, hidden_dim, num_layers, output_dim, dropout=0.2):
-                super(LSTMModel, self).__init__()
-                self.hidden_dim = hidden_dim
-                self.num_layers = num_layers
-                
-                self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, 
-                                   batch_first=True, dropout=dropout)
-                self.dropout = nn.Dropout(dropout)
-                self.fc = nn.Linear(hidden_dim, output_dim)
-                
-            def forward(self, x):
-                # x shape: (batch_size, seq_len, input_dim)
-                lstm_out, _ = self.lstm(x)
-                # 取最后一个时间步的输出
-                last_output = lstm_out[:, -1, :]
-                out = self.dropout(last_output)
-                out = self.fc(out)
-                # 重塑为预测长度
-                batch_size = out.size(0)
-                out = out.view(batch_size, self.config.PREDICTION_LENGTH, -1)
-                return out
+        # 获取特征维度
+        feature_dim = 37  # 根据实际特征数量调整
         
         model = LSTMModel(
             input_dim=feature_dim,
-            hidden_dim=self.config.HIDDEN_SIZE,
+            hidden_size=self.config.HIDDEN_SIZE,
             num_layers=2,  # 减少层数
-            output_dim=self.config.PREDICTION_LENGTH * feature_dim,
+            prediction_length=self.config.PREDICTION_LENGTH,
             dropout=0.2
         )
         
@@ -181,9 +158,7 @@ class Trainer:
         pbar = tqdm(val_loader, desc='Validating', leave=False)
         with torch.no_grad():
             for batch_X, batch_y in pbar:
-                outputs = self.model(batch_X.view(batch_X.size(0), -1))
-                batch_size = outputs.size(0)
-                outputs = outputs.view(batch_size, self.config.PREDICTION_LENGTH, -1)
+                outputs = self.model(batch_X)  # 直接传入3D张量，不展平
                 loss = self.criterion(outputs, batch_y)
                 total_loss += loss.item()
                 
@@ -252,6 +227,26 @@ class Trainer:
             plt.close()
         except Exception as e:
             logger.warning(f"损失曲线绘制失败: {str(e)}")
+
+        # 新增：可视化LSTM中间特征统计
+        try:
+            if hasattr(self.model, 'debug_stats') and self.model.debug_stats["out_mean"]:
+                plt.figure(figsize=(10,6))
+                plt.plot(self.model.debug_stats["out_mean"], label="LSTM out mean")
+                plt.plot(self.model.debug_stats["out_std"], label="LSTM out std")
+                plt.plot(self.model.debug_stats["pred_mean"], label="Predictions mean")
+                plt.plot(self.model.debug_stats["pred_std"], label="Predictions std")
+                plt.legend()
+                plt.title("LSTM中间特征均值/方差变化")
+                plt.xlabel("Batch (累计)")
+                plt.ylabel("Value")
+                plt.tight_layout()
+                Path("plots").mkdir(exist_ok=True)
+                plt.savefig("plots/lstm_debug_stats.png")
+                plt.close()
+                logger.info("已保存LSTM中间特征统计可视化: plots/lstm_debug_stats.png")
+        except Exception as e:
+            logger.warning(f"LSTM中间特征统计可视化失败: {str(e)}")
     
     def save_model(self):
         """保存模型"""
@@ -299,9 +294,10 @@ def sliding_window_cv(config, window_size=0.6, val_size=0.2, test_size=0.2, n_sp
         with torch.no_grad():
             X = torch.FloatTensor(test_X).to(trainer.device)
             y = torch.FloatTensor(test_y).to(trainer.device)
-            outputs = trainer.model(X.view(X.size(0), -1))
-            feature_dim = outputs.shape[1] // config.PREDICTION_LENGTH
-            y_pred = outputs.view(X.size(0), config.PREDICTION_LENGTH, feature_dim).cpu().numpy().flatten()
+            print(f"[调试] LSTM输入X的shape: {X.shape}")
+            outputs = trainer.model(X)  # [batch, prediction_length, input_dim]
+            print(f"[调试] LSTM输出outputs的shape: {outputs.shape}")
+            y_pred = outputs.cpu().numpy().flatten()
             y_true = y.cpu().numpy().flatten()
             mae = mean_absolute_error(y_true, y_pred)
             rmse = mean_squared_error(y_true, y_pred, squared=False)

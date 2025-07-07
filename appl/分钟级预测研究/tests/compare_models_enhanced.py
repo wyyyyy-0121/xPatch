@@ -3,6 +3,10 @@
 支持MLP/LSTM/GRU/xPatch等主流结构的横向对比
 """
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import torch
 import torch.nn as nn
 import numpy as np
@@ -108,10 +112,7 @@ class ModelComparator:
                     loss = loss_dict['total_loss']
                 else:
                     # 单任务回归
-                    if model_name == 'mlp':
-                        outputs = model(batch_X.view(batch_X.size(0), -1))
-                    else:
-                        outputs = model(batch_X)
+                    outputs = model(batch_X)
                     loss = criterion(outputs, batch_y)
                 
                 loss.backward()
@@ -135,10 +136,7 @@ class ModelComparator:
                         loss_dict = criterion(outputs, batch_y, classification_targets)
                         loss = loss_dict['total_loss']
                     else:
-                        if model_name == 'mlp':
-                            outputs = model(batch_X.view(batch_X.size(0), -1))
-                        else:
-                            outputs = model(batch_X)
+                        outputs = model(batch_X)
                         loss = criterion(outputs, batch_y)
                     
                     val_loss += loss.item()
@@ -200,10 +198,7 @@ class ModelComparator:
                     all_classification_preds.extend(classification_pred.cpu().numpy().flatten())
                     all_classification_targets.extend(classification_targets.flatten())
                 else:
-                    if model_name == 'mlp':
-                        regression_pred = model(batch_X.view(batch_X.size(0), -1))
-                    else:
-                        regression_pred = model(batch_X)
+                    regression_pred = model(batch_X)
                 
                 all_predictions.extend(regression_pred.cpu().numpy().flatten())
                 all_targets.extend(batch_y.cpu().numpy().flatten())

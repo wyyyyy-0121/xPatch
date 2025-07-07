@@ -10,6 +10,7 @@ from pathlib import Path
 import logging
 from config import Config
 from data_processor import DataProcessor
+import re
 
 # 配置日志
 logging.basicConfig(
@@ -19,7 +20,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class Predictor:
-    def __init__(self, config: Config, model_path: str):
+    def __init__(self, config: Config, model_path: str = None):
         """
         初始化预测器
         
@@ -28,12 +29,25 @@ class Predictor:
             model_path: 模型文件路径
         """
         self.config = config
-        self.model_path = model_path
         self.device = torch.device(config.DEVICE)
         logger.info(f"使用设备: {self.device}")
+        # 自动识别最佳模型类型和权重
+        self.model_name, self.model_path = self._find_best_model()
         self.model = self._load_model()
         self.data_processor = DataProcessor(config)
         
+    def _find_best_model(self):
+        report_path = Path(self.config.MODEL_COMPARISON_REPORT) if hasattr(self.config, 'MODEL_COMPARISON_REPORT') else Path('model_comparison_report.txt')
+        model_name = 'lstm'
+        if report_path.exists():
+            with open(report_path, 'r', encoding='utf-8') as f:
+                text = f.read()
+                m = re.search(r'最佳MAE模型: (\w+)', text)
+                if m:
+                    model_name = m.group(1).lower()
+        model_path = f"checkpoints/best_{model_name}.pth"
+        return model_name, model_path
+
     def _load_model(self):
         """加载模型"""
         # 加载数据并设置时间索引
@@ -44,15 +58,19 @@ class Predictor:
         
         features, _ = DataProcessor(self.config).prepare_features(df)
         feature_dim = features.shape[1]
-        model = torch.nn.Sequential(
-            torch.nn.Linear(self.config.SEQUENCE_LENGTH * feature_dim, 512),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(self.config.DROPOUT),
-            torch.nn.Linear(512, 256),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(self.config.DROPOUT),
-            torch.nn.Linear(256, self.config.PREDICTION_LENGTH * feature_dim)
-        )
+        model_name = self.model_name
+        if model_name == 'lstm':
+            model = LSTMModel(feature_dim, self.config.HIDDEN_SIZE, self.config.NUM_LAYERS, self.config.PREDICTION_LENGTH, self.config.DROPOUT, use_layernorm=True)
+        elif model_name == 'gru':
+            model = GRUModel(feature_dim, self.config.HIDDEN_SIZE, self.config.NUM_LAYERS, self.config.PREDICTION_LENGTH, self.config.DROPOUT, use_layernorm=True)
+        elif model_name == 'mlp':
+            model = MLPModel(feature_dim * self.config.SEQUENCE_LENGTH, self.config.HIDDEN_SIZE, self.config.PREDICTION_LENGTH, self.config.DROPOUT, use_layernorm=True)
+        elif model_name == 'xpatch':
+            model = XPatch(feature_dim, self.config)
+        elif model_name == 'multitask':
+            model = MultiTaskLSTM(feature_dim, self.config.HIDDEN_SIZE, 2, self.config.PREDICTION_LENGTH)
+        else:
+            raise ValueError(f"未知模型类型: {model_name}")
         model.load_state_dict(torch.load(self.model_path, map_location=self.device))
         model.to(self.device)
         model.eval()

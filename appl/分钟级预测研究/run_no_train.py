@@ -48,17 +48,17 @@ def parse_compare_results(report_path):
 
 def main():
     os.chdir(PROJECT_DIR)
-    print("\n==== xPatch 高频交易预测系统一键主流程 ====")
+    print("\n==== xPatch 高频交易预测系统一键主流程（跳过训练） ====")
     print("工作目录:", os.getcwd())
 
     # 1. 安装依赖
     run_cmd('pip install -r requirements.txt')
 
-    # 2. 完整训练
-    run_cmd('python train.py')
+    # 2. 跳过训练，直接进行后续流程
+    print("[提示] 跳过训练步骤，直接进行模型对比、预测和可视化...")
 
     # 3. 多模型对比
-    run_cmd('python compare_models_enhanced.py')
+    run_cmd('python tests/compare_models_enhanced.py')
 
     # 4. 预测与回测
     run_cmd('python predict.py')
@@ -70,7 +70,7 @@ def main():
     # 6. 自动输出最佳模型及优点
     parse_compare_results(PROJECT_DIR / 'model_comparison_report.txt')
 
-    print("\n==== 全部流程已完成！ ====")
+    print("\n==== 全部流程已完成！（未重新训练模型） ====")
     print("请查看 plots/、checkpoints/、model_comparison_report.txt、logs/ 等目录和文件获取结果。\n")
 
 if __name__ == '__main__':
