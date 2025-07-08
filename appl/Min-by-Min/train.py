@@ -17,7 +17,9 @@ import logging
 from data_processor import DataProcessor
 from config import Config
 import gc
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_error, r2_score
+import sklearn
+from packaging import version
 
 # 配置日志
 logging.basicConfig(
@@ -172,7 +174,7 @@ class Trainer:
         y_true = y_true.flatten()
         y_pred = y_pred.flatten()
         mae = mean_absolute_error(y_true, y_pred)
-        rmse = mean_squared_error(y_true, y_pred, squared=False)
+        rmse = safe_rmse(y_true, y_pred)
         r2 = r2_score(y_true, y_pred)
         return {'MAE': mae, 'RMSE': rmse, 'R2': r2}
 
@@ -264,7 +266,7 @@ def sliding_window_cv(config, window_size=0.6, val_size=0.2, test_size=0.2, n_sp
     n_splits: 滑窗次数
     """
     from data_processor import DataProcessor
-    from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+    from sklearn.metrics import mean_absolute_error, r2_score
     logger.info(f"滑动窗口交叉验证: window_size={window_size}, val_size={val_size}, test_size={test_size}, n_splits={n_splits}")
     processor = DataProcessor(config)
     df = processor.load_data()
@@ -294,13 +296,16 @@ def sliding_window_cv(config, window_size=0.6, val_size=0.2, test_size=0.2, n_sp
         with torch.no_grad():
             X = torch.FloatTensor(test_X).to(trainer.device)
             y = torch.FloatTensor(test_y).to(trainer.device)
+            # 修复：保证LSTM/GRU输入为3D
+            if X.dim() == 2:
+                X = X.unsqueeze(1)
             print(f"[调试] LSTM输入X的shape: {X.shape}")
             outputs = trainer.model(X)  # [batch, prediction_length, input_dim]
             print(f"[调试] LSTM输出outputs的shape: {outputs.shape}")
             y_pred = outputs.cpu().numpy().flatten()
             y_true = y.cpu().numpy().flatten()
             mae = mean_absolute_error(y_true, y_pred)
-            rmse = mean_squared_error(y_true, y_pred, squared=False)
+            rmse = safe_rmse(y_true, y_pred)
             r2 = r2_score(y_true, y_pred)
             logger.info(f"滑窗{i+1} MAE={mae:.6f} RMSE={rmse:.6f} R2={r2:.6f}")
             results.append([mae, rmse, r2])
@@ -327,7 +332,7 @@ def get_model(model_name, input_dim, config):
 
 def compare_models(config, model_list=['xpatch', 'lstm', 'gru', 'mlp']):
     from data_processor import DataProcessor
-    from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+    from sklearn.metrics import mean_absolute_error, r2_score
     processor = DataProcessor(config)
     df = processor.load_data()
     features, labels = processor.prepare_features(df)
@@ -370,7 +375,7 @@ def compare_models(config, model_list=['xpatch', 'lstm', 'gru', 'mlp']):
                 pred = model(X_test).cpu().numpy().flatten()
             y_true = y_test.cpu().numpy().flatten()
             mae = mean_absolute_error(y_true, pred)
-            rmse = mean_squared_error(y_true, pred, squared=False)
+            rmse = safe_rmse(y_true, pred)
             r2 = r2_score(y_true, pred)
             logger.info(f"{model_name} MAE={mae:.6f} RMSE={rmse:.6f} R2={r2:.6f}")
             results.append([model_name, mae, rmse, r2])
@@ -398,3 +403,10 @@ if __name__ == "__main__":
     from config import Config
     # compare_models(Config(), model_list=['xpatch', 'lstm', 'gru', 'mlp'])  # 取消注释可直接运行多模型对比
     sliding_window_cv(Config(), window_size=0.6, val_size=0.2, test_size=0.2, n_splits=5)
+
+def safe_rmse(y_true, y_pred):
+    from sklearn.metrics import mean_squared_error
+    try:
+        return mean_squared_error(y_true, y_pred, squared=False)
+    except TypeError:
+        return mean_squared_error(y_true, y_pred) ** 0.5

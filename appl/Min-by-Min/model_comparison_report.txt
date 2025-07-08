@@ -1,0 +1,32 @@
+Model Comparison Report
+==================================================
+
+Experiment Config:
+  Sequence Length: 48
+  Prediction Length: 12
+  Batch Size: 32
+  Epochs: 5
+  Learning Rate: 0.001
+
+Results:
+------------------------------
+
+Model: lstm
+  Training Time: 0.0 s
+  Best Val Loss: -
+  MAE: 0.362018
+  RMSE: 0.721914
+  R²: 0.572568
+
+Model: gru
+  Training Time: 0.0 s
+  Best Val Loss: -
+  MAE: 0.298795
+  RMSE: 0.687572
+  R²: 0.612267
+
+Summary:
+------------------------------
+Best MAE Model: gru
+Best R² Model: gru
+Fastest Model: lstm

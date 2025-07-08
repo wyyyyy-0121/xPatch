@@ -2,6 +2,8 @@ import os
 import sys
 import subprocess
 from pathlib import Path
+import sklearn
+from packaging import version
 
 PROJECT_DIR = Path(__file__).parent.resolve()
 
@@ -58,7 +60,7 @@ def main():
     print("[提示] 跳过训练步骤，直接进行模型对比、预测和可视化...")
 
     # 3. 多模型对比
-    run_cmd('python tests/compare_models_enhanced.py')
+    run_cmd('python compare_models_enhanced.py')
 
     # 4. 预测与回测
     run_cmd('python predict.py')

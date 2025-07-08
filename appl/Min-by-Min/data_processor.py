@@ -288,6 +288,23 @@ class DataProcessor:
         features = features[:len(labels)]
         return features, labels
     
+    def prepare_classification_targets(self, y: np.ndarray) -> np.ndarray:
+        """
+        准备分类目标（涨跌方向）
+        y: shape [batch, prediction_length, feature_dim]
+        返回 shape [batch, prediction_length] 的分类标签（0=跌，1=平，2=涨）
+        以每个预测步与当前时刻收盘价比较
+        """
+        current_price = y[:, 0, 3:4]  # [batch, 1]
+        future_price = y[:, :, 3]     # [batch, prediction_length]
+        price_changes = future_price - current_price  # [batch, prediction_length]
+        threshold = 0.001
+        classification_targets = np.zeros_like(price_changes, dtype=int)
+        classification_targets[price_changes > threshold] = 2
+        classification_targets[price_changes < -threshold] = 0
+        classification_targets[(price_changes >= -threshold) & (price_changes <= threshold)] = 1
+        return classification_targets
+    
     def create_sequences(self, features: np.ndarray, labels: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         创建序列数据，使用分批处理减少内存使用
@@ -319,7 +336,7 @@ class DataProcessor:
             
             for j in range(start_idx, end_idx):
                 X_batch.append(features[j:j + self.sequence_length])
-                y_batch.append(labels[j + self.sequence_length])  # 只取一个[5, 37]标签
+                y_batch.append(labels[j + self.sequence_length - 1])  # 修正，保证标签shape一致
             
             X_batches.append(np.array(X_batch, dtype=np.float32))  # 使用float32减少内存使用
             y_batches.append(np.array(y_batch, dtype=np.float32))

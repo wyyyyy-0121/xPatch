@@ -11,6 +11,12 @@ import logging
 from config import Config
 from data_processor import DataProcessor
 import re
+from models.LSTM import LSTMModel
+from models.GRU import GRUModel
+from models.MLP import MLPModel
+from models.xpatch import XPatch
+import sklearn
+from packaging import version
 
 # 配置日志
 logging.basicConfig(
@@ -18,6 +24,13 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+def safe_rmse(y_true, y_pred):
+    from sklearn.metrics import mean_squared_error
+    try:
+        return mean_squared_error(y_true, y_pred, squared=False)
+    except TypeError:
+        return mean_squared_error(y_true, y_pred) ** 0.5
 
 class Predictor:
     def __init__(self, config: Config, model_path: str = None):
@@ -67,8 +80,6 @@ class Predictor:
             model = MLPModel(feature_dim * self.config.SEQUENCE_LENGTH, self.config.HIDDEN_SIZE, self.config.PREDICTION_LENGTH, self.config.DROPOUT, use_layernorm=True)
         elif model_name == 'xpatch':
             model = XPatch(feature_dim, self.config)
-        elif model_name == 'multitask':
-            model = MultiTaskLSTM(feature_dim, self.config.HIDDEN_SIZE, 2, self.config.PREDICTION_LENGTH)
         else:
             raise ValueError(f"未知模型类型: {model_name}")
         model.load_state_dict(torch.load(self.model_path, map_location=self.device))
@@ -79,22 +90,27 @@ class Predictor:
     def predict(self, X: torch.Tensor) -> np.ndarray:
         """
         进行预测
-        
         Args:
             X: 输入特征
-            
         Returns:
             np.ndarray: 预测结果
         """
         try:
             batch_size = X.shape[0]
-            X = X.reshape(batch_size, -1)
+            # 自动根据模型类型调整shape
+            if self.model_name == 'mlp':
+                X = X.reshape(batch_size, -1)
+            else:
+                if X.dim() == 2:
+                    seq_len = self.config.SEQUENCE_LENGTH
+                    feature_dim = X.shape[1] // seq_len
+                    X = X.view(batch_size, seq_len, feature_dim)
             with torch.no_grad():
                 outputs = self.model(X)
-                # reshape为(batch, 5, 特征数)
-                feature_dim = outputs.shape[1] // self.config.PREDICTION_LENGTH
-                predictions = outputs.reshape(batch_size, self.config.PREDICTION_LENGTH, feature_dim)
-                return predictions.cpu().numpy()
+                # 兼容MLP和其它模型的输出
+                if isinstance(outputs, dict) and 'regression_pred' in outputs:
+                    outputs = outputs['regression_pred']
+                return outputs.cpu().numpy()
         except Exception as e:
             logger.error(f"预测过程出错: {str(e)}")
             raise
@@ -140,30 +156,37 @@ class Predictor:
         Returns:
             dict: 包含MAE, RMSE和R2的字典
         """
-        from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+        from sklearn.metrics import mean_absolute_error, r2_score
         import seaborn as sns
         
         y_true = y_true.flatten()
         y_pred = y_pred.flatten()
         
         mae = mean_absolute_error(y_true, y_pred)
-        rmse = mean_squared_error(y_true, y_pred, squared=False)
+        rmse = safe_rmse(y_true, y_pred)
         r2 = r2_score(y_true, y_pred)
         
         logger.info(f"MAE: {mae:.6f}, RMSE: {rmse:.6f}, R2: {r2:.6f}")
         
         # 残差分布
         residuals = y_true - y_pred
-        plt.figure(figsize=(8,4))
-        sns.histplot(residuals, bins=50, kde=True, color='purple')
-        plt.title('Residual Distribution')
-        plt.xlabel('Residual')
-        plt.ylabel('Frequency')
-        
+        plt.figure(figsize=(10, 6))
+        import seaborn as sns
+        sns.histplot(residuals, bins=100, kde=True, color='purple', edgecolor='black', alpha=0.6)
+        plt.title('Residual Distribution (Prediction Error)', fontsize=16)
+        plt.xlabel('Residual (True - Predicted)', fontsize=14)
+        plt.ylabel('Frequency (Number of Samples)', fontsize=14)
+        plt.grid(True, linestyle='--', alpha=0.6)
+        # 标记均值和中位数
+        import numpy as np
+        mean_res = np.mean(residuals)
+        median_res = np.median(residuals)
+        plt.axvline(mean_res, color='red', linestyle='--', label=f'Mean: {mean_res:.2f}')
+        plt.axvline(median_res, color='blue', linestyle=':', label=f'Median: {median_res:.2f}')
+        plt.legend()
         Path(save_dir).mkdir(parents=True, exist_ok=True)
-        plt.savefig(f'{save_dir}/residual_distribution.png')
+        plt.savefig(f'{save_dir}/residual_distribution.png', dpi=300, bbox_inches='tight')  # 强制覆盖
         plt.close()
-        
         logger.info(f"残差分布图已保存到 {save_dir}/residual_distribution.png")
         
         return {'MAE': mae, 'RMSE': rmse, 'R2': r2}

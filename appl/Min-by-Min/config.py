@@ -18,7 +18,7 @@ class Config:
     # 数据配置
     DATA_PATH = str(DATA_DIR / "AAPL_1min.csv")
     SEQUENCE_LENGTH = 48    # 减少输入序列长度（从96降到48）
-    PREDICTION_LENGTH = 12  # 减少预测长度（从24降到12）
+    PREDICTION_LENGTH = 12  # 预测长度，必须为正整数
     TRAIN_RATIO = 0.8
     VAL_RATIO = 0.1
     TEST_RATIO = 0.1
