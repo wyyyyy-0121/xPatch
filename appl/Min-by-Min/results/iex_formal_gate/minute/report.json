@@ -1,0 +1,143 @@
+{
+  "profile": "minute",
+  "symbol": "AAPL",
+  "status": "insufficient_data",
+  "generated_utc": "2026-10-20T08:24:07.349230+00:00",
+  "data": {
+    "rows_input": 436906,
+    "duplicate_timestamps_removed": 0,
+    "timestamp_timezone": "America/New_York",
+    "start": "2022-03-07T09:30:00-05:00",
+    "end": "2026-10-16T15:59:00-04:00",
+    "source": "HF Data Library; IEX Exchange HIST; user-supplied cleaned CSV",
+    "source_verified": true,
+    "sha256": "54d27ebb6ab2ed686ae38f1fcba5f1ff4dd7e48573b7fd2a7064b59ab40e4bb4",
+    "sidecar_manifest": "appl/Min-by-Min/data/AAPL_clean_1min.csv.manifest.json",
+    "provider_url": "https://hfdatalibrary.com/pages/download?",
+    "adjustment": "split-adjusted only per HF Data Library docs; dividends/spin-offs not adjusted; exact file-version policy not checksum-verified",
+    "declared_interval": "1min",
+    "timestamp_label": "bar_start",
+    "synthetic": false,
+    "linear_second_difference_fraction": 0.0,
+    "suspected_interpolation": false,
+    "expected_regular_minutes": 450390,
+    "observed_regular_minutes": 436887,
+    "calendar_minute_coverage": 0.9700193165922867,
+    "minimum_session_coverage": 0.15128205128205127,
+    "median_within_day_minute_coverage": 0.9717948717948718,
+    "missing_sessions": 0,
+    "sessions": 1159,
+    "outside_regular_rows": 19
+  },
+  "source_sha256": "54d27ebb6ab2ed686ae38f1fcba5f1ff4dd7e48573b7fd2a7064b59ab40e4bb4",
+  "code_sha256": "4c7ad7de5a4d5c2a1d943e35f8aa565cd6adfa91d2d8febabe42d1db7baf4e2b",
+  "data_manifest": {
+    "path": "/home/ayaka/xPatch/appl/Min-by-Min/data/AAPL_clean_1min.csv",
+    "sha256": "54d27ebb6ab2ed686ae38f1fcba5f1ff4dd7e48573b7fd2a7064b59ab40e4bb4",
+    "metadata": {
+      "rows_input": 436906,
+      "duplicate_timestamps_removed": 0,
+      "timestamp_timezone": "America/New_York",
+      "start": "2022-03-07T09:30:00-05:00",
+      "end": "2026-10-16T15:59:00-04:00",
+      "source": "HF Data Library; IEX Exchange HIST; user-supplied cleaned CSV",
+      "source_verified": true,
+      "sha256": "54d27ebb6ab2ed686ae38f1fcba5f1ff4dd7e48573b7fd2a7064b59ab40e4bb4",
+      "sidecar_manifest": "appl/Min-by-Min/data/AAPL_clean_1min.csv.manifest.json",
+      "provider_url": "https://hfdatalibrary.com/pages/download?",
+      "adjustment": "split-adjusted only per HF Data Library docs; dividends/spin-offs not adjusted; exact file-version policy not checksum-verified",
+      "declared_interval": "1min",
+      "timestamp_label": "bar_start",
+      "synthetic": false,
+      "linear_second_difference_fraction": 0.0,
+      "suspected_interpolation": false,
+      "expected_regular_minutes": 450390,
+      "observed_regular_minutes": 436887,
+      "calendar_minute_coverage": 0.9700193165922867,
+      "minimum_session_coverage": 0.15128205128205127,
+      "median_within_day_minute_coverage": 0.9717948717948718,
+      "missing_sessions": 0,
+      "sessions": 1159,
+      "outside_regular_rows": 19
+    }
+  },
+  "bars": 436887,
+  "history_years": 4.611260935466771,
+  "bar_interval": "1min",
+  "experiment_config": {
+    "symbol": "AAPL",
+    "bar_interval": "1min",
+    "lookbacks": [
+      30,
+      60,
+      120,
+      240,
+      480
+    ],
+    "horizons": [
+      5,
+      15,
+      30,
+      60
+    ],
+    "target_modes": [
+      "future_close",
+      "future_log_return"
+    ],
+    "data_source": "local CSV with manifest",
+    "models": [
+      "last_close",
+      "drift",
+      "seasonal",
+      "ridge",
+      "mlp",
+      "gru",
+      "lstm",
+      "xpatch"
+    ],
+    "rolling_folds": 5,
+    "purge_gap_bars": "equal to horizon",
+    "holdout_boundary": "2025-11-13T12:14:00-05:00",
+    "validation": "common origin intersection; expanding purged five-fold; final 20% excluded",
+    "selection": "acceptance gates then normalized return RMSE, variability, simplicity",
+    "neural": {
+      "maximum_epochs": 20,
+      "early_stopping_patience": 3,
+      "stopping_partition": "purged final 15% of outer training only",
+      "seed": 2026,
+      "batch_size": 128,
+      "learning_rate": 0.001,
+      "weight_decay": 0.0001,
+      "gradient_clip": 1.0,
+      "width": 32,
+      "layers": 1,
+      "dropout": 0.1,
+      "mlp_width": 64
+    },
+    "hourly_semantics": "complete 60-minute bars from exchange open; terminal partial bar dropped; horizons count valid bars across sessions"
+  },
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+    "cuda_available": true,
+    "cpu_threads": 24,
+    "cpu_dataloader_workers": 24,
+    "cuda_dataloader_workers": 0,
+    "torch_version": "2.13.0+cu130"
+  },
+  "rankings": [],
+  "skipped": [],
+  "selections": [],
+  "hybrid": {
+    "status": "not_enabled",
+    "reason": "validation OOF complementarity and stable gains unproven"
+  },
+  "final_test": {
+    "status": "not_requested",
+    "results": []
+  },
+  "data_limitations": [],
+  "reasons": [
+    "calendar_minute_coverage 0.9700 < required 0.9800; full XNYS sessions including missing days",
+    "minimum_session_coverage 0.1513 < required 0.9800; full XNYS sessions including missing days"
+  ]
+}

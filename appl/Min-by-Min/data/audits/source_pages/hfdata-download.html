@@ -1,0 +1,2224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Download Free 1-Minute Stock &amp; ETF Data</title>
+  <meta name="description" content="Download free 1-minute historical OHLCV data for US stocks &amp; ETFs from IEX (March 2022-present). Per-ticker or bulk Parquet &amp; CSV bundles by index &amp; sector. CC BY 4.0.">
+  <link rel="canonical" href="https://hfdatalibrary.com/pages/download">
+  <!-- Open Graph -->
+  <meta property="og:title" content="Download Free 1-Minute Stock &amp; ETF Data">
+  <meta property="og:description" content="Download free 1-minute historical OHLCV data for US stocks &amp; ETFs from IEX (March 2022-present). Per-ticker or bulk Parquet &amp; CSV bundles by index &amp; sector. CC BY 4.0.">
+  <meta property="og:url" content="https://hfdatalibrary.com/pages/download">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://hfdatalibrary.com/assets/og-image.png">
+  <meta property="og:site_name" content="HF Data Library">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Download Free 1-Minute Stock &amp; ETF Data">
+  <meta name="twitter:description" content="Download free 1-minute historical OHLCV data for US stocks &amp; ETFs from IEX (March 2022-present). Per-ticker or bulk Parquet &amp; CSV bundles by index &amp; sector. CC BY 4.0.">
+  <meta name="twitter:image" content="https://hfdatalibrary.com/assets/og-image.png">
+  <meta name="author" content="Ahmed Elkassabgi">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css?v=20260714">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <style>
+    .search-box {
+      display: flex; gap: 0.5rem; max-width: 500px;
+      margin: 0 auto 2rem;
+    }
+    .search-box input {
+      flex: 1; padding: 0.75rem 1rem;
+      border: 2px solid var(--gray-200); border-radius: var(--radius);
+      font-size: 1rem; font-family: var(--font-sans);
+    }
+    .search-box input:focus { outline: none; border-color: var(--blue); }
+    .search-box button {
+      padding: 0.75rem 1.5rem; background: var(--blue); color: #fff;
+      border: none; border-radius: var(--radius); font-weight: 600;
+      cursor: pointer;
+    }
+    .download-card {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.25rem 1.5rem; border: 1px solid var(--gray-200);
+      border-radius: var(--radius); margin-bottom: 0.75rem;
+      transition: all 0.15s;
+    }
+    .download-card:hover { border-color: var(--blue); background: var(--blue-pale); }
+    .download-info h4 { font-family: var(--font-sans); margin-bottom: 0.25rem; }
+    .download-info p { margin: 0; font-size: 0.85rem; color: var(--gray-500); }
+    .download-size { font-family: var(--font-mono); font-size: 0.85rem; color: var(--gray-500); margin-right: 1rem; }
+    .register-form {
+      background: var(--gray-50); border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg); padding: 2rem;
+      max-width: 500px;
+    }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-weight: 500; margin-bottom: 0.35rem; font-size: 0.9rem; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 0.625rem 0.875rem;
+      border: 1px solid var(--gray-300); border-radius: 6px;
+      font-size: 0.95rem; font-family: var(--font-sans);
+    }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--blue); }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container">
+    <span class="navbar-brand-group"><a href="../" class="navbar-brand">HF Data <span>Library</span></a><a class="navbar-fam" href="https://elkassabgidata.com" title="Part of the ElkassabgiData family — one account, every library">part of ElkassabgiData</a></span>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle navigation">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="data">Data</a></li>
+      <li><a href="tickers">Tickers</a></li>
+      <li><a href="docs">Documentation</a></li>
+      <li><a href="api">API</a></li>
+      <li><a href="download" class="active">Download</a></li>
+      <li><a href="code">Code</a></li>
+      <li><a href="ai-prompts">AI Tools</a></li>
+      <li><a href="cite">Cite</a></li>
+      <li><a href="stats">Stats</a></li>
+      <li><a href="status">Status</a></li>
+      <li><a href="contact">Contact</a></li><li><a href="https://econdatalibrary.com">Econ Data</a></li><li><a href="https://ipdatalibrary.com">IP Data</a></li>
+    </ul>
+  </div>
+</nav>
+
+<section style="background: var(--navy); color: #fff; padding: 3rem 0;">
+  <div class="container">
+    <h1 style="color:#fff; margin-bottom:0.5rem;">Download</h1>
+    <p style="color: rgba(255,255,255,0.7); font-size:1.1rem; margin:0;">Individual tickers, pre-packaged bundles, or the full dataset. All free.</p>
+  </div>
+</section>
+
+<!-- Free access banner (hidden when logged in) -->
+<div id="free-access-banner" style="background: #ecfdf5; border-bottom: 1px solid #a7f3d0; padding: 0.75rem 0; text-align:center;">
+  <div class="container" style="font-size:0.95rem; color:#065f46;">
+    <strong>100% Free Access</strong> — Registration required to download data. We track usage for citation metrics only.
+  </div>
+</div>
+
+<!-- Standing "verify your email" banner. Hidden by default and shown by
+     maybePromptVerify() only when /v1/auth/me reports email_verified === false,
+     so it can never appear for a verified account or for a signed-out visitor. -->
+<div id="verify-banner" style="display:none; background:#fffbeb; border-bottom:2px solid #f59e0b; padding:1rem 0;">
+  <div class="container" style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap; justify-content:center; text-align:center;">
+    <div style="flex:1; min-width:280px; text-align:left;">
+      <div style="font-weight:700; color:#92400e; font-size:1.05rem; margin-bottom:0.2rem;">
+        &#128231; Verify your email address
+      </div>
+      <div style="color:#78350f; font-size:0.92rem; line-height:1.5;">
+        Your email <strong id="verify-banner-email"></strong> is not verified yet. Open the link in the
+        verification email, or press Resend email for a new one. <span id="verify-banner-note">Downloads need a verified email.</span>
+        Look in your spam or junk folder too.
+        <span id="verify-banner-msg" style="display:block; margin-top:0.35rem; font-weight:600;"></span>
+      </div>
+    </div>
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <button id="verify-resend" class="btn btn-sm" style="background:#f59e0b; color:#fff; padding:0.45rem 0.9rem; font-size:0.85rem;" onclick="resendVerification()">Resend email</button>
+      <button class="btn btn-sm btn-outline" style="color:#92400e; border-color:#f59e0b; padding:0.45rem 0.9rem; font-size:0.85rem;" onclick="recheckVerification()">I clicked the link</button>
+    </div>
+  </div>
+</div>
+
+<!-- Auth handled by navbar widget in site.js -->
+
+<!-- Search -->
+<section class="section">
+  <div class="container">
+    <h2 style="text-align:center; margin-bottom:1.5rem;">Search for a ticker</h2>
+    <div class="search-box">
+      <input type="text" id="ticker-search" placeholder="Enter ticker symbol (e.g., AAPL, SPY, MSFT)..." autocomplete="off">
+      <button onclick="searchTicker()">Search</button>
+    </div>
+    <div style="text-align:center; margin-bottom:1.5rem; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; align-items:center;">
+      <label style="font-size:0.9rem; color:var(--gray-600);">
+        Timeframe:
+        <select id="timeframe-select" style="margin-left:0.5rem; padding:0.4rem 0.75rem; border:1px solid var(--gray-300); border-radius:6px; font-family:var(--font-sans);">
+          <option value="1min">1-minute</option>
+          <option value="5min">5-minute</option>
+          <option value="15min">15-minute</option>
+          <option value="30min">30-minute</option>
+          <option value="hourly">Hourly</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </label>
+      <label style="font-size:0.9rem; color:var(--gray-600);">
+        Version:
+        <select id="version-select" style="margin-left:0.5rem; padding:0.4rem 0.75rem; border:1px solid var(--gray-300); border-radius:6px; font-family:var(--font-sans);">
+          <option value="clean">Clean</option>
+          <option value="raw">Raw</option>
+        </select>
+      </label>
+    </div>
+    <div id="search-results"></div>
+
+    <hr style="margin: 3rem 0; border: none; border-top: 1px solid var(--gray-200);">
+
+    <!-- ── AI Prompts callout ── -->
+    <div style="display:flex; align-items:center; gap:1.25rem; padding:1.25rem 1.5rem; margin-bottom:2.5rem; background:var(--navy); color:#fff; border-radius:8px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:240px;">
+        <div style="font-weight:600; font-size:1.05rem; margin-bottom:0.25rem;">Prefer to let an AI handle the download?</div>
+        <div style="color:rgba(255,255,255,0.75); font-size:0.9rem; line-height:1.45;">Copy-paste prompts for ChatGPT, Claude, and other assistants &mdash; they'll fetch the data and run your analysis without you writing code.</div>
+      </div>
+      <a href="ai-prompts" style="flex-shrink:0; display:inline-block; padding:0.6rem 1.25rem; background:var(--gold); color:var(--navy); border-radius:6px; text-decoration:none; font-weight:600; font-size:0.9rem;">See AI prompts &rarr;</a>
+    </div>
+
+    <!-- Custom Bundle Builder -->
+    <h2 style="margin-bottom:0.5rem;">Build a custom bundle</h2>
+    <p style="color: var(--gray-600); margin-bottom:1.5rem;">Select multiple tickers and download them as a single <strong>.zip</strong> file. Use the filters or type ticker symbols directly.</p>
+
+    <div class="card" style="padding:1.5rem; margin-bottom:2rem;">
+      <!-- Quick filters -->
+      <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1rem;">
+        <button class="btn btn-sm btn-outline" style="color:var(--blue); border-color:var(--blue); padding:0.3rem 0.75rem; font-size:0.8rem;" onclick="filterTickers('all')">All tickers</button>
+        <button class="btn btn-sm btn-outline" style="color:var(--gray-500); border-color:var(--gray-300); padding:0.3rem 0.75rem; font-size:0.8rem;" onclick="clearBundle()">Clear</button>
+      </div>
+
+      <!-- Timeframe + Version -->
+      <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;">
+        <label style="font-size:0.9rem; color:var(--gray-600); display:flex; align-items:center; gap:0.5rem;">
+          Timeframe:
+          <select id="bundle-timeframe" style="padding:0.4rem 0.75rem; border:1px solid var(--gray-300); border-radius:6px; font-family:var(--font-sans);">
+            <option value="1min">1-minute</option>
+            <option value="5min">5-minute</option>
+            <option value="15min">15-minute</option>
+            <option value="30min">30-minute</option>
+            <option value="hourly">Hourly</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </label>
+        <label style="font-size:0.9rem; color:var(--gray-600); display:flex; align-items:center; gap:0.5rem;">
+          Version:
+          <select id="bundle-version" style="padding:0.4rem 0.75rem; border:1px solid var(--gray-300); border-radius:6px; font-family:var(--font-sans);">
+            <option value="clean">Clean</option>
+            <option value="raw">Raw</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Type tickers manually -->
+      <div style="margin-bottom:1rem;">
+        <label style="font-size:0.85rem; color:var(--gray-600); display:block; margin-bottom:0.35rem;">Type or paste ticker symbols (comma or space separated):</label>
+        <div style="display:flex; gap:0.5rem;">
+          <input type="text" id="bundle-input" placeholder="AAPL, MSFT, GOOG, SPY, QQQ..." style="flex:1; padding:0.5rem 0.75rem; border:1px solid var(--gray-300); border-radius:6px; font-family:var(--font-mono); font-size:0.9rem;">
+          <button class="btn btn-sm btn-primary" style="padding:0.5rem 1rem;" onclick="addToBundleFromInput()">Add</button>
+        </div>
+      </div>
+
+      <!-- Selected tickers display -->
+      <div id="bundle-selected" style="min-height:40px; padding:0.75rem; background:var(--gray-50); border:1px solid var(--gray-200); border-radius:6px; margin-bottom:1rem;">
+        <p style="color:var(--gray-400); margin:0; font-size:0.85rem;">No tickers selected. Use the filters above or type symbols.</p>
+      </div>
+
+      <!-- Count + Download -->
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span id="bundle-count" style="font-size:0.9rem; color:var(--gray-600);">0 tickers selected</span>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn btn-primary" onclick="downloadBundle('parquet')">Download All as .zip (Parquet)</button>
+          <button class="btn btn-outline" style="color:var(--blue); border-color:var(--blue);" onclick="downloadBundle('csv')">Download All as .zip (CSV)</button>
+        </div>
+      </div>
+
+      <!-- Download progress -->
+      <div id="bundle-progress" style="display:none; margin-top:1rem;">
+        <div style="background:var(--gray-200); border-radius:4px; height:8px; overflow:hidden;">
+          <div id="bundle-bar" style="background:var(--blue); height:100%; width:0%; transition:width 0.3s;"></div>
+        </div>
+        <p id="bundle-status" style="font-size:0.85rem; color:var(--gray-500); margin-top:0.5rem;">Preparing the archive&hellip;</p>
+      </div>
+
+      <!-- Recovery note. Someone who used this page before 2026-08-31 was asked to
+           "allow multiple downloads" once per ticker, and anyone who answered Block
+           has had every download on this site refused silently ever since — by their
+           browser, not by us, so nothing on the page can detect it or put it back. -->
+      <p style="font-size:0.82rem; color:var(--gray-500); margin:0.9rem 0 0; line-height:1.5;">
+        A bundle downloads as <strong>one .zip file</strong>. If clicking Download does nothing at all,
+        your browser may still be blocking downloads from this site from an earlier visit:
+        click the padlock in the address bar &rarr; <em>Site settings</em> &rarr;
+        <em>Automatic downloads</em> &rarr; <em>Allow</em>, then try again.
+      </p>
+    </div>
+
+    <hr style="margin: 3rem 0; border: none; border-top: 1px solid var(--gray-200);">
+
+    <!-- Bundles -->
+    <h2 id="bulk" style="margin-bottom:0.5rem;">Pre-packaged bundles</h2>
+    <p style="color: var(--gray-600); margin-bottom:1rem;">Download groups of tickers using the custom bundle builder above. Select a category below to auto-populate the builder, choose your timeframe and version, then download.</p>
+    <p style="margin-bottom:2rem;"><a href="tickers" style="color:var(--blue); font-weight:500;">View the full list of all 1,253 tickers</a> with sector, type, and index classifications.</p>
+
+    <!-- Index Bundles -->
+    <h3 style="margin-bottom:1rem; color:var(--navy);">By Index</h3>
+
+    <div class="download-card">
+      <div class="download-info">
+        <h4>S&amp;P 500</h4>
+        <p>Current and former S&amp;P 500 constituents in our universe</p>
+      </div>
+      <div style="display:flex; align-items:center;">
+        <button class="btn btn-primary" onclick="loadBundle('sp500')">Select Tickers</button>
+      </div>
+    </div>
+
+    <div class="download-card">
+      <div class="download-info">
+        <h4>Nasdaq 100</h4>
+        <p>Current and former Nasdaq 100 constituents in our universe</p>
+      </div>
+      <div style="display:flex; align-items:center;">
+        <button class="btn btn-primary" onclick="loadBundle('nasdaq100')">Select Tickers</button>
+      </div>
+    </div>
+
+    <div class="download-card">
+      <div class="download-info">
+        <h4>Dow Jones 30</h4>
+        <p>All 30 Dow Jones Industrial Average components</p>
+      </div>
+      <div style="display:flex; align-items:center;">
+        <button class="btn btn-primary" onclick="loadBundle('dow30')">Select Tickers</button>
+      </div>
+    </div>
+
+    <!-- Type Bundles -->
+    <h3 style="margin-top:2rem; margin-bottom:1rem; color:var(--navy);">By Type</h3>
+
+    <div class="download-card">
+      <div class="download-info">
+        <h4>All ETFs</h4>
+        <p>All 447 exchange-traded funds — broad market, sector, international, fixed income, commodity, leveraged</p>
+      </div>
+      <div style="display:flex; align-items:center;">
+        <button class="btn btn-primary" onclick="loadBundle('etf')">Select Tickers</button>
+      </div>
+    </div>
+
+    <div class="download-card">
+      <div class="download-info">
+        <h4>All Stocks</h4>
+        <p>All 806 individual equities</p>
+      </div>
+      <div style="display:flex; align-items:center;">
+        <button class="btn btn-primary" onclick="loadBundle('stock')">Select Tickers</button>
+      </div>
+    </div>
+
+    <!-- Sector Bundles -->
+    <h3 style="margin-top:2rem; margin-bottom:1rem; color:var(--navy);">By Sector (Stocks)</h3>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Technology</h4>
+          <p>149 tickers — AAPL, MSFT, NVDA, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Technology')">Select</button>
+      </div>
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Healthcare</h4>
+          <p>88 tickers — JNJ, UNH, PFE, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Healthcare')">Select</button>
+      </div>
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Financials</h4>
+          <p>92 tickers — JPM, BAC, GS, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Financials')">Select</button>
+      </div>
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Consumer Discretionary</h4>
+          <p>135 tickers — AMZN, TSLA, HD, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Consumer Discretionary')">Select</button>
+      </div>
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Industrials</h4>
+          <p>94 tickers — CAT, UPS, HON, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Industrials')">Select</button>
+      </div>
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Energy</h4>
+          <p>43 tickers — XOM, CVX, COP, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Energy')">Select</button>
+      </div>
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Communication Services</h4>
+          <p>54 tickers — GOOG, DIS, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Communication Services')">Select</button>
+      </div>
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Consumer Staples</h4>
+          <p>46 tickers — PG, KO, WMT, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Consumer Staples')">Select</button>
+      </div>
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Materials</h4>
+          <p>38 tickers — LIN, APD, NEM, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Materials')">Select</button>
+      </div>
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Real Estate</h4>
+          <p>37 tickers — AMT, PLD, SPG, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Real Estate')">Select</button>
+      </div>
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Utilities</h4>
+          <p>30 tickers — NEE, DUK, SO, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Utilities')">Select</button>
+      </div>
+    </div>
+
+    <!-- ETF Bundles -->
+    <h3 style="margin-top:2rem; margin-bottom:1rem; color:var(--navy);">By ETF Category</h3>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Broad Market ETFs</h4>
+          <p>84 ETFs — SPY, QQQ, IWM, DIA, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Broad Market')">Select</button>
+      </div>
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Sector ETFs</h4>
+          <p>100 ETFs — XLF, XLE, XLK, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Sector')">Select</button>
+      </div>
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>International ETFs</h4>
+          <p>83 ETFs — EFA, EEM, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','International')">Select</button>
+      </div>
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Fixed Income ETFs</h4>
+          <p>49 ETFs — TLT, AGG, HYG, LQD, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Fixed Income')">Select</button>
+      </div>
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Commodity ETFs</h4>
+          <p>35 ETFs — GLD, SLV, USO, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Commodity')">Select</button>
+      </div>
+      <div class="download-card" style="margin-bottom:0;">
+        <div class="download-info">
+          <h4>Leveraged / Inverse ETFs</h4>
+          <p>82 ETFs — AGQ, CURE, DDM, etc.</p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadBundle('sector','Leveraged/Inverse')">Select</button>
+      </div>
+    </div>
+
+    <!-- Full Dataset -->
+    <h3 style="margin-top:2rem; margin-bottom:1rem; color:var(--navy);">Full Dataset</h3>
+
+    <div class="download-card" style="border-color: var(--gold); background: #fef9ee;">
+      <div class="download-info">
+        <h4>Everything</h4>
+        <p>All 1,253 tickers — stocks and ETFs, all sectors, all indices</p>
+      </div>
+      <div style="display:flex; align-items:center;">
+        <button class="btn btn-gold" onclick="filterTickers('all')">Select All Tickers</button>
+      </div>
+    </div>
+
+    <hr style="margin: 3rem 0; border: none; border-top: 1px solid var(--gray-200);">
+
+    <!-- [Phase 3.3] Family SSO sign-in card — quick popup; the register/login grid below is the
+         retained dark-launch flow (untouched). -->
+    <div id="ekd-signin-card" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:1.5rem 1.75rem; margin-bottom:2rem;">
+      <h3 style="margin:0 0 0.4rem;">Sign in with your ElkassabgiData account</h3>
+      <p style="color:var(--gray-600); font-size:0.92rem; margin:0 0 1.1rem;">One free account works across every ElkassabgiData library. Sign in with a quick popup &mdash; same email and password.</p>
+      <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+        <a id="ekd-signin-btn" href="#register" class="btn btn-primary">Sign in</a>
+        <a id="ekd-register-btn" href="#register" class="btn btn-outline" style="color:var(--blue); border-color:var(--blue);">Create free account</a>
+      </div>
+    </div>
+
+    <!-- Registration / Login -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start;">
+      <div>
+        <h2 id="register" style="margin-bottom:1rem;">Create a free account</h2>
+        <!-- filled by showRegisterCardPause() while window.HFD_DOWNLOADS_PAUSED is true (js/site.js) -->
+        <p id="register-paused-note" style="display:none; margin:0 0 0.75rem; padding:0.6rem 0.8rem; background:#fffbeb; border:1px solid #fcd34d; border-radius:6px; color:#92400e; font-size:0.92rem;"></p>
+        <p>Register once to get full access to all data downloads and the REST API. No credit card. No subscription. No limits on data.</p>
+        <p>Your account gives you:</p>
+        <ul style="margin-left:1.5rem; margin-bottom:1rem;">
+          <li>Unlimited data downloads (browser or API)</li>
+          <li>Personal API key for programmatic access</li>
+          <li>JSON, CSV, and parquet formats</li>
+          <li>300 API requests per minute</li>
+        </ul>
+        <p style="font-size:0.85rem; color:var(--gray-500);">We collect your name and institution for usage analytics and citation tracking only. We will never share your information.</p>
+
+        <div style="margin-top:2rem; padding-top:2rem; border-top:1px solid var(--gray-200);">
+          <h3>Sign in with your academic identity</h3>
+          <p style="color:var(--gray-600); font-size:0.9rem; margin-bottom:1rem;">Fastest way for researchers. No password to remember.</p>
+          <div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1.5rem;">
+            <a href="https://api.hfdatalibrary.com/v1/auth/orcid/start" class="btn" style="background:#a6ce39; color:#fff; text-align:center; display:flex; align-items:center; justify-content:center; gap:0.5rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256" fill="currentColor"><circle cx="128" cy="128" r="128"/><path fill="#fff" d="M86.3 186.2H70.9V79.1h15.4v107.1zM108.9 79.1h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7C191.7 111.5 178 93 148 93h-23.7v79.4zM88.7 56.8c0 5.5-4.5 10.1-10.1 10.1-5.6 0-10.1-4.6-10.1-10.1 0-5.6 4.5-10.1 10.1-10.1 5.6 0 10.1 4.6 10.1 10.1z"/></svg>
+              Sign in with ORCID
+            </a>
+            <a href="https://api.hfdatalibrary.com/v1/auth/google/start" class="btn" style="background:#fff; color:#1f2937; border:1px solid var(--gray-300); text-align:center; display:flex; align-items:center; justify-content:center; gap:0.5rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/><path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"/><path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/></svg>
+              Sign in with Google
+            </a>
+          </div>
+          <hr style="margin:1.5rem 0; border:none; border-top:1px solid var(--gray-200);">
+          <h3>Or sign in with email and password</h3>
+          <div class="register-form" style="max-width:100%; margin-top:1rem;">
+            <div class="form-group">
+              <label for="login-email">Email</label>
+              <input type="email" id="login-email" placeholder="jsmith@university.edu">
+            </div>
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <input type="password" id="login-password" placeholder="Password">
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="loginUser()">Log In</button>
+            <p style="margin-top:0.5rem; font-size:0.85rem;"><a href="#" onclick="requestReset(); return false;">Forgot password?</a></p>
+            <div id="login-result" style="margin-top:0.75rem; display:none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="register-form">
+        <h3 style="margin-bottom:1rem;">Register</h3>
+        <div class="form-group">
+          <label for="reg-name">Full name</label>
+          <input type="text" id="reg-name" placeholder="Jane Smith">
+        </div>
+        <div class="form-group">
+          <label for="reg-email">Email</label>
+          <input type="email" id="reg-email" placeholder="jsmith@university.edu">
+        </div>
+        <div class="form-group">
+          <label for="reg-password">Password</label>
+          <input type="password" id="reg-password" placeholder="Minimum 8 characters">
+        </div>
+        <div class="form-group">
+          <label for="reg-institution">Institution</label>
+          <input type="text" id="reg-institution" placeholder="University of Example">
+        </div>
+        <div class="form-group">
+          <label for="reg-country">Country</label>
+          <input type="text" id="reg-country" placeholder="United States">
+        </div>
+        <div class="form-group">
+          <label for="reg-role">Role</label>
+          <select id="reg-role" onchange="handleRoleChange()">
+            <option value="">Select...</option>
+            <option value="faculty">Faculty / Professor</option>
+            <option value="postdoc">Postdoctoral researcher</option>
+            <option value="phd">PhD student</option>
+            <option value="masters">Master's student</option>
+            <option value="undergrad">Undergraduate student</option>
+            <option value="industry">Industry researcher</option>
+            <option value="__other__">Other (specify)</option>
+          </select>
+          <input type="text" id="reg-role-custom" placeholder="Enter your role" style="display:none; margin-top:0.5rem; width:100%; padding:0.625rem 0.875rem; border:1px solid var(--gray-300); border-radius:6px; font-size:0.95rem; font-family:var(--font-sans);">
+        </div>
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label style="display:flex; align-items:flex-start; gap:0.5rem; font-weight:400; font-size:0.9rem;">
+            <input type="checkbox" id="reg-newsletter" checked style="margin-top:0.25rem;">
+            <span>Subscribe to the newsletter for data updates and announcements. You can unsubscribe anytime.</span>
+          </label>
+        </div>
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAAC5ydfuRj9dEK0kY" data-theme="light" style="margin-bottom:1rem;"></div>
+        <button class="btn btn-primary" style="width:100%;" onclick="registerUser()" id="reg-btn">Create Account</button>
+        <div id="reg-result" style="margin-top:1rem; display:none;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom">
+      <p>&copy; 2026 Ahmed Elkassabgi.</p>
+      <p style="margin-top:0.4rem; font-size:0.82rem; opacity:0.85;">For academic research only. Not for trading. Not investment advice. No warranty. Use of this site and its data is subject to the <a href="terms">Terms of Use</a>.</p>
+      <p style="margin-top:0.4rem; font-size:0.82rem; opacity:0.85;">Data provided for free by IEX. By accessing or using IEX Historical Data, you agree to the <a href="https://www.iex.io/legal/hist-data-terms" rel="noopener">IEX Historical Data Terms of Use</a>.</p>
+      <p class="orcid">ORCID: <a href="https://orcid.org/0000-0002-5926-7493">0000-0002-5926-7493</a></p>
+    </div>
+  </div>
+  <!-- visitor-count: 23,435 visitors | 51,240 page views | 133 countries (snapshot taken at deploy time; the live figure is on /pages/stats) -->
+</footer>
+
+<!-- Terms-and-citation gate: shown once (per version) before the first download. -->
+<div id="cite-modal" style="display:none; position:fixed; inset:0; background:rgba(11,18,32,0.6); z-index:2000; align-items:center; justify-content:center; padding:1rem;">
+  <div style="background:#fff; max-width:560px; width:100%; border-radius:12px; padding:1.75rem 1.85rem; box-shadow:0 12px 44px rgba(0,0,0,0.35);">
+    <h3 style="margin:0 0 0.75rem; color:var(--navy); font-family:var(--font-sans);">Before you download</h3>
+    <p style="margin:0 0 0.85rem; color:var(--gray-800); font-size:0.93rem; line-height:1.6; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:0.75rem 0.9rem;">
+      <strong>For academic research only. Not for trading.</strong> This data is provided for academic and educational research. It is not meant for, and must not be relied on for, any trading or investment decision. It is not investment advice. It is provided &ldquo;as is&rdquo;, with no warranty, and you use it at your own risk. The full conditions are in the <a href="terms" target="_blank" rel="noopener">Terms of Use</a>.
+    </p>
+    <p style="margin:0 0 0.85rem; color:var(--gray-700); font-size:0.93rem; line-height:1.6;">
+      This dataset is <strong>free</strong> under <a href="license">CC BY&nbsp;4.0</a>. In return, you agree to
+      <strong>credit it</strong> in any publication, redistribution, or derivative work. Please cite:
+    </p>
+    <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:0.85rem 1rem; font-size:0.85rem; color:var(--gray-800); line-height:1.5; margin-bottom:1.1rem;">
+      Elkassabgi, A. (2026). <em>HF Data Library: Free 1-Minute Intraday U.S. Equity Data.</em> Zenodo. https://doi.org/10.5281/zenodo.19501604
+      <div style="margin-top:0.5rem;"><a href="cite">Full citation, BibTeX &amp; APA &rarr;</a></div>
+    </div>
+    <p style="margin:0 0 1.1rem; color:var(--gray-700); font-size:0.85rem; line-height:1.55;">All bars are derived from IEX market data. Data provided for free by IEX. By accessing or using IEX Historical Data, you agree to the <a href="https://www.iex.io/legal/hist-data-terms" rel="noopener">IEX Historical Data Terms of Use</a>.</p>
+    <label style="display:flex; align-items:flex-start; gap:0.55rem; font-size:0.9rem; color:var(--gray-700); margin-bottom:1.2rem; cursor:pointer;">
+      <input type="checkbox" id="cite-agree-chk" style="margin-top:0.2rem; flex:0 0 auto;">
+      <span>I agree to cite the HF Data Library — and IEX as the data source — in any use of this data.</span>
+    </label>
+    <label style="display:flex; align-items:flex-start; gap:0.55rem; font-size:0.9rem; color:var(--gray-700); margin-bottom:1.2rem; cursor:pointer;">
+      <input type="checkbox" id="terms-agree-chk" style="margin-top:0.2rem; flex:0 0 auto;">
+      <span>I have read and I agree to the <a href="terms" target="_blank" rel="noopener">Terms of Use</a>. I understand that this data is provided for academic research only, and I will not rely on it for any trading or investment decision.</span>
+    </label>
+    <div style="display:flex; gap:0.6rem; justify-content:flex-end;">
+      <button id="cite-agree-cancel" style="padding:0.5rem 1.1rem; border:1px solid var(--gray-300); background:#fff; color:var(--gray-700); border-radius:6px; cursor:pointer;">Cancel</button>
+      <button id="cite-agree-ok" style="padding:0.5rem 1.3rem; border:none; background:var(--gray-300); color:#fff; border-radius:6px; cursor:not-allowed;" disabled>Agree &amp; Download</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://api.hfdatalibrary.com';
+const ACCOUNTS_BASE = 'https://accounts.elkassabgidata.com';
+
+// [Phase 3.3] Dual-mode download auth: a VALIDATED legacy hfd_session wins (channel='web'), else the
+// EKD family token (channel='family'). Purely additive — the old register/login grid below is untouched.
+function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function safeDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+// Load the EKD SDK for family sign-in; feature-detect everywhere. onload → init + re-run checkAuth so an
+// EKD user's currentUser resolves once the SDK is ready. onerror/absence → legacy-only, page still works.
+var EKD_READY = false;
+(function loadSdk() {
+  try {
+    var s = document.createElement('script');
+    s.src = ACCOUNTS_BASE + '/sdk/ekd-sso.js';
+    s.onload = function () {
+      try {
+        if (window.EKD) {
+          EKD_READY = true;
+          window.EKD.init();                                   // clientId = this origin, callback /auth/callback
+          window.EKD.on('login',  function () { checkAuth(); });
+          window.EKD.on('logout', function () { checkAuth(); });
+        }
+      } catch (e) {}
+      checkAuth();
+    };
+    s.onerror = function () {};
+    document.head.appendChild(s);
+  } catch (e) {}
+})();
+
+// Fresh Bearer per download call (D38: edl_at is 15-min — resolve per request). Legacy-first, else family.
+async function getDownloadAuth() {
+  var legacy = safeGet('hfd_session');
+  if (legacy) return { token: legacy, kind: 'legacy' };
+  if (window.EKD) { try { var at = await window.EKD.getAccessToken(); if (at) return { token: at, kind: 'family' }; } catch (e) {} }
+  return null;
+}
+
+// D38: a download 401. family → the session is dead — do NOT loop getAccessToken; clear state + offer Sign
+// in (EKD.login mints fresh tokens with no reload — that IS recovery). legacy → purge per G-13.
+// The optional `reason` is the server's 401 body. The worker's explainAuthFailure() only inspects
+// X-API-Key / ?api_key=, and this page authenticates with `Authorization: Bearer`, so today a browser
+// 401 ALWAYS comes back as the generic "Provide your API key in the X-API-Key header" boilerplate —
+// wrong-shaped advice for someone signed in on the website, so it is suppressed. If the worker ever
+// starts explaining Bearer failures too (expired key, inactive account), that text shows up here with
+// no page change; we detect the useless generic by its X-API-Key mention rather than by status alone.
+function handleDownloadAuthDead(kind, reason) {
+  currentUser = null;
+  var specific = (reason && String(reason).indexOf('X-API-Key') === -1) ? String(reason) : '';
+  if (kind === 'family') {
+    alert((specific ? specific + '\n\n' : '') +
+      'Your sign-in for this site expired or was ended — click Sign in to reconnect (same email and password).');
+  } else {
+    safeDel('hfd_session'); sessionToken = null;
+    alert((specific ? specific + '\n\n' : '') +
+      'Your session expired. Please sign in again to download.');
+  }
+  var el = document.getElementById('ekd-signin-card'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ── Why a download was refused ──────────────────────────────────────────────────────────────
+// The bundle loop used to throw the server's explanation away and print only a count, so a user
+// whose email was unverified saw "Done! 0 files downloaded. 1 failed." and had no way to learn
+// that verifying their email would fix it. These three helpers turn a refusal into (a) the reason
+// and (b) the next step, and are shared by the bundle loop and the single-file path so both say
+// the same thing.
+
+// The REASON is whatever the server actually said (the `error` field of the JSON body) — it is
+// never guessed here, so a refusal the worker adds later ("account suspended", anything) surfaces
+// correctly with no page change and no lockstep deploy. Only when the body is missing or unusable
+// (a Cloudflare edge error page, a dropped connection) do we fall back to wording keyed off the
+// HTTP status, which is always available.
+function downloadFailureText(status, reason) {
+  if (reason) return String(reason);
+  if (status === 0)   return 'Could not reach the server — network error, or the request was blocked.';
+  if (status === 401) return 'Your sign-in was not accepted.';
+  if (status === 403) return 'The server refused this download for your account.';
+  if (status === 404) return 'The server did not recognise that request.';
+  if (status === 429) return 'Too many downloads in a short time.';
+  if (status >= 500)  return 'The server hit an error (HTTP ' + status + ').';
+  return 'The download was refused (HTTP ' + status + ').';
+}
+
+// What to DO about it. Matched against the server's own wording first — that is the only signal
+// precise enough to distinguish "verify your email" from "complete your profile", both of which
+// arrive as a 403 — and falls through to a status-keyed pointer so an unfamiliar reason still ends
+// with a next step instead of a dead end. The match only picks the ADVICE; the reason shown to the
+// user is always the server's text, so nothing here has to predict which cause occurred.
+// ── What the page says about downloading. `downloads_paused` comes from the worker (/v1/auth/me and the
+// register answer): while it is true no data file is served to anyone, so no text may say that a step
+// "unlocks" downloads (reviews AR-231). These are functions so that a test can run them both ways.
+// Two sources: the signed-in user's flag (from the worker), or the page constant in js/site.js, which is all a
+// signed-out visitor has (review AR-231 round 3).
+function pagePaused() { return typeof window !== 'undefined' && window.HFD_DOWNLOADS_PAUSED === true; }
+function dlPaused(user) { return pagePaused() || !!(user && user.downloads_paused === true); }
+// A signed-out click on a download button. true = the click was answered here: with the pause sentence while
+// downloads are paused (sending the visitor to the sign-in card would promise a download behind it), or else
+// with the sign-in prompt.
+function stopIfSignedOut(user) {
+  if (user) return false;
+  if (pagePaused()) { alert(DOWNLOADS_PAUSED_ALERT); return true; }
+  var c = document.getElementById('ekd-signin-card'); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  alert('Please sign in to download — one free account works across every library.');
+  return true;
+}
+// What the ticker search answers to a signed-out visitor (the third signed-out door; fixed strings, no user text).
+function signedOutSearchHtml() {
+  return pagePaused()
+    ? '<p style="text-align:center; color:var(--gray-500);">Downloads are paused for now.</p>'
+    : '<p style="text-align:center; color:var(--gray-500);">Please <a href="#ekd-signin-card">sign in</a> to download data &mdash; one free account works across every library.</p>';
+}
+// The line on a search result card (a signed-in search). While paused, a click on its buttons gives the pause alert.
+function searchCardLine(paused) {
+  return paused ? 'Downloads are paused for now.' : 'Click below to download with the version + timeframe selected above.';
+}
+// The register card describes the product ("full access to all data downloads"). While downloads are paused it
+// says so first; the product text stays as it is.
+function showRegisterCardPause() {
+  var n = document.getElementById('register-paused-note');
+  if (!n || !pagePaused()) return;
+  n.textContent = 'Downloads are paused for now.';
+  n.style.display = 'block';
+}
+// (Neither paused text says "your account is ready": an account made by Google sign-in with an address
+// Google does not vouch for has TWO steps left - the email and the profile - and after one of them it is
+// not ready. Review r8, 2026-10-05.)
+// With downloads open the same account must not read "unlocked" after ONE of its two steps either: each text
+// takes the state of the OTHER step. profileIncomplete / mustVerify = the other step is still to do.
+function profileIncomplete(user) { return !!(user && (user.profile_complete === false || user.profile_complete === 0)); }
+function mustVerify(user) { return !!(user && user.email_verified === false && user.verification_required !== false); }
+function verifiedAlertText(paused, profileLeft) {
+  return paused ? 'Email verified. Downloads are paused for now.'
+    : profileLeft ? 'Email verified. One more step: add your institution, country and role.'
+      : 'Email verified — downloads are unlocked.';
+}
+function profilePromptTexts(paused, emailLeft) {
+  return paused
+    ? { lead: 'Your Google sign-up is done. Your account needs these three fields.',
+        saveHtml: 'Save', need: 'All three fields are needed.',
+        saved: '✓ Profile saved. Downloads are paused for now.' }
+    : emailLeft
+      ? { lead: 'Your Google sign-up is done. Your account needs these three fields and a verified email.',
+          saveHtml: 'Save', need: 'All three fields are needed.',
+          saved: '✓ Profile saved. One more step: verify your email.' }
+      : { lead: 'Your Google sign-up is done. Downloads unlock once these three fields are filled.',
+          saveHtml: 'Save &amp; unlock downloads', need: 'All three fields are needed to unlock downloads.',
+          saved: '✓ Profile saved — downloads unlocked.' };
+}
+var DOWNLOADS_PAUSED_ALERT = 'Downloads are paused for everyone for now. Nothing is wrong with your account.';
+// true = the download was stopped here, before the citation step and the file picker
+function stopIfDownloadsPaused(user) {
+  if (!dlPaused(user)) return false;
+  alert(DOWNLOADS_PAUSED_ALERT);
+  return true;
+}
+
+function downloadFailureAdvice(status, reason) {
+  var t = String(reason || '').toLowerCase();
+  if (t.indexOf('paused') !== -1)                      // the data pause (503): nothing to fix, nothing to retry
+    return 'Downloads are paused for everyone for now. Nothing is wrong with your account.';
+  if (t.indexOf('verif') !== -1)
+    return 'Open the link in the verification email, or press Resend email for a new one — check your spam or junk folder too.';
+  if (t.indexOf('profile') !== -1 || t.indexOf('institution') !== -1)
+    return 'Add your institution, country and role at accounts.elkassabgidata.com/account, then start the download again.';
+  if (t.indexOf('expired') !== -1 && t.indexOf('key') !== -1)
+    return 'Generate a new key at hfdatalibrary.com/pages/account, then update anything that still uses the old one.';
+  if (t.indexOf('inactive') !== -1 || t.indexOf('deactivat') !== -1 || t.indexOf('suspend') !== -1)
+    return 'Email admin@hfdatalibrary.com to have the account reactivated.';
+  if (status === 401 || status === 403)
+    return 'Check your account at accounts.elkassabgidata.com/account, then try again.';
+  if (status === 400)
+    return 'Change the version, timeframe or format selected above and try again.';
+  if (status === 404)
+    return 'That symbol may not exist in the version, timeframe or format you picked — try Parquet at 1min, or choose a different timeframe.';
+  if (status === 429)
+    return 'Wait a minute, then download the remaining files.';
+  if (status === 0 || status >= 500)
+    return 'Try again in a few minutes; if it keeps failing, email admin@hfdatalibrary.com.';
+  return 'Try again, and email admin@hfdatalibrary.com if it keeps happening.';
+}
+
+// One line per DISTINCT reason, never one per file. A 400-ticker bundle that hits a single
+// account-level refusal must say it ONCE; when reasons genuinely differ we show the three biggest
+// with a couple of example tickers and roll the rest into a tail, so the summary stays readable
+// instead of becoming a wall of 400 identical sentences.
+// Returns an array of plain strings — the caller joins them into textContent (never innerHTML:
+// both the reason and the ticker are attacker-influenceable, see the escaping rule).
+// `decisive` (optional) is the ONE failure that ended the run. It exists because the on-page
+// "What to do" and the pop-up alert used to be chosen by two different rules — this function took
+// the LARGEST group, the caller's alert took the LAST failure — so two 404s followed by a stopping
+// 403 printed the 404 remedy on the page and the 403 remedy in the alert: two different next steps
+// for one click, with the page advising the problem that did NOT stop the run. The caller now
+// passes the stopping failure here and uses the same one for the alert, so they cannot disagree.
+function summariseDownloadFailures(failures, decisive) {
+  var groups = [], index = {};
+  for (var i = 0; i < failures.length; i++) {
+    var f = failures[i];
+    var text = downloadFailureText(f.status, f.reason);
+    var key = f.status + '|' + text;
+    if (!index[key]) {
+      index[key] = { text: text, status: f.status, reason: f.reason, count: 0, tickers: [] };
+      groups.push(index[key]);
+    }
+    index[key].count++;
+    if (index[key].tickers.length < 3) index[key].tickers.push(f.ticker);
+  }
+  groups.sort(function (a, b) { return b.count - a.count; });
+  var lines = [];
+  if (groups.length === 1) {
+    lines.push('Reason: ' + groups[0].text);
+  } else {
+    // Roll up only when rolling up actually saves space: "+ 1 more for 1 other reason" is the same
+    // length as the reason it hides, so four distinct reasons are all shown and five-plus are cut to
+    // the three largest.
+    var shown = groups.slice(0, groups.length <= 4 ? 4 : 3);
+    for (var j = 0; j < shown.length; j++) {
+      lines.push(shown[j].count + ' failed: ' + shown[j].text +
+        ' (e.g. ' + shown[j].tickers.join(', ') + ')');
+    }
+    var restGroups = groups.length - shown.length;
+    if (restGroups > 0) {
+      var restFiles = 0;
+      for (var k = shown.length; k < groups.length; k++) restFiles += groups[k].count;
+      lines.push('+ ' + restFiles + ' more for ' + restGroups + ' other reason' + (restGroups === 1 ? '' : 's') + '.');
+    }
+  }
+  // The advice comes from the failure that actually STOPPED the run when there was one, and from
+  // the biggest group otherwise. A stopping refusal is account- or request-level: it is the thing
+  // standing between the user and every remaining ticker, so it is the only useful next step even
+  // when a larger group of per-ticker 404s came first.
+  var advise = decisive || groups[0];
+  lines.push('What to do: ' + downloadFailureAdvice(advise.status, advise.reason));
+  return lines;
+}
+
+// §9 popup-rejection copy (D40): specific for blocked/closed, generic for everything else.
+function showSigninError(err) {
+  var m = (err && err.message) || 'exchange_failed';
+  alert(m === 'popup_blocked'
+    ? 'Your browser blocked the sign-in window. Allow popups for this site, then click Sign in again.'
+    : m === 'popup_closed'
+      ? 'The sign-in window was closed. If you just registered, check your email (and spam) to verify your address, then click Sign in.'
+      : 'Sign-in didn’t complete. Click Sign in to try again — if you just registered, one click is all it takes.');
+}
+
+// Surface a download 403 (email-unverified / profile-incomplete) VERBATIM + a next step.
+// The tail used to be fixed, so a user told "complete your profile" was also told to check their
+// spam folder — advice for a different problem, which reads as noise and hides the real fix. The
+// next step is now derived from what the server actually said, via the shared advice helper.
+function downloadForbidden(msg) {
+  alert(downloadFailureText(403, msg) +
+    '\n\n' + downloadFailureAdvice(403, msg) +
+    '\nOr sign in below with the same email and password.');
+}
+
+// Wire the sign-in card buttons — synchronous EKD.login (G-12a); the #register href is the no-JS fallback.
+function wireEkdCard() {
+  var si = document.getElementById('ekd-signin-btn');
+  var rg = document.getElementById('ekd-register-btn');
+  if (si) si.addEventListener('click', function (e) { if (!window.EKD) return; e.preventDefault(); window.EKD.login().catch(showSigninError); });
+  if (rg) rg.addEventListener('click', function (e) { if (!window.EKD) return; e.preventDefault(); window.EKD.login({ tab: 'register' }).catch(showSigninError); });
+}
+document.addEventListener('DOMContentLoaded', wireEkdCard);
+// (js/site.js, which sets window.HFD_DOWNLOADS_PAUSED, is loaded below this script and before DOMContentLoaded)
+document.addEventListener('DOMContentLoaded', showRegisterCardPause);
+
+// Family-aware registration: a visitor arriving from another ElkassabgiData site
+// carries ?from=econ / ?from=elkassabgidata. Accounts are shared family-wide, so
+// we acknowledge where they came from and offer a one-click way back afterwards.
+var FAMILY_RETURN = (function () {
+  var p = new URLSearchParams(location.search);
+  var sites = {
+    econ: { origin: 'https://econdatalibrary.com', label: 'Econ Data Library' },
+    ip: { origin: 'https://ipdatalibrary.com', label: 'IP Data Library' },
+    elkassabgidata: { origin: 'https://elkassabgidata.com', label: 'ElkassabgiData' }
+  };
+  var site = sites[p.get('from')];
+  if (!site) return null;
+  // Optional ?return= carries the exact page the user came from, so "Back"
+  // returns them there (not just the site's homepage). Origin-validated
+  // against the family allow-list so we never send users to a foreign URL.
+  var url = site.origin;
+  var ret = p.get('return');
+  if (ret) {
+    try {
+      var u = new URL(ret);
+      var ok = ['https://econdatalibrary.com', 'https://www.econdatalibrary.com',
+                'https://ipdatalibrary.com', 'https://www.ipdatalibrary.com',
+                'https://elkassabgidata.com', 'https://www.elkassabgidata.com'];
+      if (ok.indexOf(u.origin) !== -1) url = u.href;
+    } catch (e) { /* malformed return -> fall back to the site origin */ }
+  }
+  // #sso_recheck tells the family site's sso.js to re-run its session check on
+  // arrival — the user may have just signed in HERE, after that site's
+  // once-per-session check already ran and cached "signed out".
+  if (url.indexOf('#') === -1) url += '#sso_recheck';
+  return { url: url, label: site.label };
+})();
+function familyReturnHtml() {
+  if (!FAMILY_RETURN) return '';
+  return '<p style="margin:1rem 0 0;"><a href="' + FAMILY_RETURN.url + '" ' +
+    'style="display:inline-block; background:#1a2332; color:#fff; padding:0.6rem 1.2rem; ' +
+    'border-radius:8px; text-decoration:none; font-weight:600;">&larr; Back to ' +
+    FAMILY_RETURN.label + '</a></p>';
+}
+// Drop a note above the register form when they arrive from a family site.
+document.addEventListener('DOMContentLoaded', function () {
+  if (!FAMILY_RETURN) return;
+  var h = document.getElementById('register');
+  if (!h) return;
+  var note = document.createElement('p');
+  note.style.cssText = 'background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; ' +
+    'border-radius:8px; padding:0.75rem 1rem; font-size:0.9rem; margin:0.75rem 0 1rem;';
+  note.innerHTML = 'You&rsquo;re creating your free <strong>ElkassabgiData</strong> account from the ' +
+    FAMILY_RETURN.label + ' &mdash; one account works across every library. ' +
+    '<a href="' + FAMILY_RETURN.url + '" style="font-weight:600; color:#1e40af; white-space:nowrap;">&larr; Back to ' +
+    FAMILY_RETURN.label + '</a>';
+  h.parentNode.insertBefore(note, h.nextSibling);
+  // The ticker-search content loads asynchronously above #register and keeps
+  // shifting it, so a fixed-delay scroll lands short (the form ends up far down
+  // the page). Poll until the form's absolute position stops moving — i.e. the
+  // page has settled — then scroll to it once. Hard stop after 6s.
+  var lastTop = null, stable = 0;
+  var iv = setInterval(function () {
+    var top = Math.round(h.getBoundingClientRect().top + window.pageYOffset);
+    if (top === lastTop) {
+      if (++stable >= 2) { clearInterval(iv); h.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    } else { stable = 0; lastTop = top; }
+  }, 300);
+  setTimeout(function () { clearInterval(iv); h.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 6000);
+});
+let currentUser = null;
+let sessionToken = localStorage.getItem('hfd_session');
+
+// ── Terms-and-citation gate ──────────────────────────────────────────────
+// Bump the version to re-prompt everyone if the citation terms or the Terms of Use change.
+// 2026-10: the Terms of Use of October 10, 2026 (research only, not for trading) - both boxes are needed.
+const CITE_AGREE_VERSION = '2026-10';
+function requireCitationAgreement() {
+  return new Promise(function (resolve) {
+    if (localStorage.getItem('hfd_cite_agreed') === CITE_AGREE_VERSION) { resolve(true); return; }
+    const m = document.getElementById('cite-modal');
+    const chk = document.getElementById('cite-agree-chk');
+    const terms = document.getElementById('terms-agree-chk');
+    const ok = document.getElementById('cite-agree-ok');
+    const cancel = document.getElementById('cite-agree-cancel');
+    chk.checked = false;
+    terms.checked = false;
+    ok.disabled = true; ok.style.background = 'var(--gray-300)'; ok.style.cursor = 'not-allowed';
+    chk.onchange = terms.onchange = function () {
+      const both = chk.checked && terms.checked;
+      ok.disabled = !both;
+      ok.style.background = both ? 'var(--blue)' : 'var(--gray-300)';
+      ok.style.cursor = both ? 'pointer' : 'not-allowed';
+    };
+    ok.onclick = function () {
+      if (!chk.checked || !terms.checked) return;
+      localStorage.setItem('hfd_cite_agreed', CITE_AGREE_VERSION);
+      m.style.display = 'none';
+      resolve(true);
+    };
+    cancel.onclick = function () { m.style.display = 'none'; resolve(false); };
+    m.style.display = 'flex';
+  });
+}
+
+// Handle OAuth callback redirects
+let oauthPendingProvider = null;
+let oauthPendingId = null;
+// Signed proof that this browser really completed ORCID's OAuth. oauthPendingId is only
+// ever used to fill the form in; the server ignores it and trusts this token instead.
+let oauthPendingProof = null;
+
+// Hand the user a FRESH Turnstile token after any failed submit. Called from every failure
+// path in the register handler; without it a retry re-sends the spent token and fails on the
+// CAPTCHA regardless of what was actually wrong. Guarded because the widget script is
+// third-party: if it failed to load, registration must still work (the worker treats a
+// missing token as a failure only when TURNSTILE_SECRET is configured), and a reset that
+// throws must never take the error message down with it.
+function resetTurnstile() {
+  try { if (typeof turnstile !== 'undefined' && turnstile.reset) turnstile.reset(); } catch (e) {}
+}
+(function handleOAuthCallback() {
+  const params = new URLSearchParams(window.location.search);
+  // The session id arrives in the QUERY STRING, matching what the worker sends
+  // (api/src/index.js §SESSION-IN-QUERY). That is a known weakness — the id is a
+  // 30-day full-scope credential and a query string lands in the Pages access log,
+  // in browser history and in outgoing Referer headers — and the fix is to move it
+  // to the fragment, which never leaves the browser. A fragment reader was written
+  // and then taken back out: the Worker and Pages deploy as separate parallel jobs,
+  // so a page that reads only the fragment is dark for every user still being served
+  // the old worker, and a worker that sends only the fragment is dark for every user
+  // still being served the old page. Whichever half lands first, sign-in fails
+  // silently. Fix it as one coordinated change: land the fragment reader HERE with
+  // the query fallback kept, confirm it is live, then move the worker in a later push.
+  // STEP 1 of that coordinated change. This reader now accepts the callback values from the
+  // FRAGMENT as well as the query string, preferring the fragment. On its own it changes
+  // nothing observable — the worker still sends a query string, so `pick` falls through to the
+  // old source on every real sign-in today. That is exactly the point: it makes the page
+  // tolerant of BOTH shapes, so the worker can be switched afterwards without a window in
+  // which one half is dark. Step 2 is the worker change; this must be confirmed live first.
+  const hashParams = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+  const pick = (k) => hashParams.get(k) || params.get(k);
+
+  const session = pick('session');
+  const oauthSuccess = pick('oauth_success');
+  const oauthError = pick('oauth_error');
+  const oauthProvider = pick('oauth_provider');
+  const oauthId = pick('oauth_id');
+  const oauthName = pick('oauth_name');
+
+  if (oauthSuccess && session) {
+    localStorage.setItem('hfd_session', session);
+    sessionToken = session;
+    // Clean URL (remove hash and query params)
+    window.history.replaceState({}, document.title, window.location.pathname);
+    // Show success toast
+    setTimeout(() => {
+      const toast = document.createElement('div');
+      toast.style.cssText = 'position:fixed; top:80px; right:1.5rem; background:#059669; color:#fff; padding:1rem 1.5rem; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:9999; font-weight:500; display:flex; align-items:center; gap:0.5rem; animation:slideIn 0.3s ease-out;';
+      toast.innerHTML = '<span style="font-size:1.2rem;">&#10003;</span> <span>Successfully signed in!</span>';
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.transition = 'opacity 0.4s';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 400);
+      }, 3000);
+    }, 100);
+  }
+  // Google/ORCID sign-in on a 2FA-protected account. The worker no longer issues a session on
+  // those paths — it used to, skipping the second factor entirely — and instead mints a pending
+  // token and sends the browser back here to finish, exactly as the password flow does.
+  //
+  // Deferred with setTimeout, and that is load-bearing rather than style. This block is an IIFE
+  // that runs where it sits in the file, while `pendingTotpToken` is `let`-declared ~290 lines
+  // BELOW it: assigning to it from here directly is a temporal-dead-zone ReferenceError that
+  // would kill the whole handler, including the ordinary sign-in paths above it. A macrotask
+  // runs after the script body finishes, by which point the binding exists.
+  const totpRequired = pick('totp_required');
+  const totpPending = pick('pending_token');
+  if (totpRequired && totpPending) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+    setTimeout(function () {
+      try {
+        pendingTotpToken = totpPending;
+        const box = document.getElementById('login-result');
+        if (!box) return;
+        box.style.display = 'block';
+        box.innerHTML =
+          '<div style="background:var(--blue-pale); border-radius:8px; padding:1rem; margin-top:0.5rem;">' +
+            '<p style="margin:0 0 0.75rem; color:var(--navy); font-weight:500;">Two-factor authentication is on for this account. Enter your 6-digit code:</p>' +
+            '<div style="display:flex; gap:0.5rem;">' +
+              '<input type="text" id="totp-code" placeholder="123456" maxlength="6" style="flex:1; padding:0.5rem; border:2px solid var(--gray-200); border-radius:6px; font-family:var(--font-mono); font-size:1.1rem; letter-spacing:0.2em; text-align:center;">' +
+              '<button class="btn btn-primary" style="padding:0.5rem 1rem;" onclick="submitTotp()">Verify</button>' +
+            '</div>' +
+            '<p id="totp-error" style="color:var(--red); margin:0.5rem 0 0; display:none;"></p>' +
+          '</div>';
+        const inp = document.getElementById('totp-code');
+        if (inp) inp.focus();
+      } catch (e) { /* never let this prompt break the rest of the page */ }
+    }, 0);
+  }
+
+  if (oauthError) {
+    // "Please try again" is right only for a TRANSIENT failure. Several of these are terminal
+    // by design — retrying reproduces them exactly — and telling someone to repeat an action
+    // that cannot succeed is worse than saying nothing, because it hides the real next step.
+    // Codes needing a different action get their own sentence; anything unrecognised keeps the
+    // generic retry text.
+    const OAUTH_ERRORS = {
+      account_link_conflict:
+        'This email address is already registered to a different Google account. That happens ' +
+        'when an address has been reassigned to a new owner. For your security we will not ' +
+        'transfer the existing account automatically — please sign in with the original Google ' +
+        'account, or contact us and we will sort it out.',
+      email_unverified:
+        'We could not confirm that you own this email address: Google reports it as unverified, ' +
+        'and the account already here has never been confirmed either. Verify the address with ' +
+        'Google, or register with a password and click the confirmation link we email you.',
+      account_deactivated:
+        'This account has been deactivated. If you think that is a mistake, reply to any email ' +
+        'from us and we will take a look.',
+      no_email:
+        'Your provider did not share an email address, and we need one to create an account. ' +
+        'Check the permissions you granted, or register with a password instead.',
+      signups_paused:
+        'New accounts are paused on the HF Data Library for now. ' +
+        'Existing accounts can still sign in.',
+    };
+    alert(OAUTH_ERRORS[oauthError] || ('Sign-in failed: ' + oauthError + '. Please try again or use email/password.'));
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+  if (oauthProvider === 'orcid' && oauthId) {
+    // User authorized via ORCID but has no account yet — pre-fill registration
+    oauthPendingProvider = 'orcid';
+    oauthPendingId = oauthId;
+    oauthPendingProof = pick('orcid_prefill');
+    // Wait for DOM to be ready, then show banner and pre-fill
+    setTimeout(() => {
+      const nameField = document.getElementById('reg-name');
+      if (nameField && oauthName) nameField.value = decodeURIComponent(oauthName);
+
+      // Show ORCID banner above the registration form
+      const regForm = document.querySelector('.register-form');
+      if (regForm) {
+        const banner = document.createElement('div');
+        banner.style.cssText = 'background:#ecfdf5; border:1px solid #a6ce39; border-radius:8px; padding:1rem; margin-bottom:1.5rem;';
+        banner.innerHTML =
+          '<div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">' +
+            '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="#a6ce39"><circle cx="128" cy="128" r="128"/><path fill="#fff" d="M86.3 186.2H70.9V79.1h15.4v107.1zM108.9 79.1h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7C191.7 111.5 178 93 148 93h-23.7v79.4zM88.7 56.8c0 5.5-4.5 10.1-10.1 10.1-5.6 0-10.1-4.6-10.1-10.1 0-5.6 4.5-10.1 10.1-10.1 5.6 0 10.1 4.6 10.1 10.1z"/></svg>' +
+            '<strong style="color:#065f46;">ORCID verified</strong>' +
+          '</div>' +
+          '<p style="color:#047857; font-size:0.9rem; margin:0;">Your ORCID iD <code style="user-select:all;" id="orcid-banner-id"></code> will be linked to this account. You will be able to sign in with ORCID next time.</p>';
+        // oauthId comes from the query string, so it must never reach innerHTML. Until
+        // 2026-07-31 it was concatenated in directly, which made
+        //   /pages/download?oauth_provider=orcid&oauth_id=<img src=x onerror=...>
+        // a working reflected-XSS link on hfdatalibrary.com — any logged-in user who
+        // followed it ran the attacker's script on our origin, with their session in
+        // localStorage. The site CSP still allows 'unsafe-inline', so nothing caught it.
+        // textContent renders the value as text and never as markup; the shape check
+        // additionally refuses anything that is not an ORCID iD.
+        const idSlot = banner.querySelector('#orcid-banner-id');
+        if (idSlot) idSlot.textContent = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/.test(oauthId) ? oauthId : '';
+        regForm.insertBefore(banner, regForm.firstChild);
+      }
+      // Scroll to registration form
+      document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+    window.history.replaceState({}, document.title, window.location.pathname + '#register');
+  }
+})();
+
+// Resolve the download identity on load / post-login: a VALIDATED legacy hfd_session wins, else the EKD
+// family session. Sets currentUser (drives the search gate + the "registration required" banner).
+// [D02/G-13] purge the legacy session ONLY on 401; KEEP it on any 5xx / network blip — a brief api.*
+// hiccup must never client-side-log-out a legacy user.
+let authBearer = null;   // the token /v1/auth/me actually accepted — reused by the profile modal
+async function checkAuth() {
+  currentUser = null;
+  authBearer = null;
+  const legacy = safeGet('hfd_session');
+  if (legacy) {
+    try {
+      const r = await fetch(API + '/v1/auth/me', { headers: { 'Authorization': 'Bearer ' + legacy } });
+      if (r.ok) { currentUser = await r.json(); authBearer = legacy; }
+      else if (r.status === 401) { safeDel('hfd_session'); sessionToken = null; }
+      // 5xx / non-401 → keep hfd_session, fall through (transient)
+    } catch (e) { /* network → keep, fall through */ }
+  }
+  if (!currentUser && window.EKD) {
+    try {
+      const at = await window.EKD.getAccessToken();
+      if (at) { const r2 = await fetch(API + '/v1/auth/me', { headers: { 'Authorization': 'Bearer ' + at } }); if (r2.ok) { currentUser = await r2.json(); authBearer = at; } }
+    } catch (e) {}
+  }
+  const banner = document.getElementById('free-access-banner');
+  if (banner) banner.style.display = currentUser ? 'none' : '';
+  if (window.__hfdPaintNav) window.__hfdPaintNav();            // repaint the site.js nav (old-form login shows the name without a reload)
+  // Re-fill any key placeholders after every auth change — cheap no-op on this
+  // page (it has no snippets), but checkAuth also runs after popup sign-ins,
+  // where a fill is exactly what pages with snippets would need.
+  if (window.HFDKeys) { try { window.HFDKeys.fill(); } catch (e) {} }
+  maybePromptVerify();
+  maybePromptProfile();
+}
+checkAuth();
+
+// ── Unverified email: say so on every visit, not once at sign-up ──────────────
+// The registration box did carry a verify-your-email line, but it sat inside a
+// green "Account created!" panel next to the API key, at the bottom of a long
+// page — and it appeared exactly once. Close the tab and the site never mentioned
+// it again, while every download answered 403 "Please verify your email". Ahmed
+// reported the instruction as not clearly shown; this is the missing half — a
+// standing banner that persists until the account is actually verified, with the
+// two things a stuck user needs: another email, and a re-check.
+function maybePromptVerify() {
+  const bar = document.getElementById('verify-banner');
+  if (!bar) return;
+  // email_verified is returned by BOTH branches of /v1/auth/me. Guard on an
+  // explicit false rather than falsiness: an older worker that omits the field
+  // would otherwise show this banner to every verified user, which is worse than
+  // showing it to none (the same mistake the field was added to fix).
+  // verification_required === false: the server lets unverified accounts download for now, so the
+  // banner would ask for something nobody needs (an older worker omits the field: banner as before).
+  if (!currentUser || currentUser.email_verified !== false || currentUser.verification_required === false) { bar.style.display = 'none'; return; }
+  document.getElementById('verify-banner-email').textContent = currentUser.email || 'your email address';
+  // the same sentence as on the account page: while no file is served, say that, not a condition
+  const note = document.getElementById('verify-banner-note');
+  if (note) note.textContent = currentUser.downloads_paused === true
+    ? 'Downloads are paused for now. Verify your email now, so that your account is ready when they return.'
+    : 'Downloads need a verified email.';
+  bar.style.display = 'block';
+}
+
+async function resendVerification() {
+  const btn = document.getElementById('verify-resend');
+  const out = document.getElementById('verify-banner-msg');
+  const a = await getDownloadAuth();
+  if (!a) { out.textContent = 'Your sign-in expired — sign in again first.'; return; }
+  btn.disabled = true;
+  out.textContent = 'Sending…';
+  try {
+    const r = await fetch(API + '/v1/auth/resend-verification', {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + a.token }
+    });
+    const d = await r.json().catch(function () { return {}; });
+    // The worker returns its own wording for both the sent and the rate-limited
+    // case, so it is shown verbatim rather than second-guessed here.
+    out.textContent = d.message || d.error || (r.ok ? 'Sent.' : 'Could not send just now.');
+  } catch (e) {
+    out.textContent = 'Network error — try again in a moment.';
+  }
+  btn.disabled = false;
+}
+
+// Shown once, immediately after a successful email+password registration.
+//
+// The standing banner above is at the TOP of the page and the register form is at
+// the BOTTOM, so on the one screen where the instruction matters most the user
+// cannot see it — they read "Account created!", copy the API key, and leave. This
+// puts the single next step in front of them before anything else.
+// mailSent === false means the worker KNOWS Resend refused the message
+// (handleRegister now takes sendEmail's return value, not just its throw). In that
+// case promising "the link we just sent" would be a lie the user pays for with an
+// empty inbox — say what happened and point at the Resend button instead.
+// paused === true means no data file is served now (the register answer's downloads_paused):
+// then "downloads stay locked until you click" would promise a download the click cannot give.
+function showVerifyModal(email, mailSent, paused) {
+  if (document.getElementById('verify-modal-overlay')) return;
+  const wrap = document.createElement('div');
+  wrap.id = 'verify-modal-overlay';
+  wrap.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,41,0.6); z-index:9998; display:flex; align-items:center; justify-content:center; padding:1rem;';
+  const card = document.createElement('div');
+  card.style.cssText = 'background:#fff; border-radius:12px; max-width:460px; width:100%; padding:1.9rem; box-shadow:0 10px 40px rgba(0,0,0,0.25); text-align:center;';
+  const h = document.createElement('h3');
+  h.style.cssText = 'margin:0 0 0.6rem; font-size:1.3rem; color:var(--navy);';
+  h.textContent = mailSent === false ? '📧 One more step: verify your email' : '📧 Check your email to finish';
+  const p1 = document.createElement('p');
+  p1.style.cssText = 'margin:0 0 0.5rem; font-size:1rem; color:var(--gray-700); line-height:1.55;';
+  // textContent for the address — it is user input echoed straight back.
+  const PAUSED_TAIL = ' Downloads are paused for now. Verify your email now, so that your account is ready when they return.';
+  p1.appendChild(document.createTextNode(paused === true
+    ? (mailSent === false ? 'Your account exists, but our first attempt to email '
+                          : 'Your account exists. Please click the link we just sent to ')
+    : (mailSent === false
+      ? 'Your account exists, but downloads stay locked until your email is verified — and our first attempt to email '
+      : 'Your account exists, but downloads stay locked until you click the link we just sent to ')));
+  const strong = document.createElement('strong');
+  strong.textContent = email;
+  p1.appendChild(strong);
+  p1.appendChild(document.createTextNode(paused === true
+    ? (mailSent === false ? ' did not go through.' : ' to verify your address.') + PAUSED_TAIL
+    : (mailSent === false ? ' did not go through.' : '.')));
+  const p2 = document.createElement('p');
+  p2.style.cssText = 'margin:0 0 1.2rem; font-size:0.88rem; color:var(--gray-500);';
+  p2.textContent = mailSent === false
+    ? 'Use the "Resend email" button in the banner at the top of this page in a few hours — the account itself is fine.'
+    : 'No email after a minute? Check your spam or junk folder — university mail filters catch it often.';
+  const close = document.createElement('button');
+  close.className = 'btn btn-primary';
+  close.style.cssText = 'width:100%;';
+  close.textContent = 'Got it';
+  close.onclick = function () { wrap.remove(); };
+  card.appendChild(h); card.appendChild(p1); card.appendChild(p2); card.appendChild(close);
+  wrap.appendChild(card);
+  document.body.appendChild(wrap);
+}
+
+// "I clicked the link" — re-read the account instead of making the user reload.
+async function recheckVerification() {
+  const out = document.getElementById('verify-banner-msg');
+  out.textContent = 'Checking…';
+  await checkAuth();
+  if (currentUser && currentUser.email_verified !== false) {
+    const bar = document.getElementById('verify-banner');
+    if (bar) bar.style.display = 'none';
+    alert(verifiedAlertText(dlPaused(currentUser), profileIncomplete(currentUser)));
+  } else {
+    // (the old text named a mail "we sent"; an account whose link was refused has none)
+    out.textContent = 'Still not verified. Open the link in the verification email, or press Resend email for a new one, then check again.';
+  }
+}
+
+// ── Post-registration profile completion ──────────────────────────────────────
+// Google-registered accounts arrive with profile_complete=0 (institution/country/role
+// unset) and every download 403s until those are filled. Until 2026-08-26 nothing told
+// the user until they TRIED a download, and the advice then sent them to another page —
+// accounts were parked in that state. Ask
+// RIGHT HERE, the moment any signed-in visit finds the profile incomplete: the hook in
+// checkAuth covers the OAuth landing, the popup sign-in and every later visit. "Later"
+// dismisses for the browser session only — downloads stay blocked by the server gate
+// either way, so the nag is strictly friendlier than the 403 it preempts.
+function maybePromptProfile() {
+  if (!currentUser || currentUser.profile_complete) return;
+  // Family-token sessions USED to be skipped here: /v1/auth/update-profile
+  // authenticated via getSessionUser, which structurally rejects family bearers,
+  // so the Save button could only ever 401 and the advice pointed people at
+  // accounts.elkassabgidata.com instead. That widening is now done (see
+  // requireHfFirstPartyUser in api/src/index.js — an HF-origin family token is
+  // accepted, a cross-site one still is not), so the prompt is shown to every
+  // signed-in visitor with an incomplete profile, which is the population it was
+  // always meant to catch: Ahmed reported reaching the site through the family
+  // sign-in and being told to complete a profile with nothing offering the form.
+  if (sessionStorage.getItem('hfd_profile_later') === '1') return;
+  if (document.getElementById('profile-complete-overlay')) return;
+  const wrap = document.createElement('div');
+  wrap.id = 'profile-complete-overlay';
+  wrap.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,41,0.6); z-index:9998; display:flex; align-items:center; justify-content:center; padding:1rem;';
+  const PT = profilePromptTexts(dlPaused(currentUser), mustVerify(currentUser));     // fixed strings, no user text
+  wrap.innerHTML =
+    '<div style="background:#fff; border-radius:12px; max-width:430px; width:100%; padding:1.75rem; box-shadow:0 10px 40px rgba(0,0,0,0.25);">' +
+      '<h3 style="margin:0 0 0.5rem; font-size:1.15rem;">Tell us who you are</h3>' +
+      '<p style="margin:0 0 1rem; color:var(--gray-500); font-size:0.9rem;">' + PT.lead + '</p>' +
+      '<label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.25rem;">Institution</label>' +
+      '<input id="pc-institution" type="text" placeholder="e.g. University of Central Arkansas" style="width:100%; padding:0.5rem; border:1px solid var(--gray-300); border-radius:6px; margin-bottom:0.75rem;">' +
+      '<label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.25rem;">Country</label>' +
+      '<input id="pc-country" type="text" placeholder="e.g. United States" style="width:100%; padding:0.5rem; border:1px solid var(--gray-300); border-radius:6px; margin-bottom:0.75rem;">' +
+      '<label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.25rem;">Role</label>' +
+      '<input id="pc-role" type="text" placeholder="e.g. Professor, PhD student, Analyst" style="width:100%; padding:0.5rem; border:1px solid var(--gray-300); border-radius:6px; margin-bottom:0.5rem;">' +
+      '<p id="pc-error" style="display:none; color:var(--red); font-size:0.85rem; margin:0 0 0.5rem;"></p>' +
+      '<div style="display:flex; gap:0.75rem; margin-top:0.75rem;">' +
+        '<button id="pc-save" class="btn btn-primary" style="flex:1;">' + PT.saveHtml + '</button>' +
+        '<button id="pc-later" class="btn" style="background:var(--gray-100);">Later</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(wrap);
+  document.getElementById('pc-later').addEventListener('click', function () {
+    sessionStorage.setItem('hfd_profile_later', '1');
+    wrap.remove();
+  });
+  document.getElementById('pc-save').addEventListener('click', async function () {
+    const inst = document.getElementById('pc-institution').value.trim();
+    const ctry = document.getElementById('pc-country').value.trim();
+    const role = document.getElementById('pc-role').value.trim();
+    const err = document.getElementById('pc-error');
+    if (!inst || !ctry || !role) {
+      err.textContent = PT.need;
+      err.style.display = 'block';
+      return;
+    }
+    this.disabled = true;
+    try {
+      // Resolved at SAVE time, not at page load: a family access token lives 15
+      // minutes, and this modal can sit open far longer than that while someone
+      // looks up how their department is spelled. authBearer was captured in
+      // checkAuth() and would be stale.
+      const a = await getDownloadAuth();
+      if (!a) {
+        err.textContent = 'Your sign-in expired. Sign in again, then save.';
+        err.style.display = 'block';
+        this.disabled = false;
+        return;
+      }
+      const r = await fetch(API + '/v1/auth/update-profile', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + a.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ institution: inst, country: ctry, role: role })
+      });
+      const d = await r.json().catch(function () { return {}; });
+      if (!r.ok) {
+        err.textContent = d.error || 'Could not save — please try again.';
+        err.style.display = 'block';
+        this.disabled = false;
+        return;
+      }
+      wrap.remove();
+      if (currentUser) currentUser.profile_complete = true;
+      const toast = document.createElement('div');
+      toast.style.cssText = 'position:fixed; top:80px; right:1.5rem; background:#059669; color:#fff; padding:1rem 1.5rem; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:9999; font-weight:500;';
+      toast.textContent = profilePromptTexts(dlPaused(currentUser), mustVerify(currentUser)).saved;
+      document.body.appendChild(toast);
+      setTimeout(function () { toast.remove(); }, 4000);
+    } catch (e) {
+      err.textContent = 'Network error — please try again.';
+      err.style.display = 'block';
+      this.disabled = false;
+    }
+  });
+}
+
+// ── Custom Bundle Builder ──
+let allTickers = [];
+let selectedTickers = new Set();
+let tickerMeta = {};
+
+// Byte size per ticker, as reported by /v1/symbols. NOTE THE SCOPE: that endpoint
+// lists the 1-minute CLEAN parquet objects only, so these numbers are the right
+// order of magnitude for any other version/timeframe/format but not the actual
+// size of one. They are used solely to warn before a bundle that a non-streaming
+// browser could not hold in memory, and the warning says "about".
+let tickerSizes = {};
+
+(async function loadAllTickers() {
+  try {
+    const r = await fetch(API + '/v1/symbols');
+    if (r.ok) {
+      const d = await r.json();
+      allTickers = d.symbols.map(s => s.ticker);
+      d.symbols.forEach(s => { if (typeof s.size_bytes === 'number') tickerSizes[s.ticker] = s.size_bytes; });
+    }
+  } catch (e) {}
+  // Also load ticker metadata for bundle filtering
+  try {
+    const r2 = await fetch('../data/ticker_meta.json');
+    if (r2.ok) tickerMeta = await r2.json();
+    // Offer only tickers of the published list: /v1/symbols lists every stored object, and the
+    // published list is the dataset.
+    if (Object.keys(tickerMeta).length) allTickers = allTickers.filter(t => tickerMeta[t]);
+  } catch (e) {}
+})();
+
+function loadBundle(type, value) {
+  if (!Object.keys(tickerMeta).length) { alert('Ticker metadata still loading. Try again.'); return; }
+  selectedTickers.clear();
+  for (const [ticker, info] of Object.entries(tickerMeta)) {
+    if (!allTickers.includes(ticker)) continue;
+    if (type === 'sp500' && info.indices && info.indices.includes('S&P 500')) selectedTickers.add(ticker);
+    else if (type === 'nasdaq100' && info.indices && info.indices.includes('Nasdaq 100')) selectedTickers.add(ticker);
+    else if (type === 'dow30' && info.indices && info.indices.includes('Dow 30')) selectedTickers.add(ticker);
+    else if (type === 'etf' && info.type === 'ETF') selectedTickers.add(ticker);
+    else if (type === 'stock' && info.type === 'Stock') selectedTickers.add(ticker);
+    else if (type === 'sector' && info.sector === value) selectedTickers.add(ticker);
+  }
+  renderBundle();
+  // Scroll up to the bundle builder
+  document.getElementById('bundle-selected').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function filterTickers(group) {
+  if (!allTickers.length) { alert('Ticker list still loading. Try again.'); return; }
+  // Only 'all'. The list is alphabetical (/v1/symbols), so a slice of it is not a liquidity group.
+  if (group === 'all') selectedTickers = new Set(allTickers);
+  renderBundle();
+}
+
+function clearBundle() { selectedTickers.clear(); renderBundle(); }
+
+function addToBundleFromInput() {
+  const input = document.getElementById('bundle-input').value.trim();
+  if (!input) return;
+  const tickers = input.split(/[\s,;]+/).map(t => t.toUpperCase().trim()).filter(Boolean);
+  for (const t of tickers) { if (allTickers.includes(t)) selectedTickers.add(t); }
+  document.getElementById('bundle-input').value = '';
+  renderBundle();
+}
+
+function removeTicker(t) { selectedTickers.delete(t); renderBundle(); }
+
+function renderBundle() {
+  const el = document.getElementById('bundle-selected');
+  const count = document.getElementById('bundle-count');
+  if (selectedTickers.size === 0) {
+    el.innerHTML = '<p style="color:var(--gray-400); margin:0; font-size:0.85rem;">No tickers selected.</p>';
+    count.textContent = '0 tickers selected';
+    return;
+  }
+  const sorted = [...selectedTickers].sort();
+  const shown = sorted.slice(0, 100);
+  const remaining = sorted.length - shown.length;
+  el.innerHTML = shown.map(t =>
+    '<span onclick="removeTicker(\'' + t + '\')" style="display:inline-block; background:var(--blue-pale); color:var(--blue); padding:0.15rem 0.5rem; border-radius:4px; font-family:var(--font-mono); font-size:0.8rem; margin:0.15rem; cursor:pointer;" title="Click to remove">' + t + ' &times;</span>'
+  ).join('') + (remaining > 0 ? '<span style="color:var(--gray-500); font-size:0.8rem; margin-left:0.5rem;">+' + remaining + ' more</span>' : '');
+  count.textContent = selectedTickers.size + ' tickers selected';
+}
+
+function fmtBytes(n) {
+  if (!(n > 0)) return '0 B';
+  const u = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(u.length - 1, Math.floor(Math.log(n) / Math.log(1024)));
+  return (n / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1) + ' ' + u[i];
+}
+
+// A bundle collected in memory has to fit in the tab. 1.5 GB is well under where
+// a 64-bit Chrome tab dies but high enough to cover any ordinary selection; the
+// streaming path (Chrome/Edge) has no such limit and never consults this.
+const BLOB_FALLBACK_CAP = 1.5 * 1024 * 1024 * 1024;
+
+async function downloadBundle(format) {
+  // ── ONE click must produce ONE file. ───────────────────────────────────────
+  // This used to request a signed URL per ticker and click a hidden <a download>
+  // for each, 300 ms apart. Every one of those is a separate cross-origin
+  // navigation download, so Chrome raised its "Download multiple files?" prompt —
+  // and kept raising it, because the loop kept starting new ones. Answering Block
+  // once writes automaticDownloads=block for hfdatalibrary.com, after which EVERY
+  // programmatic download on the site fails silently, including single-ticker
+  // ones. The page cannot read that setting or clear it; only the user can, from
+  // the padlock menu. Ahmed hit exactly this on 2026-08-31 and was left unable to
+  // download anything at all.
+  //
+  // So the files are now fetched with fetch() — no download is started per file —
+  // and written into a single .zip. On Chrome/Edge the archive streams straight
+  // to a location the user picks, so nothing is buffered and there is no size
+  // ceiling; elsewhere it is assembled in memory and handed over as one download
+  // at the end, which is why that path is capped.
+
+  // Cheap synchronous gates FIRST. Everything after the citation modal has to run
+  // inside the user's transient activation, because showSaveFilePicker() requires
+  // it — a network round-trip here would spend it and the save dialog would throw.
+  if (selectedTickers.size === 0) { alert('No tickers selected.'); return; }
+  if (stopIfSignedOut(currentUser)) return;
+  if (stopIfDownloadsPaused(currentUser)) return;
+  if (!(await requireCitationAgreement())) return;
+  const version = document.getElementById('bundle-version').value;
+  const timeframe = document.getElementById('bundle-timeframe').value;
+  const tickers = [...selectedTickers].sort();
+  const progress = document.getElementById('bundle-progress');
+  const bar = document.getElementById('bundle-bar');
+  const status = document.getElementById('bundle-status');
+  progress.style.display = 'block';
+  status.style.whiteSpace = 'pre-line';   // the summary below is multi-line and set via textContent
+
+  if (!window.HFDZip) {
+    status.textContent = 'The bundle builder could not load (js/zipstream.js). Reload the page and try again, ' +
+      'or download tickers one at a time from the search box above.';
+    return;
+  }
+
+  // Warn before a selection the in-memory path cannot hold. The estimate comes
+  // from the 1-minute clean sizes /v1/symbols reports, so it is an order of
+  // magnitude for other timeframes rather than their real size — hence "about",
+  // and hence the hard stop on ACTUAL bytes further down, which does not rely on
+  // the estimate being right.
+  let estimate = 0;
+  for (const t of tickers) estimate += (tickerSizes[t] || 0);
+  if (!window.HFDZip.supportsStreaming && estimate > BLOB_FALLBACK_CAP) {
+    const goOn = confirm(
+      'This browser cannot stream a download to disk, so the archive has to be built in memory.\n\n' +
+      'You selected ' + tickers.length + ' tickers (about ' + fmtBytes(estimate) + '). Bundles over ' +
+      fmtBytes(BLOB_FALLBACK_CAP) + ' can run the tab out of memory here.\n\n' +
+      'Chrome or Edge will stream this to disk with no size limit. Continue anyway?');
+    if (!goOn) { progress.style.display = 'none'; return; }
+  }
+
+  const stamp = new Date().toISOString().slice(0, 10);
+  const archiveName = 'hfdatalibrary_' + version + '_' + timeframe + '_' + tickers.length + 'tickers_' + stamp + '.zip';
+  status.textContent = 'Choose where to save the archive…';
+  let sink;
+  try {
+    sink = await window.HFDZip.openArchiveSink(archiveName);
+  } catch (e) { sink = null; }
+  if (sink === 'cancelled') {                    // the user dismissed the save dialog
+    status.textContent = 'Cancelled — nothing was downloaded.';
+    bar.style.width = '0%';
+    return;
+  }
+  if (!sink) {                                   // no sink at all — should be unreachable
+    status.textContent = 'Could not open a place to save the archive. Reload the page and try again.';
+    return;
+  }
+  const zip = new window.HFDZip.ZipWriter(sink.writer);
+  // Set expectations before the first file, not after twenty minutes of silence.
+  // The floor is the server's own 100-per-minute cap, so it is a real minimum
+  // rather than a guess about bandwidth, and it is stated as "at least".
+  if (tickers.length > 100) {
+    status.textContent = 'Building ' + archiveName + '. The API allows 100 downloads a minute, ' +
+      'so ' + tickers.length + ' tickers will take at least ' + Math.ceil(tickers.length / 100) +
+      ' minutes. Keep this tab open — closing it stops the archive.';
+  }
+
+  let completed = 0, failed = 0, authDead = null, authDeadReason = '';
+  let bytesWritten = 0, capHit = false;
+  // The loop used to keep a bare `failed` count and discard the JSON body it had already parsed,
+  // so every refusal — unverified email, incomplete profile, bad timeframe — collapsed into an
+  // unexplained number. Each failure now records the server's own words alongside its status.
+  const failures = [];
+  // Set when the refusal is account- or request-level rather than ticker-level: the same request
+  // for the next ticker would be refused identically, so firing a call for every other ticker only wastes
+  // the user's time and our rate budget. We stop and explain instead.
+  let stopEarly = false;
+
+  // ── The 100-downloads-per-minute cap, and why this loop must respect it ──────
+  // /v1/download charges 'api:download' = { max: 100, window: 60 } PER USER
+  // (api/src/index.js). The old loop slept 300 ms between tickers, which held it
+  // to ~200/min — over the cap, but the second hop was a browser navigation whose
+  // arrival rate the page never saw, so nothing here ever had to notice a 429.
+  // Fetching the bytes ourselves removes both the sleep and the blindness: on a
+  // fast link this would issue ~5 requests a second, collect 429s from the 101st
+  // ticker onward, and — because 429 is not 403 — quietly write a complete-LOOKING
+  // archive containing only the first hundred files. A silently short bundle is
+  // the worst possible outcome for a research dataset.
+  //
+  // So a 429 is treated as "wait", never as a failure: the server sends
+  // Retry-After (rateLimitResponse), and the same ticker is retried after it.
+  // The window is fixed rather than sliding, so the wait is bounded by 60 s.
+  let rateWaits = 0;
+  const RETRY_LIMIT = 3;
+  // Object.create(null): ticker names come from user input, and a plain {} would
+  // treat "constructor" or "toString" as already-present keys.
+  const retriesFor = Object.create(null);
+  // Set when the SINK itself failed (disk full, the picked file made read-only,
+  // the user revoking the handle) — every remaining fetch would be bytes we
+  // cannot write, so the loop must stop, not keep spending the rate budget.
+  let sinkDead = '';
+  // The auth MODE this run is in, updated from every successful getDownloadAuth.
+  // When one finally returns null we report the mode we were last in, instead of
+  // guessing — the guess sent legacy users the family recovery text.
+  let lastAuthKind = null;
+  const sleep = ms => new Promise(res => setTimeout(res, ms));
+
+  // Stay just under the cap rather than discovering it. The server's window is
+  // fixed (not sliding), so counting our own downloads inside a 60 s window and
+  // pausing at 95 keeps a long bundle out of 429 territory entirely; the handler
+  // below stays as the safety net for a window we mis-estimate or share with
+  // another tab.
+  const DL_PER_MIN = 95;
+  let winStart = Date.now(), winCount = 0;
+  // BOTH waits are deadline-driven (`while Date.now() < end`), never counted in
+  // sleep(1000) iterations: a hidden tab clamps timers to one per second, then to
+  // one per MINUTE after ~5 minutes — and this page tells users to leave the tab
+  // open. An iteration-counted "60 s" wait in a hidden tab would take an hour.
+  async function waitUntil(end, label) {
+    while (Date.now() < end) {
+      const left = Math.max(1, Math.ceil((end - Date.now()) / 1000));
+      status.textContent = completed + ' / ' + tickers.length + ' added (' + fmtBytes(bytesWritten) + ')' +
+        '\n' + label + ' — continuing in ' + left + 's.';
+      await sleep(Math.min(1000, end - Date.now()));
+    }
+  }
+  async function paceDownloads() {
+    const now = Date.now();
+    if (now - winStart >= 60000) { winStart = now; winCount = 0; }
+    if (winCount >= DL_PER_MIN) {
+      await waitUntil(winStart + 60000, 'Pacing to the 100-downloads-per-minute limit');
+      winStart = Date.now(); winCount = 0;
+    }
+    winCount++;
+  }
+  async function pauseForRateLimit(resp, ticker) {
+    // Retry-After is seconds (readable because the worker exposes it via
+    // Access-Control-Expose-Headers). Clamp: a missing or absurd value must not
+    // park the user unboundedly, and must not spin either.
+    let secs = parseInt(resp.headers.get('Retry-After') || '', 10);
+    if (!(secs > 0) || secs > 120) secs = 60;
+    rateWaits++;
+    await waitUntil(Date.now() + secs * 1000, 'At the 100-downloads-per-minute limit (' + ticker + ')');
+  }
+
+  for (let ti = 0; ti < tickers.length; ti++) {
+    const ticker = tickers[ti];
+    const a2 = await getDownloadAuth();                        // fresh per ticker (D38: 15-min edl_at)
+    if (!a2) { authDead = lastAuthKind || 'family'; break; }
+    lastAuthKind = a2.kind;
+    try {
+      const r = await fetch(API + '/v1/download-token/' + ticker + '?version=' + version + '&format=' + format + '&timeframe=' + timeframe, {
+        headers: { 'Authorization': 'Bearer ' + a2.token }
+      });
+      // Parsed in its own try: a Cloudflare edge error page or a bot challenge is HTML, and the old
+      // `await r.json()` threw straight past the status check into the outer catch — turning every
+      // such failure into an anonymous one with no status to report. Now the status always survives.
+      let data = null;
+      try { data = await r.json(); } catch (e) { data = null; }
+      const serverMsg = (data && typeof data.error === 'string') ? data.error : '';
+      if (r.ok && data && data.url) {
+        // Hop 2 is now a fetch, not a navigation, so its status is finally
+        // OBSERVABLE — the old loop counted a ticker as downloaded the moment the
+        // token request succeeded and could not see a failure here at all.
+        // data.url is a signed URL on api.hfdatalibrary.com, which returns CORS
+        // headers for this origin, so the body is readable.
+        await paceDownloads();
+        const fr = await fetch(data.url);
+        if (fr.status === 429) {
+          // Not a failure — the cap. Retry budget is checked BEFORE waiting, so a
+          // ticker that has already burned its retries fails immediately instead
+          // of paying one more wait it can never use. The token just spent is
+          // single-use, so the retry re-runs BOTH hops.
+          if (retriesFor[ticker] === undefined) retriesFor[ticker] = 0;
+          if (++retriesFor[ticker] <= RETRY_LIMIT) {
+            await pauseForRateLimit(fr, ticker);
+            ti--; continue;
+          }
+          failed++;
+          failures.push({ ticker: ticker, status: 429, reason: 'Still rate-limited after ' + RETRY_LIMIT + ' waits.' });
+        } else if (!fr.ok) {
+          let ferr = '';
+          try { const fj = await fr.json(); if (fj && typeof fj.error === 'string') ferr = fj.error; } catch (e) {}
+          failed++;
+          failures.push({ ticker: ticker, status: fr.status, reason: ferr });
+          if (ferr && (fr.status === 403 || fr.status === 400 || fr.status === 503)) stopEarly = true;
+        } else {
+          const bytes = new Uint8Array(await fr.arrayBuffer());
+          if (!window.HFDZip.supportsStreaming && bytesWritten + bytes.length > BLOB_FALLBACK_CAP) {
+            // Actual bytes, not the estimate. Stop cleanly and still emit a valid
+            // archive of what was fetched rather than losing the whole run.
+            capHit = true;
+            break;
+          }
+          // The WRITE gets its own try: a throw here is the SINK failing (disk
+          // full, the picked file locked or revoked), not this ticker — every
+          // remaining fetch would be bytes we cannot write, so stop the loop
+          // instead of counting ticker "failures" for fifteen more minutes.
+          try {
+            await zip.add(ticker + '_' + version + '_' + timeframe + '.' + format, bytes);
+          } catch (we) {
+            sinkDead = (we && we.message) ? we.message : String(we);
+            break;
+          }
+          bytesWritten += bytes.length;
+        }
+      } else if (r.status === 429) {
+        // Hop 1 is not charged against 'api:download' today, but a 429 here would
+        // mean some other limit engaged; the correct response is identical — wait
+        // and retry, never record it as a per-ticker failure. Budget checked
+        // before the wait, same as hop 2.
+        if (retriesFor[ticker] === undefined) retriesFor[ticker] = 0;
+        if (++retriesFor[ticker] <= RETRY_LIMIT) {
+          await pauseForRateLimit(r, ticker);
+          ti--; continue;
+        }
+        failed++;
+        failures.push({ ticker: ticker, status: 429, reason: 'Still rate-limited after ' + RETRY_LIMIT + ' waits.' });
+      } else if (r.status === 401) {                                // D38: session died mid-bundle → stop + recover
+        authDead = a2.kind; authDeadReason = serverMsg; break;
+      } else {
+        failed++;
+        failures.push({ ticker: ticker, status: r.status, reason: serverMsg });
+        // 403 depends on the ACCOUNT (email unverified, profile incomplete) and 400 on the version /
+        // format / timeframe dropdowns, which are fixed for the whole run — both are identical for
+        // every remaining ticker. 404 and 5xx are per-ticker and must not stop the bundle.
+        // The `serverMsg &&` guard is what makes this an APPLICATION-level test rather than a bare
+        // HTTP-status one. Every refusal the worker itself issues is jsonRes({ error: ... }), so it
+        // always arrives with a reason; a Cloudflare edge 403 — a WAF block or a managed challenge —
+        // is an HTML page, which is exactly why `data` is parsed defensively above and left null.
+        // Keyed off the status alone, one such network event aborted a 400-ticker bundle after the
+        // first file and told the user to go check their ACCOUNT: an account remedy for a network
+        // event, 399 tickers abandoned. With no parsed reason we do what the loop did before this
+        // feature existed — count the failure and carry on to the next ticker.
+        if (serverMsg && (r.status === 403 || r.status === 400 || r.status === 503)) stopEarly = true;   // 503: data paused
+      }
+    } catch (e) {
+      failed++;
+      failures.push({ ticker: ticker, status: 0, reason: '' });     // network error / aborted fetch
+    }
+    completed++;
+    bar.style.width = ((completed / tickers.length) * 100) + '%';
+    status.textContent = completed + ' / ' + tickers.length + ' added to the archive (' +
+      fmtBytes(bytesWritten) + ')' + (failed > 0 ? ' — ' + failed + ' failed' : '');
+    if (stopEarly) break;                                          // after the progress update, so the bar reflects the attempt
+  }
+
+  // The archive must be closed on EVERY exit path. An unfinished zip has no
+  // central directory and no reader will open it, so bailing out early without
+  // this would hand the user a corrupt file — worse than the failure that caused
+  // the bail-out, and indistinguishable from it.
+  const ok = completed - failed;
+  const filesInArchive = zip.entries.length;
+  let finalizeError = '';
+  let deliverRoute = 'saved';
+  try {
+    await zip.finish();
+    deliverRoute = (await sink.deliver()) || 'saved';
+  } catch (e) {
+    finalizeError = (e && e.message) ? e.message : String(e);
+  }
+
+  if (sinkDead) {
+    status.textContent = 'Stopped: the archive could not be written any further (' + sinkDead + '). ' +
+      'It was closed with the ' + filesInArchive + ' file(s) already inside — a common cause is a full disk. ' +
+      'Free space (or pick a different drive) and run the rest as a new bundle.';
+    return;
+  }
+  if (authDead) {
+    status.textContent = filesInArchive === 0
+      ? 'Sign-in ended before anything could be fetched — the saved archive is EMPTY and safe to delete.'
+      : 'Sign-in ended — the archive was closed with the ' + filesInArchive + ' file(s) fetched before it stopped.';
+    handleDownloadAuthDead(authDead, authDeadReason);
+    return;
+  }
+  if (finalizeError) {
+    status.textContent = 'The archive could not be written: ' + finalizeError +
+      '\nIf you are out of disk space, free some and try again with fewer tickers.';
+    return;
+  }
+  // On the in-memory route the final download itself can be silently refused by
+  // Chrome's automatic-downloads Block — there is no event to observe, so the
+  // honest thing is to say which route ran and what to check if nothing appeared.
+  const blockNote = deliverRoute === 'fallback'
+    ? '\nIf no download appeared: click the padlock in the address bar → Site settings → Automatic downloads → Allow, then try again.'
+    : '';
+  const savedLine = 'Saved 1 archive — ' + archiveName + ' (' + fmtBytes(bytesWritten) + ', ' + ok + ' files inside).' +
+    (rateWaits > 0 ? ' Paused ' + rateWaits + '× for the per-minute download limit.' : '') + blockNote;
+  if (capHit) {
+    status.textContent = savedLine + '\nStopped at this browser\'s ' + fmtBytes(BLOB_FALLBACK_CAP) +
+      ' in-memory limit, so ' + (tickers.length - completed) + ' of ' + tickers.length +
+      ' tickers are not included. Use Chrome or Edge to save the whole selection in one archive, ' +
+      'or split the selection.';
+    return;
+  }
+  if (failures.length === 0) {
+    status.textContent = savedLine;
+    return;
+  }
+  const head = (ok === 0)
+    ? 'No files could be fetched — ' + failed + ' failed. An empty archive was written.'
+    : savedLine + ' ' + failed + ' ticker(s) failed and are not in it.';
+  const stoppedNote = (completed < tickers.length && !capHit)
+    ? ' Stopped after ' + completed + ' of ' + tickers.length + ' — the rest would be refused the same way.'
+    : '';
+  // The ONE failure that ended the run, or null if the loop went the whole way. The page and the
+  // alert both take their "what to do" from it, so a single click can no longer produce two
+  // different next steps (previously the page advised the largest failure group and the alert the
+  // last failure — with two 404s and a stopping 403 those are different remedies).
+  const stopper = stopEarly ? failures[failures.length - 1] : null;
+  const lines = summariseDownloadFailures(failures, stopper);
+  // textContent, never innerHTML: `reason` is a server-supplied string and the ticker names come
+  // from user input, so neither may ever be parsed as markup.
+  status.textContent = [head + stoppedNote].concat(lines).join('\n');
+  // A bundle that produced nothing and stopped on a fixable account/request problem needs to be
+  // impossible to miss — the inline line alone reads as if the click did nothing.
+  if (stopper && ok === 0) {
+    alert(downloadFailureText(stopper.status, stopper.reason) + '\n\n' + downloadFailureAdvice(stopper.status, stopper.reason));
+  }
+}
+
+document.getElementById('bundle-input').addEventListener('keyup', function(e) {
+  if (e.key === 'Enter') addToBundleFromInput();
+});
+
+// ── Login ──
+let pendingTotpToken = null;
+
+async function loginUser() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const result = document.getElementById('login-result');
+
+  if (!email || !password) { result.style.display = 'block'; result.innerHTML = '<p style="color:var(--red); margin:0;">Enter email and password.</p>'; return; }
+
+  try {
+    const r = await fetch(API + '/v1/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await r.json();
+    result.style.display = 'block';
+
+    if (data.totp_required) {
+      // 2FA enabled — show code input
+      pendingTotpToken = data.pending_token;
+      result.innerHTML =
+        '<div style="background:var(--blue-pale); border-radius:8px; padding:1rem; margin-top:0.5rem;">' +
+          '<p style="margin:0 0 0.75rem; color:var(--navy); font-weight:500;">Enter your 6-digit authenticator code:</p>' +
+          '<div style="display:flex; gap:0.5rem;">' +
+            '<input type="text" id="totp-code" placeholder="123456" maxlength="6" style="flex:1; padding:0.5rem; border:2px solid var(--gray-200); border-radius:6px; font-family:var(--font-mono); font-size:1.1rem; letter-spacing:0.2em; text-align:center;">' +
+            '<button class="btn btn-primary" style="padding:0.5rem 1rem;" onclick="submitTotp()">Verify</button>' +
+          '</div>' +
+          '<p id="totp-error" style="color:var(--red); margin:0.5rem 0 0; display:none;"></p>' +
+        '</div>';
+      setTimeout(function() { document.getElementById('totp-code').focus(); }, 100);
+      return;
+    }
+
+    if (data.session) {
+      sessionToken = data.session;
+      localStorage.setItem('hfd_session', sessionToken);
+      result.innerHTML = '<p style="color:#059669; margin:0;">Login successful!</p>';
+      checkAuth();
+      // Scroll up to the search/download area
+      document.getElementById('ticker-search')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      result.innerHTML = '<p style="color:var(--red); margin:0;">' + (data.error || 'Login failed.') + '</p>';
+    }
+  } catch (e) {
+    result.style.display = 'block';
+    result.innerHTML = '<p style="color:var(--red); margin:0;">Connection error.</p>';
+  }
+}
+
+async function submitTotp() {
+  const code = document.getElementById('totp-code').value.trim();
+  const err = document.getElementById('totp-error');
+  if (!/^\d{6}$/.test(code)) { err.style.display = 'block'; err.textContent = 'Enter a 6-digit code'; return; }
+
+  try {
+    const r = await fetch(API + '/v1/auth/2fa/verify-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pending_token: pendingTotpToken, code: code })
+    });
+    const data = await r.json();
+    if (data.session) {
+      sessionToken = data.session;
+      localStorage.setItem('hfd_session', sessionToken);
+      document.getElementById('login-result').innerHTML = '<p style="color:#059669; margin:0;">Login successful!</p>';
+      checkAuth();
+      document.getElementById('ticker-search')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      err.style.display = 'block';
+      err.textContent = data.error || 'Invalid code';
+    }
+  } catch (e) {
+    err.style.display = 'block';
+    err.textContent = 'Connection error';
+  }
+}
+
+async function requestReset() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) { alert('Enter your email first, then click "Forgot password?"'); return; }
+  // The neutral message is right for "does this address exist" and WRONG for 429. A 429 is a
+  // fact about the caller's own network, not about any account, so surfacing it leaks nothing —
+  // while hiding it tells someone to wait for an email that is never going to arrive.
+  let rr = null;
+  try {
+    rr = await fetch(API + '/v1/auth/reset-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+  } catch (e) { /* network failure → fall through to the neutral message */ }
+  if (rr && rr.status === 429) {
+    alert('Too many password-reset requests from your network in the last hour. Please wait and try again — if you share an internet connection (a university or office), someone else may have used the allowance.');
+    return;
+  }
+  alert('If that email is registered, a reset link has been sent.');
+}
+
+document.getElementById('login-password').addEventListener('keyup', function(e) { if (e.key === 'Enter') loginUser(); });
+
+function handleRoleChange() {
+  const sel = document.getElementById('reg-role').value;
+  document.getElementById('reg-role-custom').style.display = sel === '__other__' ? 'block' : 'none';
+}
+
+// ── Signed download — request a short-lived token and open it ──
+// Save ONE signed URL to disk.
+//
+// This used to be `window.location.href = data.url`, and that is a navigation to
+// a Content-Disposition: attachment response — which Chrome routes through the
+// very same DownloadRequestLimiter as the old bundle loop's <a download> clicks
+// (content/browser/download/download_manager_impl.cc, InterceptNavigation ->
+// CheckDownloadAllowed). So a visitor who once answered Block to the bundle's
+// "download multiple files" prompt lost SINGLE-ticker downloads too, with no
+// error and nothing on the page able to see it. That is what Ahmed meant by
+// "downloads don't work anymore for hf".
+//
+// The File System Access path is the one download route that limiter never sees
+// (its permission is FILE_SYSTEM_WRITE_GUARD; it creates no DownloadItem), so on
+// Chrome and Edge this works even for someone still carrying that Block. The
+// navigation stays as the fallback for browsers without the API — where the
+// limiter also exists but the user has not been prompted once per ticker, because
+// nothing on this page does that any more.
+async function saveSignedUrl(url, filename, handle) {
+  // `handle` is picked by the CALLER inside the click's transient activation,
+  // before any network round-trip — picking it here, after the token request,
+  // is what made slow links fall back to the navigation route the Chrome Block
+  // refuses. Null handle → no picker available → classic navigation.
+  if (handle && handle !== 'cancelled') {
+    const fr = await fetch(url);
+    if (!fr.ok) {
+      let msg = '';
+      try { const j = await fr.json(); if (j && j.error) msg = j.error; } catch (e2) {}
+      alert(downloadFailureText(fr.status, msg) + '\n\n' + downloadFailureAdvice(fr.status, msg));
+      return;
+    }
+    // createWritable inside the try-shaped path too: a locked target file or AV
+    // interference throws here, and that is an error to SHOW, not a silent stop.
+    let w = null;
+    try { w = await handle.createWritable(); } catch (we) {
+      alert('Could not write to the chosen file (' + ((we && we.message) || we) + '). Pick a different location and try again.');
+      return;
+    }
+    // Streamed, not buffered: a 1-minute CSV can be far larger than the parquet
+    // and there is no reason for any of it to sit in the tab.
+    await fr.body.pipeTo(w);
+    return;
+  }
+  window.location.href = url;
+}
+
+async function downloadViaToken(ticker, format) {
+  // Cheap gates first, then the PICKER, then the network. The picker needs the
+  // click's transient activation (~5 s); the token round-trip can exceed that on
+  // a slow link, and a picker that throws for expired activation falls back to
+  // the navigation route — which is refused for anyone carrying the Chrome
+  // Block this function exists to bypass. getDownloadAuth for a legacy session
+  // is a localStorage read; the family branch may refresh, which is why the
+  // picker comes before it.
+  if (stopIfSignedOut(currentUser)) return;
+  if (stopIfDownloadsPaused(currentUser)) return;
+  if (!(await requireCitationAgreement())) return;
+  const version = document.getElementById('version-select').value;
+  const timeframe = document.getElementById('timeframe-select').value;
+  const filename = ticker + '_' + version + '_' + timeframe + '.' + format;
+  const handle = window.HFDSave ? await window.HFDSave.pickHandle(filename) : null;
+  if (handle === 'cancelled') return;                       // the user said no
+  const auth = await getDownloadAuth();
+  if (!auth) {
+    var c2 = document.getElementById('ekd-signin-card'); if (c2) c2.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    alert('Your sign-in expired. Please sign in again to download.');
+    return;
+  }
+  try {
+    const r = await fetch(API + '/v1/download-token/' + ticker + '?version=' + version + '&format=' + format + '&timeframe=' + timeframe, {
+      headers: { 'Authorization': 'Bearer ' + auth.token }
+    });
+    const data = await r.json();
+    if (r.ok && data.url) {
+      await saveSignedUrl(data.url, filename, handle);
+    } else if (r.status === 401) {
+      handleDownloadAuthDead(auth.kind, data.error);          // D38: dead session → recover, no retry loop
+    } else if (r.status === 403) {
+      downloadForbidden(data.error);                          // verify-email / complete-profile, verbatim + next step
+    } else {
+      // Was a bare `data.error` with no guidance, and nothing at all when the body had no `error`
+      // field. Same reason-plus-next-step treatment the bundle summary now gives.
+      alert(downloadFailureText(r.status, data.error) + '\n\n' + downloadFailureAdvice(r.status, data.error));
+    }
+  } catch (e) { alert('Connection error'); }
+}
+
+// ── Ticker Search ──
+async function searchTicker() {
+  const q = document.getElementById('ticker-search').value.trim().toUpperCase();
+  if (!q) return;
+  const results = document.getElementById('search-results');
+  results.innerHTML = '<p style="text-align:center; color:var(--gray-500);">Searching...</p>';
+
+  if (!currentUser) { await checkAuth(); }                      // re-resolve (EKD may have loaded since page load)
+  if (!currentUser) {
+    results.innerHTML = signedOutSearchHtml();
+    return;
+  }
+
+  function tickerCard(ticker) {
+    return '<div class="download-card" style="margin-bottom:0.5rem;">' +
+      '<div class="download-info"><h4>' + ticker + '</h4>' +
+      '<p>' + searchCardLine(dlPaused(currentUser)) + '</p></div>' +
+      '<button onclick="downloadViaToken(\'' + ticker + '\',\'parquet\')" class="btn btn-primary" style="margin-right:0.25rem;">Parquet</button>' +
+      '<button onclick="downloadViaToken(\'' + ticker + '\',\'csv\')" class="btn btn-outline" style="color:var(--blue); border-color:var(--blue); padding:0.5rem 0.75rem; font-size:0.85rem;">CSV</button>' +
+      '</div>';
+  }
+
+  // Only tickers of the published list (see loadAllTickers): the published list is the dataset.
+  // If ticker_meta did not load, nothing is filtered.
+  const published = t => !Object.keys(tickerMeta).length || !!tickerMeta[t];
+  try {
+    const r = await fetch(API + '/v1/symbols/' + encodeURIComponent(q));
+    if (r.ok && published(q)) {
+      // Exact ticker match
+      results.innerHTML = tickerCard(q);
+    } else {
+      // Try partial match from full list
+      const r2 = await fetch(API + '/v1/symbols');
+      const all = await r2.json();
+      const matches = all.symbols.filter(s => s.ticker.includes(q) && published(s.ticker)).slice(0, 10);
+      if (matches.length > 0) {
+        results.innerHTML = matches.map(s => tickerCard(s.ticker)).join('');
+      } else {
+        results.innerHTML = '<p style="text-align:center; color:var(--gray-500);">No results found for <strong></strong></p>';
+        results.querySelector('strong').textContent = q;       // typed text is never parsed as HTML
+      }
+    }
+  } catch (e) {
+    results.innerHTML = '<p style="text-align:center; color:var(--red);">Error connecting to API. Please try again.</p>';
+  }
+}
+document.getElementById('ticker-search').addEventListener('keyup', function(e) {
+  if (e.key === 'Enter') searchTicker();
+});
+
+// ── Registration ──
+async function registerUser() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const institution = document.getElementById('reg-institution').value.trim();
+  const country = document.getElementById('reg-country').value.trim();
+  let role = document.getElementById('reg-role').value;
+  if (role === '__other__') {
+    role = document.getElementById('reg-role-custom').value.trim();
+    if (!role) { document.getElementById('reg-result').style.display = 'block'; document.getElementById('reg-result').innerHTML = '<p style="color:var(--red); margin:0;">Please specify your role.</p>'; return; }
+  }
+  const newsletter = document.getElementById('reg-newsletter').checked;
+  // A Turnstile token is SINGLE-USE and expires about five minutes after it is solved, but
+  // getResponse() keeps handing back the same one. Nothing on this page ever reset the
+  // widget, so the first failed submit — a taken email, a weak password, or simply taking
+  // longer than five minutes over the form — spent the token, and every retry after that
+  // came back "CAPTCHA verification failed. Please try again." no matter what the user
+  // corrected. The green tick stayed on screen the whole time, so the message looked like a
+  // lie. The only escape was a full page reload, which throws away everything typed.
+  //
+  // This is very likely the "some error happened, then it told him he cannot retry" that
+  // started this whole review: the CAPTCHA message masked the real error, and the hourly
+  // registration cap (fixed separately) then locked the address out entirely.
+  const turnstileToken = (typeof turnstile !== 'undefined') ? turnstile.getResponse() : '';
+  if (!turnstileToken) {
+    document.getElementById('reg-result').style.display = 'block';
+    document.getElementById('reg-result').innerHTML = '<p style="color:var(--red); margin:0;">Please complete the CAPTCHA.</p>';
+    return;
+  }
+  const result = document.getElementById('reg-result');
+  const btn = document.getElementById('reg-btn');
+
+  if (!name || !email || !password || !institution || !country || !role) {
+    result.style.display = 'block';
+    result.innerHTML = '<p style="color:var(--red); margin:0;">Please fill in all fields.</p>';
+    return;
+  }
+  // Mirrors isSafeName() in api/src/index.js — keep the two in step. Any script is accepted;
+  // only invisible characters are refused (control codes, and the bidi overrides that make a
+  // string render in an order that does not match its bytes). ZWNJ/ZWJ are allowed, because
+  // Persian and several Indic scripts need them.
+  //
+  // This used to be a Latin-only test, and it mattered that it lived here: the server stopped
+  // refusing non-Latin values on 2026-08-02, but the form went on rejecting them in the browser,
+  // so the server change would have been invisible to every user typing 北京大学.
+  const safeField = s => !/[\u0000-\u001F\u007F\u202A-\u202E\u2066-\u2069]/.test(s)
+    && /^[\p{L}\p{M}\p{N}\s\u200C\u200D\-'.,&()/]+$/u.test(s) && /[\p{L}]/u.test(s);
+  if (!safeField(name) || !safeField(institution) || !safeField(country) || !safeField(role)) {
+    result.style.display = 'block';
+    result.innerHTML = '<p style="color:var(--red); margin:0;">Name, institution, country, and role must each contain at least one letter, and cannot contain symbols or invisible characters.</p>';
+    return;
+  }
+  if (password.length < 8) {
+    result.style.display = 'block';
+    result.innerHTML = '<p style="color:var(--red); margin:0;">Password must be at least 8 characters.</p>';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Creating account...';
+
+  try {
+    const r = await fetch(API + '/v1/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // credentials so the __Host-hfd_orcid_pf cookie the ORCID callback set on
+      // api.hfdatalibrary.com rides along. The prefill token is now HALF a
+      // credential — the server checks it against sha256(that cookie's nonce), so a
+      // token mailed to a stranger verifies nowhere. Without this the cookie is not
+      // sent (this is a cross-origin fetch, same site) and the ORCID link is dropped.
+      // api.* returns Access-Control-Allow-Credentials for hfdatalibrary.com.
+      credentials: 'include',
+      body: JSON.stringify({
+        name, email, password, institution, country, role, newsletter,
+        turnstile_token: turnstileToken,
+        // The server ignores orcid_id (anyone can type one) and reads orcid_prefill,
+        // which is signed and only minted after a real ORCID sign-in.
+        orcid_prefill: oauthPendingProvider === 'orcid' ? oauthPendingProof : undefined
+      })
+    });
+    const data = await r.json();
+
+    result.style.display = 'block';
+    if (data.api_key) {
+      sessionToken = data.session;
+      localStorage.setItem('hfd_session', sessionToken);
+      result.innerHTML =
+        '<div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:1.25rem;">' +
+          '<strong style="color:#065f46;">Account created!</strong>' +
+          // The green banner at the top of this form promised "Your ORCID iD will be linked
+          // to this account. You will be able to sign in with ORCID next time." When the
+          // confirmation did not survive the time it took to fill the form, the server
+          // creates the account anyway with no ORCID iD on it and returns orcid_notice.
+          // That promise has to be corrected on this screen — the user will otherwise
+          // discover it only when "Sign in with ORCID" fails to find their account.
+          (data.orcid_notice ? '<p id="reg-orcid-notice" style="margin:0.6rem 0 0; padding:0.65rem 0.8rem; background:#fffbeb; border:1px solid #fcd34d; border-radius:6px; color:#92400e; font-size:0.9rem;"></p>' : '') +
+          (data.downloads_paused
+            ? '<p style="margin:0.6rem 0 0; font-size:0.95rem;"><strong>Downloads are paused for now.</strong> ' +
+              // an account that must still verify is not "ready" yet
+              (data.verification_required === false ? 'Your account is ready for when they return.'
+                                                    : 'Verify your email now, so that your account is ready when they return.') + '</p>'
+            : '') +
+          (data.verification_required === false
+            ? (data.downloads_paused ? '' : '<p style="margin:0.6rem 0 0; font-size:0.95rem;"><strong>You can download right away.</strong></p>') +
+              '<p style="margin:0.75rem 0 0; font-size:0.9rem;">Your API key (works across every ElkassabgiData library):</p>'
+            : '<p style="margin:0.6rem 0 0; font-size:0.95rem;">&#128231; <strong>' + (data.downloads_paused ? 'Verify your email.' : 'Verify your email to start downloading.') + '</strong> ' +
+                // verification_email_sent === false: the worker KNOWS no mail went out; "we've sent" would be false
+                (data.verification_email_sent === false
+                  ? 'We could not send the verification email just now. Use the <strong>Resend email</strong> button at the top of this page in a few hours.'
+                  : 'We&rsquo;ve sent a verification link &mdash; check your inbox (and spam folder) and click it to activate your account.') + '</p>' +
+              '<p style="margin:0.75rem 0 0; font-size:0.9rem;">Your API key (works across every ElkassabgiData library once your email is verified):</p>') +
+          '<code style="display:block; margin-top:0.5rem; padding:0.75rem; background:#fff; border:1px solid #d1d5db; border-radius:4px; font-size:0.95rem; word-break:break-all;">' + data.api_key + '</code>' +
+          familyReturnHtml() +
+        '</div>';
+      // textContent, never concatenation into innerHTML — same rule as the ORCID banner
+      // above. An older worker simply does not send this field and the paragraph is not
+      // rendered at all, so page and worker can deploy in either order.
+      if (data.orcid_notice) {
+        const orcidNote = document.getElementById('reg-orcid-notice');
+        if (orcidNote) orcidNote.textContent = data.orcid_notice;
+      }
+      // Unmissable version of the same instruction. The worker now reports
+      // email_verified: false for EVERY registrant — admins included, whose rows
+      // are also born unverified — so the guard's real job is the OLDER worker:
+      // a response without the field must not trigger the modal.
+      if (data.email_verified === false && data.verification_required !== false) showVerifyModal(email, data.verification_email_sent, data.downloads_paused);
+      checkAuth();
+    } else {
+      result.textContent = '';
+      const errP = document.createElement('p');
+      errP.style.cssText = 'color:var(--red); margin:0;';
+      errP.textContent = data.error || 'Registration failed.';
+      result.appendChild(errP);
+      resetTurnstile();
+    }
+  } catch (e) {
+    result.innerHTML = '<p style="color:var(--red); margin:0;">Error connecting to API. Please try again.</p>';
+    resetTurnstile();
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Create Account';
+}
+</script>
+
+<script src="../js/zipstream.js"></script>
+<script src="../js/site.js"></script>
+</body>
+</html>

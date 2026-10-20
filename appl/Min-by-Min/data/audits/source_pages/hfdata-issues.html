@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Known Issues - Intraday Minute Stock Data Errata</title>
+  <meta name="description" content="Known data-quality limits of the free 1-minute OHLCV intraday US stock dataset: IEX Exchange only, ~2-3% of consolidated volume, trade corrections, extended hours.">
+  <link rel="canonical" href="https://hfdatalibrary.com/pages/issues">
+  <!-- Open Graph -->
+  <meta property="og:title" content="Known Issues - Intraday Minute Stock Data Errata">
+  <meta property="og:description" content="Known data-quality limits of the free 1-minute OHLCV intraday US stock dataset: IEX Exchange only, ~2-3% of consolidated volume, trade corrections, extended hours.">
+  <meta property="og:url" content="https://hfdatalibrary.com/pages/issues">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://hfdatalibrary.com/assets/og-image.png">
+  <meta property="og:site_name" content="HF Data Library">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Known Issues - Intraday Minute Stock Data Errata">
+  <meta name="twitter:description" content="Known data-quality limits of the free 1-minute OHLCV intraday US stock dataset: IEX Exchange only, ~2-3% of consolidated volume, trade corrections, extended hours.">
+  <meta name="twitter:image" content="https://hfdatalibrary.com/assets/og-image.png">
+  <meta name="author" content="Ahmed Elkassabgi">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css?v=20260714">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container">
+    <span class="navbar-brand-group"><a href="../" class="navbar-brand">HF Data <span>Library</span></a><a class="navbar-fam" href="https://elkassabgidata.com" title="Part of the ElkassabgiData family — one account, every library">part of ElkassabgiData</a></span>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle navigation">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="data">Data</a></li>
+      <li><a href="tickers">Tickers</a></li>
+      <li><a href="docs">Documentation</a></li>
+      <li><a href="api">API</a></li>
+      <li><a href="download">Download</a></li>
+      <li><a href="code">Code</a></li>
+      <li><a href="ai-prompts">AI Tools</a></li>
+      <li><a href="cite">Cite</a></li>
+      <li><a href="stats">Stats</a></li>
+      <li><a href="status">Status</a></li>
+      <li><a href="contact">Contact</a></li><li><a href="https://econdatalibrary.com">Econ Data</a></li><li><a href="https://ipdatalibrary.com">IP Data</a></li>
+    </ul>
+  </div>
+</nav>
+
+<section style="background: var(--navy); color: #fff; padding: 3rem 0;">
+  <div class="container">
+    <h1 style="color:#fff; margin-bottom:0.5rem;">Known Issues</h1>
+    <p style="color: rgba(255,255,255,0.7); font-size:1.1rem; margin:0;">Living errata. Every discovered issue documented with date and resolution.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container" style="max-width:800px;">
+
+    <div style="background: #fef9ee; border: 1px solid #fde68a; border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 2.5rem;">
+      <strong>Transparency policy:</strong> All data issues are documented here as they are discovered. If you find an issue, please <a href="contact">report it</a>. Reporters are credited.
+    </div>
+
+    <h2>Source limitations</h2>
+
+    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem;">
+      <strong style="color:#991b1b;">Important: IEX Exchange only</strong>
+      <p style="margin:0.5rem 0 0; color:#7f1d1d;">Every bar comes from IEX Exchange HIST, which records IEX's own trading activity only (~2–3% of consolidated volume). Please read the details below before using this data in research.</p>
+    </div>
+
+    <h4>IEX Exchange HIST (single exchange)</h4>
+    <p><strong>Status:</strong> Known limitation, documented</p>
+    <p><strong>Coverage:</strong> IEX Exchange only — approximately 2–3% of total consolidated volume — from March 7, 2022.</p>
+    <p>The data comes from IEX Exchange HIST, which provides publicly available pcap captures of IEX's own trading activity. IEX is the only U.S. exchange that makes its historical data freely available and allows redistribution.</p>
+
+    <p><strong>What this means for researchers:</strong></p>
+    <ul style="margin-left:1.5rem; line-height:2;">
+      <li><strong>Volume is substantially lower.</strong> IEX represents ~2–3% of consolidated volume. Daily volume for a stock like AAPL on IEX may be 2–5 million shares vs. 50–80 million on the full tape.</li>
+      <li><strong>Some tickers have zero trades on IEX on any given day.</strong> Thinly traded names have no bars on the days when nothing traded on IEX.</li>
+      <li><strong>OHLCV bars may differ from the full tape.</strong> Since IEX sees a subset of trades, the Open, High, Low, and Close prices may not match the consolidated tape values.</li>
+      <li><strong>Academic measures will be affected.</strong> Realized volatility, bid-ask spreads, Amihud illiquidity, jump detection, and autocorrelation statistics computed from IEX-only data may differ from those computed from the full tape.</li>
+    </ul>
+
+    <p><strong>When IEX data is appropriate:</strong></p>
+    <ul style="margin-left:1.5rem; line-height:2;">
+      <li>Cross-sectional studies (all tickers observed under the same conditions)</li>
+      <li>Studies of IEX specifically (market share, execution quality, routing behavior)</li>
+      <li>Studies of highly liquid names (Q5 quintile) where IEX has better representation</li>
+      <li>As a free complement to WRDS/TAQ, which researchers may have through their institutions</li>
+      <li>Prototyping and teaching, where exact magnitudes are less important than demonstrating methods</li>
+    </ul>
+
+    <p><strong>When IEX data is NOT appropriate:</strong></p>
+    <ul style="margin-left:1.5rem; line-height:2;">
+      <li>Studies requiring complete volume or turnover figures</li>
+      <li>Studies of illiquid stocks that rarely trade on IEX</li>
+      <li>Studies where NBBO (National Best Bid/Offer) prices are needed — IEX quotes reflect IEX's book, not the NBBO</li>
+    </ul>
+
+    <p>Each bar has a <code>source</code> column. Its value is <code>"iex"</code> (IEX Exchange HIST).</p>
+
+    <h4>Why not use a full-tape source?</h4>
+    <p>Consolidated tape data (CTA/UTP) is owned by NYSE and Nasdaq. Providers who redistribute it charge licensing fees and prohibit re-redistribution in their terms of service. IEX Exchange HIST is the only U.S. equity exchange that makes its historical data freely available and permits redistribution with attribution. This is a trade-off between coverage and accessibility. Data provided for free by IEX. By accessing or using IEX Historical Data, you agree to the <a href="https://www.iex.io/legal/hist-data-terms" rel="noopener">IEX Historical Data Terms of Use</a>.</p>
+    <p>Researchers who require full consolidated tape data should supplement this library with institutional access to WRDS/TAQ or similar licensed sources.</p>
+
+    <h4>Trade corrections and cancellations</h4>
+    <p><strong>Status:</strong> Known limitation, documented 2026-08-22</p>
+    <p>Bars are built from IEX TOPS <em>Trade Report</em> messages only. IEX
+    trade-break messages are not consumed, so a print that the exchange later busts or
+    corrects remains in the minute bar. Erroneous prints are therefore caught, if at all,
+    by the generic outlier filters in the Clean version (steps 7 and 8) rather than by a
+    corrections feed. Researchers whose designs are sensitive to busted trades should take
+    this into account.</p>
+
+    <h4>Bars outside 09:30&ndash;16:00 ET are not included in either version</h4>
+    <p><strong>Status:</strong> Clarification, documented 2026-08-22; corrected 2026-10-05 (this entry
+    previously said that neither version holds after-hours bars)</p>
+    <p>Neither Raw nor Clean contains a bar outside 09:30&ndash;16:00 ET. Clean removes
+    such bars by rule (step 1), but Raw has none to remove: raw bars are built only from
+    trades at or after 09:30 and before 16:00 ET (bars labelled 09:30 to 15:59). In the
+    full served raw files of SOXL and AAPL, read on 2026-10-05, 0 of 387,925 and 0 of
+    445,966 bars fall outside that window. The window is the same on every day: on the
+    nine NYSE early-close days in the data (13:00 ET close; 2022-11-25, 2023-07-03,
+    2023-11-24, 2024-07-03, 2024-11-29, 2024-12-24, 2025-07-03, 2025-11-28, 2025-12-24),
+    trades printed at or after 13:00 ET are kept in both versions (43 SOXL and 21 AAPL raw
+    bars, all between 13:00 and 13:59; 19 of the 21 AAPL bars are also in Clean).
+    Researchers who need regular-session bars only should drop bars at or after 13:00 ET
+    on those days. The Data Versions page previously
+    listed &ldquo;outside-hours bars&rdquo; among Raw&rsquo;s contents; that was wrong and
+    has been corrected.</p>
+
+    <h4>One price basis since October 6, 2026: adjusted for stock splits only</h4>
+    <p><strong>Status:</strong> Changed 2026-10-06 (this replaces the entry of 2026-10-05, which
+    described a dividend adjustment that ended on March 27, 2026)</p>
+    <p>Until October 6, 2026 the bars from March 7, 2022 to March 27, 2026 carried a backward
+    adjustment for cash dividends and most spin-offs, and the bars after that date did not.
+    The series changed its price basis in the middle. I rebuilt that period from the IEX
+    trade prices, so the whole series is now on one basis: prices and volumes are adjusted
+    for stock splits and for nothing else.</p>
+    <p>What changed in the data: a price before a split is the traded price divided by the
+    split ratio, and its volume is multiplied by it (a 4-for-1 split divides earlier prices
+    by 4; a 1-for-10 reverse split multiplies them by 10). There are 168 such splits in 145
+    tickers through October 2, 2026. A price is no longer scaled for dividends or
+    spin-offs, so on an ex-date it falls as it did in the market (for example T on April 11,
+    2022, GE on January 4, 2023 and DD on November 3, 2025). Prices from March 2022 to
+    March 2026 are therefore higher than in files downloaded before October 6, 2026: across
+    all 1,253 tickers the close of a ticker&rsquo;s first day is higher by 6.2% at the median
+    (5th to 95th percentile: 0.0% to 22.7%), and the prices of 105 tickers did not change.
+    Raw bars after March 27, 2026 did not change.</p>
+    <p>What this means for research: every return in the data is now a price return. For
+    total returns, add distributions from your own source. Files downloaded before
+    October 6, 2026 are on the old mixed basis; do not combine them with new files. I find
+    splits from the IEX prices. A stock dividend, or a split of an unusual ratio that I
+    have not found, is not adjusted and shows as a price change. Volumes are split-adjusted whole shares, and a
+    traded minute never shows less than 1 share, so the early bars of funds with many
+    reverse splits are small: SOXS has four reverse splits (20,000 to 1 in total at the
+    start of the series), and 42% of its bars from March 7, 2022 to March 27, 2026 show
+    1 share.</p>
+    <p>Clean was cleaned again as a whole on the new basis: its prices change with the
+    basis, and a small number of minutes enter or leave it (for AAPL, 138 entered and 94
+    left, of 433,540). Most move because the outlier filters see different prices. Some
+    move although no price changed, because the whole file is now cleaned in one pass and
+    not day by day: after March 27, 2026, 2,112 minutes entered Clean and 166 left, in 651
+    tickers. The 5-minute to monthly bars and the daily variables are recomputed from the
+    new bars.</p>
+    <p>Two splits fall together with another event, so the adjusted price still moves at
+    them. AMC made a 1-for-10 reverse split on August 24, 2023. That day was also the
+    record date of a share payment to holders, and its preferred equity units were due
+    to convert into common stock on the next day; the adjusted close falls 26% on
+    August 24. GSK consolidated its shares 4-for-5
+    when it separated Haleon on July 18, 2022; the adjusted close falls 17% from July 18
+    to July 25, 2022, and GSK has no bars on the four sessions between. A separation of a
+    company is not a split: CTVA fell on October 1, 2026 with the separation of its seed
+    business, and that fall is in the data.</p>
+
+    <h4>The session of December 23, 2024 is cut short at 10:22 ET</h4>
+    <p><strong>Status:</strong> Known limitation, documented 2026-10-06</p>
+    <p>The IEX HIST record of December 23, 2024 is short. All three feeds that IEX publishes
+    for that day are about a fifth of the size of the session before (the feed I use is
+    1.58 GB, against 8.27 GB for December 20). Of the 33,042 one-minute bars of that
+    session, 33,022 fall between 09:30 and 10:22 ET; the other 20 are single bars of SPY,
+    BAC and AAPL between 12:08 and 13:45. I cannot fill the rest of the session from IEX
+    HIST. Daily bars and daily variables of that date are built from less than one hour of
+    trading: treat them as incomplete.</p>
+
+    <h4>Old files of 15 tickers hold another security&rsquo;s prices after the ticker symbol changed hands</h4>
+    <p><strong>Status:</strong> Fixed 2026-09-09 (seven tickers) and 2026-10-05 (eight more);
+    documented 2026-10-07</p>
+    <p>An exchange can give a ticker symbol to a new security after the old one has left it.
+    The files were built by ticker symbol alone, so from the day a symbol changed hands the
+    series of the old security received the trades of the new one. GOLD is the one ticker
+    of the 15 whose series continues after the symbol changed hands: it follows Barrick,
+    which has traded under the symbol B since May 9, 2025. On December 2, 2025 the symbol GOLD passed to
+    Gold.com, Inc. In the file that was served before the fix of
+    September 9, 2026, the bars from December 2, 2025 to September 4, 2026 were
+    Gold.com&rsquo;s: 38,865 one-minute bars in Raw. The daily close moved from 42.34 on
+    December 1 to 29.815 on December 2, 2025. After that fix GOLD had no bars from March 30
+    to September 4, 2026, until October 6, 2026 (the next entry).</p>
+    <p>Rows dated on or after the day the symbol changed hands belonged to the other security. Each count is
+    the number of such one-minute bars in Raw in the served file: just before the fix for
+    the first group, on October 2, 2026 for the second.</p>
+    <ul>
+      <li>Fixed on September 8, 2026 (IPW) and September 9, 2026 (the other six): GOLD from December 2, 2025 to September 4, 2026
+      (38,865 bars); STI
+      from February 5, 2024 (24,714); IPW from the day its symbol changed hands (13,092); SKK from October 8,
+      2024 (4,019); VRM from February 20, 2025 (3,010); PARA from August 7, 2026 (350); USLV
+      from May 27, 2026 (253).</li>
+      <li>Fixed on October 5, 2026: WOLF from September 29, 2025 (70,788 bars); BBBY from
+      August 29, 2025 (70,380); RCD from December 19, 2024 (1,090); FB from June 26, 2025
+      (318); INFO from November 8, 2024 (303); UGLD from May 29, 2026 (202); KNOW from
+      February 27, 2024 (106); CRED from June 2, 2023 (74).</li>
+    </ul>
+    <p>Three of these files had a second error: the whole history of the old security was on
+    a wrong scale. For PARA the daily update read the price difference between the two
+    securities as a 6-for-1 split. A PARA file served between the daily update of August 12, 2026
+    and the fix of September 9, 2026 holds every price of the old security at one sixth of
+    its value and every volume at six times. In such a file the Raw close of August 6,
+    2025 is 1.845; the right value is 11.07. For IPW and SKK, stock splits of the new owner were applied to the old
+    security: from September 5, 2026 to their fix, IPW prices were 72 times too high and
+    SKK prices 10 times too high, with volumes lower by the same factor (rounded to whole
+    shares). No bar in such a file is right.</p>
+    <p>What the files hold now: GOLD continues as Barrick&rsquo;s series. Six series stop on
+    the last session of their own security: FB on June 8, 2022, BBBY on May 2, 2023, RCD
+    on June 6, 2023, VRM on November 29, 2024, PARA on August 6, 2025 and WOLF on
+    September 26, 2025. For VRM and WOLF the new security is the same company&rsquo;s new
+    stock: the old shares were cancelled in a reorganization and new shares took the
+    symbol. The series follows the old shares. The other eight (STI, IPW, SKK, USLV, INFO,
+    UGLD, KNOW and CRED) are not in the dataset.</p>
+    <p>What this means for research: the other security&rsquo;s bars were also in Clean
+    (fewer, because the cleaning rules removed some), in the 5-minute to monthly bars and
+    in the daily variables. If you hold a file of one of these tickers from before its fix
+    date, do not use it. Download the ticker again if it is still in the dataset. The daily
+    update now drops the trades that the new owners of these 15 symbols print.</p>
+
+    <h4>Seven tickers had missing sessions between March and October 2026</h4>
+    <p><strong>Status:</strong> Fixed 2026-10-06</p>
+    <p>BRK-B, BF-B, PRN- and GOLD had no bars from March 30 to September 4, 2026. PSTG had
+    none from April 17, BK from May 21 and LC from June 22, each to October 2, 2026. The
+    cause was the symbol: the dataset writes BRK-B, BF-B and PRN- where IEX writes BRK.B,
+    BF.B and PRN; GOLD&rsquo;s company now trades as B; and PSTG, BK and LC changed their IEX
+    symbols (to P, BNY and HAPN). I added the missing sessions from the IEX HIST record:
+    221,672 one-minute bars. LC has no IEX trade on June 22, 2026, the day of its symbol
+    change, and has no bars that day.</p>
+
+    <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--gray-200);">
+
+    <h2>No other issues reported</h2>
+    <p style="color: var(--gray-500);">This page will be updated as issues are discovered. Check back after each data update.</p>
+
+    <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--gray-200);">
+
+    <h3>Report an issue</h3>
+    <p>Email <a href="/cdn-cgi/l/email-protection#ee8f8a838780ae86888a8f9a8f82878c9c8f9c97c08d8183"><span class="__cf_email__" data-cfemail="dcbdb8b1b5b29cb4bab8bda8bdb0b5beaebdaea5f2bfb3b1">[email&#160;protected]</span></a> with the ticker, date(s), and description. See the <a href="contact">contact page</a> for full reporting guidelines.</p>
+
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom">
+      <p>&copy; 2026 Ahmed Elkassabgi.</p>
+      <p style="margin-top:0.4rem; font-size:0.82rem; opacity:0.85;">For academic research only. Not for trading. Not investment advice. No warranty. Use of this site and its data is subject to the <a href="terms">Terms of Use</a>.</p>
+      <p style="margin-top:0.4rem; font-size:0.82rem; opacity:0.85;">Data provided for free by IEX. By accessing or using IEX Historical Data, you agree to the <a href="https://www.iex.io/legal/hist-data-terms" rel="noopener">IEX Historical Data Terms of Use</a>.</p>
+      <p class="orcid">ORCID: <a href="https://orcid.org/0000-0002-5926-7493">0000-0002-5926-7493</a></p>
+    </div>
+  </div>
+  <!-- visitor-count: 23,435 visitors | 51,240 page views | 133 countries (snapshot taken at deploy time; the live figure is on /pages/stats) -->
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="../js/site.js"></script>
+</body>
+</html>

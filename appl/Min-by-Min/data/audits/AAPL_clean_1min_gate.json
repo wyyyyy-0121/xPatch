@@ -1,0 +1,35 @@
+{
+  "status": "insufficient_data",
+  "reasons": [
+    "calendar_minute_coverage 0.9700 < required 0.9800; full XNYS sessions including missing days",
+    "minimum_session_coverage 0.1513 < required 0.9800; full XNYS sessions including missing days"
+  ],
+  "metadata": {
+    "rows_input": 436906,
+    "duplicate_timestamps_removed": 0,
+    "timestamp_timezone": "America/New_York",
+    "start": "2022-03-07T09:30:00-05:00",
+    "end": "2026-10-16T15:59:00-04:00",
+    "source": "HF Data Library; IEX Exchange HIST; user-supplied cleaned CSV",
+    "source_verified": true,
+    "sha256": "54d27ebb6ab2ed686ae38f1fcba5f1ff4dd7e48573b7fd2a7064b59ab40e4bb4",
+    "sidecar_manifest": "appl/Min-by-Min/data/AAPL_clean_1min.csv.manifest.json",
+    "provider_url": "https://hfdatalibrary.com/pages/download?",
+    "adjustment": "split-adjusted only per HF Data Library docs; dividends/spin-offs not adjusted; exact file-version policy not checksum-verified",
+    "declared_interval": "1min",
+    "timestamp_label": "bar_start",
+    "synthetic": false,
+    "linear_second_difference_fraction": 0.0,
+    "suspected_interpolation": false,
+    "expected_regular_minutes": 450390,
+    "observed_regular_minutes": 436887,
+    "calendar_minute_coverage": 0.9700193165922867,
+    "minimum_session_coverage": 0.15128205128205127,
+    "median_within_day_minute_coverage": 0.9717948717948718,
+    "missing_sessions": 0,
+    "sessions": 1159,
+    "outside_regular_rows": 19
+  },
+  "complete_bars": 436887,
+  "bar_interval": "1min"
+}

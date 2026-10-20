@@ -195,7 +195,8 @@ def code_hash():
 
 
 def run_profile(name, csv_path, out_dir, lookbacks=None, requested_models=None,
-                bar_interval=None, horizons=None, final=False, freeze_path=None, ledger_path=None):
+                bar_interval=None, horizons=None, final=False, freeze_path=None, ledger_path=None,
+                exploratory_quality=False):
     csv_path, out_dir = Path(csv_path), Path(out_dir)
     config = json.loads(PROFILE_PATH.read_text())
     p = dict(config['profiles'][name])
@@ -239,10 +240,28 @@ def run_profile(name, csv_path, out_dir, lookbacks=None, requested_models=None,
                   final_test={'status':'not_requested', 'results':[]},
                   data_limitations=[] if meta.get('source_verified') else ['Source remains unverified: results are exploratory/regression evidence.'])
     issues = data_gate(name, bars, meta, config['requirements'])
-    if issues:
+    quality_only = [issue for issue in issues if issue.startswith(('calendar_minute_coverage', 'minimum_session_coverage'))]
+    blocking_issues = [issue for issue in issues if issue not in quality_only]
+    if quality_only and exploratory_quality and not final and not blocking_issues:
+        result['quality_gate_override'] = dict(status='exploratory_only', waived=quality_only,
+                reason='User selected this source; missing active minutes remain unfilled and samples crossing gaps are discarded.')
+        result['data_limitations'].extend([
+            'Coverage is below the formal 98% requirement; this run is exploratory only.',
+            'IEX HIST is a single-exchange sample, not consolidated U.S. market activity.',
+            'HF Data Library Clean filtering uses a centered 50-bar window and can depend on future neighboring bars.',
+            'The exact local file version is not checksum-matched to the provider release; consult the quality audit.'])
+        issues = []
+    if issues and not exploratory_quality:
         result.update(status='insufficient_data', reasons=issues)
         return write_result(out_dir, result)
+    elif issues:
+        result.update(status='insufficient_data', reasons=issues)
+        return write_result(out_dir,result)
+    if final and quality_only:
+        raise ValueError('Quality-gate-limited data cannot enter a final evaluation')
     if final:
+        if exploratory_quality:
+            raise ValueError('Exploratory quality-limited run cannot perform final testing')
         if freeze_path is None:
             raise ValueError('--final requires a frozen validation configuration (--freeze)')
         frozen = json.loads(Path(freeze_path).read_text())
@@ -326,7 +345,8 @@ def run_profile(name, csv_path, out_dir, lookbacks=None, requested_models=None,
                                    median_baseline_RMSE_gain=float(np.median([f['baseline_rmse_gain'] for f in scores])),
                                    baseline_improvement_fraction=float(np.mean([f['baseline_rmse_gain'] > 0 for f in scores])))
                         row['acceptance_criteria'] = acceptance(row)
-                        row['accepted'] = model_name != 'last_close' and all(row['acceptance_criteria'].values())
+                        row['accepted'] = (not exploratory_quality and model_name != 'last_close'
+                                           and all(row['acceptance_criteria'].values()))
                         row['diagnostic'] = diagnose(row)
                         result['rankings'].append(row)
         result['rankings'].sort(key=selection_key)
@@ -341,6 +361,10 @@ def run_profile(name, csv_path, out_dir, lookbacks=None, requested_models=None,
         if not result['rankings']:
             result.update(status='insufficient_data', reasons=['No configuration supports five purged folds; see skipped'])
             return write_result(out_dir, result)
+        if exploratory_quality:
+            result['status'] = 'exploratory_quality_limited'
+            result['acceptance_criteria']['accepted_run_exists'] = False
+            result['acceptance_criteria']['reason'] = 'Coverage gate failed; no candidate can be accepted.'
     # Export deployment artifacts using development labels only, also for baseline fallback.
     for selected in result['selections']:
         horizon, window, mode, model_name = (selected[k] for k in ('horizon','lookback','target_mode','model'))
@@ -465,10 +489,13 @@ def main(argv=None):
     parser.add_argument('--models', nargs='+', choices=MODEL_ORDER)
     parser.add_argument('--final', action='store_true')
     parser.add_argument('--freeze', type=Path)
+    parser.add_argument('--exploratory-quality-limited', action='store_true',
+                        help='Run development diagnostics after a coverage-only gate failure; never accepts models or permits final testing')
     args = parser.parse_args(argv)
     source = args.csv or HERE/'data'/('AAPL_1d.csv' if args.profile in ('annual','quarterly','monthly') else 'AAPL_1min.csv')
     result = run_profile(args.profile,source,args.output/args.profile,args.lookbacks,args.models,
-                         args.bar_interval,args.horizons,args.final,args.freeze)
+                         args.bar_interval,args.horizons,args.final,args.freeze,
+                         exploratory_quality=args.exploratory_quality_limited)
     print(json.dumps(dict(status=result['status'],reasons=result.get('reasons',[]), report=str(args.output/args.profile/'REPORT.md')),indent=2))
     return 2 if result['status']=='insufficient_data' else 0
 

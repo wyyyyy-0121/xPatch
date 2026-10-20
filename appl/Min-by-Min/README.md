@@ -29,6 +29,9 @@ python run_experiment.py --profile quarterly --csv data/AAPL_1d.csv
 python run_experiment.py --profile monthly --csv data/AAPL_1d.csv --models last_close drift seasonal ridge
 python run_experiment.py --profile hourly --csv data/AAPL_1min.csv
 python run_experiment.py --profile minute --csv data/AAPL_1min.csv
+python audit_user_minute_data.py
+python run_experiment.py --profile minute --csv data/AAPL_clean_1min.csv \
+  --exploratory-quality-limited --output results/iex_exploratory
 python run_experiment.py --profile minute --csv data/AAPL_1min.csv --bar-interval 5min
 python predict.py --artifact results/validation/annual/future_close_h12.joblib --csv data/AAPL_1d.csv
 python -m pytest tests/test_experiment.py -q
@@ -43,6 +46,8 @@ python -m pytest tests/test_experiment.py -q
 ## 时间、来源与缺口
 
 `profiles.json` 定义五种时间尺度及最低历史：年度 15 年、季度 10 年、月度 5 年、小时 1 年、分钟 6 个月。日内默认要求每个完整常规交易日及全期间覆盖率均至少 98%。不足写 `insufficient_data` 并返回 2；无法形成五折的配置记录跳过原因，不生成虚假排名。
+
+用户指定的真实分钟输入是 `data/AAPL_clean_1min.csv`，来源页为 [HF Data Library](https://hfdatalibrary.com/pages/download?)。本地文件哈希绑定的人工来源凭证记录纽约时区、分钟起始标签及提供方所述复权政策；这证明审阅了来源说明，不证明精确下载版本。审计发现总常规时段覆盖率约 97.0%，低于 98% 正式门槛；来源是 IEX 单一交易所，且 Clean 版居中 50 分钟异常值过滤依赖未来邻近柱，无法支持严格因果结论。正式实验仍返回 `insufficient_data`。仅用于开发诊断时可显式添加 `--exploratory-quality-limited`；输出会标记 `exploratory_quality_limited`、不接受任何模型且不运行最终测试。细节见 `data/audits/AAPL_clean_1min_quality.md`。
 
 CSV 至少包含 timestamp/Date 与 Open/High/Low/Close/Volume。排序并保留重复时间的最后一条，记录去重数量；拒绝无效数值和 OHLC 边界。仅用 XNYS 常规时段；日历包含节假日、提前收市、整天缺失和 DST。不填补缺失分钟或闭市时间。输入／标签可跨交易日，闭市跳过，真正缺柱不能压缩。小时柱从开盘起对齐，只保留完整 60 分钟；通常每天 6 柱，末尾 30 分钟不进入小时样本，8 柱预测会跨日。未来时间不是简单加自然小时。由日线生成月线时只保留完整交易月。
 

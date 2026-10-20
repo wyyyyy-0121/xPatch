@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1-Minute Stock Data: Cleaning Methodology - HF Data</title>
+  <link rel="canonical" href="https://hfdatalibrary.com/pages/docs">
+  <!-- Open Graph -->
+  <meta property="og:title" content="1-Minute Stock Data: Cleaning Methodology - HF Data">
+  <meta property="og:description" content="Methodology for free 1-minute OHLCV stock &amp; ETF data: data sources, the 8-step cleaning pipeline, outlier filters, price adjustment, survivorship.">
+  <meta property="og:url" content="https://hfdatalibrary.com/pages/docs">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://hfdatalibrary.com/assets/og-image.png">
+  <meta property="og:site_name" content="HF Data Library">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="1-Minute Stock Data: Cleaning Methodology - HF Data">
+  <meta name="twitter:description" content="Methodology for free 1-minute OHLCV stock &amp; ETF data: data sources, the 8-step cleaning pipeline, outlier filters, price adjustment, survivorship.">
+  <meta name="twitter:image" content="https://hfdatalibrary.com/assets/og-image.png">
+  <meta name="description" content="Methodology for free 1-minute OHLCV stock &amp; ETF data: data sources, the 8-step cleaning pipeline, outlier filters, price adjustment, survivorship.">
+  <meta name="author" content="Ahmed Elkassabgi">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css?v=20260714">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container">
+    <span class="navbar-brand-group"><a href="../" class="navbar-brand">HF Data <span>Library</span></a><a class="navbar-fam" href="https://elkassabgidata.com" title="Part of the ElkassabgiData family — one account, every library">part of ElkassabgiData</a></span>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle navigation">&#9776;</button>
+    <ul class="nav-links">
+      <li><a href="data">Data</a></li>
+      <li><a href="tickers">Tickers</a></li>
+      <li><a href="docs" class="active">Documentation</a></li>
+      <li><a href="api">API</a></li>
+      <li><a href="download">Download</a></li>
+      <li><a href="code">Code</a></li>
+      <li><a href="ai-prompts">AI Tools</a></li>
+      <li><a href="cite">Cite</a></li>
+      <li><a href="stats">Stats</a></li>
+      <li><a href="status">Status</a></li>
+      <li><a href="contact">Contact</a></li><li><a href="https://econdatalibrary.com">Econ Data</a></li><li><a href="https://ipdatalibrary.com">IP Data</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section style="background: var(--navy); color: #fff; padding: 3rem 0;">
+  <div class="container">
+    <h1 style="color:#fff; margin-bottom:0.5rem;">Documentation</h1>
+    <p style="color: rgba(255,255,255,0.7); font-size:1.1rem; margin:0;">Everything you need to know about the data: sources, cleaning, variables, and quality.</p>
+  </div>
+</section>
+
+<!-- Doc navigation cards -->
+<section class="section">
+  <div class="container">
+    <div class="grid-3">
+      <a href="versions" class="card" style="text-decoration:none; color:inherit;">
+        <div class="card-icon">&#128202;</div>
+        <h3>Data Versions</h3>
+        <p>Raw and Clean — what each version contains and who should use it.</p>
+      </a>
+      <a href="dictionary" class="card" style="text-decoration:none; color:inherit;">
+        <div class="card-icon">&#128214;</div>
+        <h3>Data Dictionary</h3>
+        <p>Every column, data type, and description. All 25 computed academic variables.</p>
+      </a>
+      <a href="api" class="card" style="text-decoration:none; color:inherit;">
+        <div class="card-icon">{&thinsp;}</div>
+        <h3>API Reference</h3>
+        <p>REST endpoints, authentication, rate limits, response formats, and examples.</p>
+      </a>
+      <a href="code" class="card" style="text-decoration:none; color:inherit;">
+        <div class="card-icon">&#128187;</div>
+        <h3>Sample Code</h3>
+        <p>Python, R, and Stata examples. Jupyter notebooks for common research tasks.</p>
+      </a>
+      <a href="changelog" class="card" style="text-decoration:none; color:inherit;">
+        <div class="card-icon">&#128221;</div>
+        <h3>Changelog</h3>
+        <p>Every data update, versioned and documented. What changed and when.</p>
+      </a>
+      <a href="issues" class="card" style="text-decoration:none; color:inherit;">
+        <div class="card-icon">&#9888;</div>
+        <h3>Known Issues</h3>
+        <p>Living errata log. Every discovered issue documented with date and resolution.</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Methodology -->
+<section class="section section-alt">
+  <div class="container" style="max-width:900px;">
+    <h2>Methodology</h2>
+
+    <h3>Data sources</h3>
+    <p><strong>Source:</strong> IEX Exchange market data. Every bar is parsed directly from IEX Exchange HIST TOPS pcap files (IEX's top-of-book feed) into one-minute OHLCV bars. IEX represents approximately 2–3% of consolidated volume, so these bars capture IEX-only activity, not the full tape.</p>
+    <p>Data provided for free by IEX. By accessing or using IEX Historical Data, you agree to the <a href="https://www.iex.io/legal/hist-data-terms" rel="noopener">IEX Historical Data Terms of Use</a>.</p>
+    <p>Every file carries a <code>source</code> column; every bar is <code>iex</code>.</p>
+
+    <h3 style="margin-top:2.5rem;">Eight-step cleaning pipeline</h3>
+    <p>The Clean version applies the following pipeline. Each step is applied in order. A bar that fails any step is removed.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th>Rule</th>
+            <th>Rationale</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mono">1</td>
+            <td>Remove bars outside 09:30–16:00 ET</td>
+            <td>Pre/post-market bars have different microstructure properties</td>
+          </tr>
+          <tr>
+            <td class="mono">2</td>
+            <td>Remove bars with non-positive prices (Open, High, Low, or Close &le; 0)</td>
+            <td>Clearly erroneous</td>
+          </tr>
+          <tr>
+            <td class="mono">3</td>
+            <td>Remove bars where High &lt; Low</td>
+            <td>OHLC violation — impossible in valid trade data</td>
+          </tr>
+          <tr>
+            <td class="mono">4</td>
+            <td>Remove bars where Open or Close falls outside [Low, High]</td>
+            <td>OHLC violation — Open and Close must be within the bar's range</td>
+          </tr>
+          <tr>
+            <td class="mono">5</td>
+            <td>Remove duplicate timestamps (keep first occurrence)</td>
+            <td>Source data occasionally contains exact duplicates</td>
+          </tr>
+          <tr>
+            <td class="mono">6</td>
+            <td>Remove bars with zero volume</td>
+            <td>No trade occurred — price is stale or indicative</td>
+          </tr>
+          <tr>
+            <td class="mono">7</td>
+            <td>Remove bars where |log return| &gt; 25% (relative to previous close)</td>
+            <td>Extreme outlier filter — returns exceeding 25% in one minute are almost certainly errors</td>
+          </tr>
+          <tr>
+            <td class="mono">8</td>
+            <td>Brownlees-Gallo filter: remove bars where |close &minus; median| &gt; 3 &times; MAD, computed over a 50-bar centered window</td>
+            <td>Adaptive outlier detection that accounts for local price level</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>Bars removed:</strong> <span data-meta="bars-removed">9,263,399</span> (about 3% of raw). The cleaning is conservative by design.</p>
+
+    <h3 style="margin-top:2.5rem;">Coverage</h3>
+    <ul style="margin-left:1.5rem;">
+      <li><strong>1,253 tickers</strong> — U.S. equities and ETFs</li>
+      <li><strong>Begin March 7, 2022</strong> — IEX Exchange HIST data only</li>
+      <li><strong>Updated daily</strong> — new bars added each trading day via automated pipeline</li>
+      <li><strong>09:30–16:00 Eastern Time only</strong> — the same window on every day, early-close days included (see <a href="issues">Known Issues</a>)</li>
+      <li><strong>Adjusted prices</strong> — prices and volumes are adjusted for stock splits and for nothing else. Dividends and spin-offs are not removed: on an ex-date a price falls as it did in the market, so every return is a price return (see <a href="issues">Known Issues</a>)</li>
+    </ul>
+
+    <h3 style="margin-top:2.5rem;">Universe construction &amp; survivorship</h3>
+    <p>The ticker list is <em>not</em> reconstructed point-in-time: names are not added or removed automatically as companies list, delist, merge, or fail. Each ticker's series starts at its first bar and ends at its last one.</p>
+
+    <div style="background:#fef3c7; border:1px solid #f0c850; border-radius:8px; padding:1rem 1.25rem; margin:1rem 0; color:#5a4708;">
+      <p style="margin:0 0 0.5rem;"><strong>&#9888; The ticker list is not point-in-time.</strong></p>
+      <p style="margin:0;">It includes names that traded on IEX in the covered period and later delisted (e.g.&nbsp;SVB Financial, First Republic), so delisted names are not simply dropped. But names are not added automatically as companies list, so a cross-sectional study should check that the tickers it needs are present.</p>
+    </div>
+
+    <p style="margin-bottom:0.4rem;"><strong>Guidance:</strong></p>
+    <ul style="margin-left:1.5rem;">
+      <li><strong>Suitable for:</strong> time-series and intraday microstructure analysis of the listed tickers, and data-cleaning/methodology research.</li>
+      <li><strong>Use with caution for:</strong> cross-sectional studies that need recently listed companies, which the fixed universe does not add.</li>
+      <li><strong>Separate from survivorship:</strong> the <strong>IEX-only volume caveat</strong> noted under <em>Data sources</em> above (≈2–3% of consolidated volume) also applies.</li>
+    </ul>
+    <p>A point-in-time, delisting-inclusive universe (built from CRSP/TAQ) is a known future direction, not part of the current release.</p>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom">
+      <p>&copy; 2026 Ahmed Elkassabgi.</p>
+      <p style="margin-top:0.4rem; font-size:0.82rem; opacity:0.85;">For academic research only. Not for trading. Not investment advice. No warranty. Use of this site and its data is subject to the <a href="terms">Terms of Use</a>.</p>
+      <p style="margin-top:0.4rem; font-size:0.82rem; opacity:0.85;">Data provided for free by IEX. By accessing or using IEX Historical Data, you agree to the <a href="https://www.iex.io/legal/hist-data-terms" rel="noopener">IEX Historical Data Terms of Use</a>.</p>
+      <p class="orcid">ORCID: <a href="https://orcid.org/0000-0002-5926-7493">0000-0002-5926-7493</a></p>
+    </div>
+  </div>
+  <!-- visitor-count: 23,435 visitors | 51,240 page views | 133 countries (snapshot taken at deploy time; the live figure is on /pages/stats) -->
+</footer>
+
+<script src="../js/site.js"></script>
+</body>
+</html>

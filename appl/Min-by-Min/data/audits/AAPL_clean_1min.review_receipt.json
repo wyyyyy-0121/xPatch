@@ -1,0 +1,13 @@
+{
+  "decision": "verified",
+  "reviewer": "Codex source review using URL supplied by user",
+  "source_url": "https://hfdatalibrary.com/pages/download?",
+  "review_evidence": [
+    "https://hfdatalibrary.com/pages/docs",
+    "https://hfdatalibrary.com/pages/issues",
+    "Page documents IEX HIST, 09:30-15:59 ET bar labels, Clean filters and split-only adjustment; source column is iex"
+  ],
+  "timezone": "America/New_York",
+  "csv_sha256": "54d27ebb6ab2ed686ae38f1fcba5f1ff4dd7e48573b7fd2a7064b59ab40e4bb4",
+  "reviewed_utc": "2026-10-20T08:33:06.507078+00:00"
+}

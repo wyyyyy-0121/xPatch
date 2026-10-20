@@ -1,0 +1,91 @@
+{
+  "csv": "/home/ayaka/xPatch/appl/Min-by-Min/data/AAPL_clean_1min.csv",
+  "csv_sha256": "54d27ebb6ab2ed686ae38f1fcba5f1ff4dd7e48573b7fd2a7064b59ab40e4bb4",
+  "file_bytes": 23703398,
+  "rows": 436906,
+  "source_values": {
+    "iex": 436906
+  },
+  "timestamp_range": [
+    "2022-03-07T09:30:00-05:00",
+    "2026-10-16T15:59:00-04:00"
+  ],
+  "naive_timestamp_localization": "America/New_York, based on supplied source URL and provider methodology; original CSV has no timezone offset",
+  "duplicate_timestamps": 0,
+  "interpolation": {
+    "second_difference_fraction": 0.0,
+    "suspected_interpolation": false
+  },
+  "calendar_coverage": {
+    "expected_minutes": 450390,
+    "observed_minutes": 436887,
+    "fraction": 0.9700193165922867,
+    "sessions": 1159,
+    "sessions_below_98_percent": 790,
+    "median_session": 0.9717948717948718,
+    "minimum_session": 0.15128205128205127,
+    "quantiles": {
+      "0.0": 0.15128205128205127,
+      "0.01": 0.9230769230769231,
+      "0.05": 0.9384615384615385,
+      "0.25": 0.9615384615384616,
+      "0.5": 0.9717948717948718,
+      "0.75": 0.9846153846153847,
+      "0.95": 0.9948717948717949,
+      "1.0": 1.0
+    },
+    "excluded_outside_regular_minutes": 19
+  },
+  "daily_row_count": {
+    "minimum": 59,
+    "median": 379.0,
+    "maximum": 390
+  },
+  "largest_gap_minutes": {
+    "1.0": 429601,
+    "2.0": 3475,
+    "3.0": 1164,
+    "1051.0": 727,
+    "4.0": 619,
+    "5.0": 371,
+    "6.0": 187,
+    "3931.0": 171,
+    "7.0": 117,
+    "8.0": 87
+  },
+  "dec_23_2024": {
+    "rows": 59,
+    "first": "2024-12-23T09:30:00-05:00",
+    "last": "2024-12-23T13:33:00-05:00"
+  },
+  "provider_scope": "IEX Exchange HIST only, approximately 2-3% of consolidated market volume; not consolidated tape",
+  "provider_cleaning": "Nonzero-volume bars only; removes >25% one-minute returns and Brownlees-Gallo centered 50-bar outliers; centered filter uses neighboring future bars for sample retention.",
+  "provider_price_basis": "Per provider docs, split-adjusted only after 2026-10-06; no dividend/spin-off adjustment. This file version is not independently checksum-matched to provider.",
+  "formal_eligibility": "fails: regular-session coverage is below the configured 98% requirement and one publisher-documented session is cut short",
+  "exploratory_policy": "unfilled gaps; samples crossing any missing expected minute are discarded; no final testing; no model accepted",
+  "source_pages": {
+    "download": "https://hfdatalibrary.com/pages/download?",
+    "methodology": "https://hfdatalibrary.com/pages/docs",
+    "known_issues": "https://hfdatalibrary.com/pages/issues",
+    "download_page_sha256": "aad57ecf8e34ea415ab79b65eb5715e7ec5b01a01e1fc17b689a8a573896a335",
+    "methodology_page_sha256": "8ef43e46c05eab65f6abc30a7971d71cf0b4d6c46b0cb31ab5cdca45c76d94ff",
+    "known_issues_page_sha256": "ad2f4017caf6ee8645492e254aea43663ca8a8732a5cf8ed598865f47c75e911",
+    "archived_pages": "data/audits/source_pages/"
+  },
+  "source_review": "User supplied the provider URL; public page and methodology reviewed on 2026-10-20. The column source=iex and published schema agree. The exact file download event and file-version checksum are unavailable.",
+  "provenance": {
+    "receipt_valid": true,
+    "timezone": "America/New_York",
+    "declared_interval": "1min",
+    "timestamp_label": "bar_start",
+    "adjustment": "split-adjusted only per HF Data Library docs; dividends/spin-offs not adjusted; exact file-version policy not checksum-verified"
+  },
+  "status": "exploratory_only_quality_gate_failed",
+  "limitations": [
+    "97.0% aggregate regular-session minute coverage is below required 98%.",
+    "2024-12-23 is a provider-documented cut-short session; do not interpret it as normal market structure.",
+    "IEX-only trades omit other exchanges and many minutes with no IEX trade.",
+    "The Clean pipeline uses centered future-neighbor outlier filtering, which can make historical bar inclusion non-causal.",
+    "The exact downloaded file version and current split-adjustment basis are not cryptographically tied to provider release metadata."
+  ]
+}

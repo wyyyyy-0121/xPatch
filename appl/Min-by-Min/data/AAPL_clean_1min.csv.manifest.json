@@ -1,0 +1,17 @@
+{
+  "symbol": "AAPL",
+  "interval": "1min",
+  "timestamp_label": "bar_start",
+  "source": "HF Data Library; IEX Exchange HIST; user-supplied cleaned CSV",
+  "provider": "HF Data Library / IEX HIST",
+  "provider_url": "https://hfdatalibrary.com/pages/download?",
+  "timezone": "America/New_York",
+  "adjustment": "split-adjusted only per HF Data Library docs; dividends/spin-offs not adjusted; exact file-version policy not checksum-verified",
+  "sha256": "54d27ebb6ab2ed686ae38f1fcba5f1ff4dd7e48573b7fd2a7064b59ab40e4bb4",
+  "provenance": {
+    "method": "manual_review",
+    "evidence_path": "audits/AAPL_clean_1min.review_receipt.json",
+    "evidence_sha256": "9c6d3dc4152059be905e52091074ab3abab1f20db6953db440f42a64d99662ee"
+  },
+  "source_version": "not independently checksum-matched"
+}

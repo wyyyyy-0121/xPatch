@@ -13,6 +13,8 @@
 
 `report.json` 包含训练／验证误差、每个预测步、共同 origin 哈希、训练标签截止时间、MASE 分母、基线提升和诊断标记。`possible_underfit_or_target_data_issue` 无法仅凭误差区分欠拟合、数据问题和难预测目标，需要检查原始证据。`possible_overfit_or_regime_change` 同样不能自动区分过拟合与非平稳。
 
+仅在数据来源／时区／柱标签已追溯，且唯一失败项为覆盖率时，可显式加 `--exploratory-quality-limited` 运行开发诊断。结果状态为 `exploratory_quality_limited`、所有模型均不可接受、禁止最终测试；它不降低正式 98% 覆盖要求。缺口不填补，跨越缺口的整个输入／目标窗丢弃。若来源或时间语义未核实，仍应停止运行。
+
 ## 调参顺序
 
 1. 检查 CSV、来源、复权、交易日历、聚合完整性和未来标签。
