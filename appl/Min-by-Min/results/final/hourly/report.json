@@ -1,0 +1,88 @@
+{
+  "symbol": "AAPL",
+  "profile": "hourly",
+  "bar_interval": "1h",
+  "data": {
+    "rows_input": 242612,
+    "duplicate_timestamps_removed": 0,
+    "timestamp_timezone": "naive / unspecified",
+    "start": "2024-06-03T04:00:00",
+    "end": "2025-06-06T19:59:00",
+    "sessions": 254,
+    "median_within_day_minute_coverage": 0.9989583333333333,
+    "source": "local CSV; provenance not independently verified",
+    "sidecar_manifest": null,
+    "source_verified": false,
+    "provider_url": null,
+    "adjustment": null
+  },
+  "bars": 4055,
+  "history_years": 1.0093,
+  "source_sha256": "e3eee9c1bfa8121686bb2ea085bcb0a8272d41ece33f6c4ab5e3beb9ed8c2fba",
+  "generated_utc": "2026-10-20T02:45:06.001774+00:00",
+  "code_sha256": "70a99bf0ba62a276f3bb473d8fe37028f2a72584fae9d7c40b6f2bc365ec9b57",
+  "profile_config_sha256": "1d0ab1303b3599f26a62f16966f884ea5c518d9ec6f5e2e5f1bfac452ebba0cb",
+  "data_limitations": [
+    "Local CSV provenance and adjustment policy are unverified."
+  ],
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+    "cuda_available": true,
+    "cpu_threads": 24,
+    "cpu_dataloader_workers": 24,
+    "cuda_dataloader_workers": 0
+  },
+  "experiment_config": {
+    "lookbacks": [
+      12,
+      24,
+      48,
+      96
+    ],
+    "horizons": [
+      1,
+      4,
+      8
+    ],
+    "target_modes": [
+      "future_close",
+      "future_log_return"
+    ],
+    "models": [
+      "last_close",
+      "drift",
+      "seasonal",
+      "ridge",
+      "mlp",
+      "gru",
+      "lstm",
+      "xpatch"
+    ],
+    "rolling_folds": 5,
+    "validation": "expanding-window CV over the first 80 percent; model selection uses validation only",
+    "purge_gap_bars": "equal to forecast horizon",
+    "final_test_fraction": 0.2,
+    "ridge_alpha": 1.0,
+    "mlp": {
+      "hidden_layers": [
+        64
+      ],
+      "dropout": 0.1
+    },
+    "neural": {
+      "architecture_width": 32,
+      "epochs": 5,
+      "batch_size": 128,
+      "optimizer": "Adam",
+      "learning_rate": 0.001,
+      "weight_decay": 0.0001,
+      "seed": 2026
+    }
+  },
+  "status": "insufficient_data",
+  "reasons": [
+    "intraday timezone is unspecified; trading-session continuity cannot be verified",
+    "intraday source/provenance is not independently verified"
+  ],
+  "rankings": []
+}

@@ -39,7 +39,7 @@ The input contains causal OHLCV-derived features. The target is either the futur
 
 Intraday local CSV timestamps must have a known timezone and verifiable source to pass the data gate. The included `AAPL_1min.csv` has naive timestamps and its source/adjustment policy are undocumented, so hourly and minute model rankings are intentionally withheld until that metadata is verified. It is not safe to infer regular-session boundaries from these timestamps.
 
-For a documented local intraday file, add a sibling `<file>.manifest.json` with `source_verified: true`, a descriptive `source`, and an IANA `timezone` (for example `America/New_York`) when the CSV timestamps are naive. This is an explicit provenance assertion and should only be set when the provider and file can be checked. Samples crossing missing bars or session boundaries are dropped; the pipeline never forward-fills across them.
+For a documented local intraday file, add a sibling `<file>.manifest.json` with `source_verified: true`, a descriptive `source`, the file's `sha256`, and an IANA `timezone` (for example `America/New_York`) when CSV timestamps are naive. The hash must match. This is an explicit provenance assertion and should only be set when the provider and file can be checked. Samples crossing missing bars or session boundaries are dropped; the pipeline never forward-fills across them.
 
 ## Compute
 
