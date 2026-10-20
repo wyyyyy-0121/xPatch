@@ -174,8 +174,17 @@ def make_samples(bars: pd.DataFrame, lookback: int, horizon: int, interval: str,
     return np.asarray(xs, dtype=np.float32), np.asarray(ys, dtype=np.float64), np.asarray(origins, dtype=np.int64), close
 
 
-def rolling_splits(origins: np.ndarray, dates: np.ndarray, folds=5, purge=1):
+def rolling_splits(origins: np.ndarray, dates: np.ndarray, folds=5, purge=1,
+                   validation_ranges=None):
     order = np.argsort(origins)
+    if validation_ranges is not None:
+        splits = []
+        for start, end in validation_ranges:
+            valid = order[(origins[order] >= start) & (origins[order] < end)]
+            train = order[origins[order] + purge < start]
+            if len(train) and len(valid):
+                splits.append((train, valid))
+        return splits
     chunks = np.array_split(order, folds + 1)
     splits = []
     for fold in range(1, len(chunks)):
@@ -190,13 +199,17 @@ def rolling_splits(origins: np.ndarray, dates: np.ndarray, folds=5, purge=1):
     return splits
 
 
-def holdout_indices(origins: np.ndarray, horizon: int, test_fraction=.2):
-    cut = int(np.floor(len(origins) * (1 - test_fraction)))
-    if cut <= 0 or cut >= len(origins):
+def holdout_indices(origins: np.ndarray, horizon: int, test_fraction=.2,
+                    cutoff_origin=None):
+    if cutoff_origin is None:
+        cut = int(np.floor(len(origins) * (1 - test_fraction)))
+        if cut <= 0 or cut >= len(origins):
+            return np.array([], dtype=np.int64), np.array([], dtype=np.int64)
+        cutoff_origin = origins[cut]
+    if cutoff_origin <= 0 or cutoff_origin >= origins.max():
         return np.array([], dtype=np.int64), np.array([], dtype=np.int64)
-    test = np.arange(cut, len(origins), dtype=np.int64)
-    first_test_origin = origins[test[0]]
-    train = np.flatnonzero(origins + horizon < first_test_origin)
+    test = np.flatnonzero(origins >= cutoff_origin)
+    train = np.flatnonzero(origins + horizon < cutoff_origin)
     return train, test
 
 
@@ -271,6 +284,10 @@ def run_profile(name: str, csv_path: Path, out_dir: Path, lookbacks=None, reques
         raise ValueError("Lookbacks must be positive bar counts")
     bars = aggregate_bars(raw, p["bar_interval"])
     issues = data_gate(name, bars, meta, profiles["requirements"])
+    active_lookbacks = lookbacks or p["lookbacks"]
+    holdout_cutoff = int(np.floor(len(bars) * .8))
+    cv_edges = np.linspace(max(active_lookbacks) - 1, holdout_cutoff, 7, dtype=int)
+    cv_ranges = [(int(cv_edges[i]), int(cv_edges[i + 1])) for i in range(1, 6)]
     models = requested_models or ["last_close", "drift", "seasonal", "ridge", "mlp", "gru", "lstm", "xpatch"]
     if "last_close" not in models:
         models = ["last_close", *models]
@@ -290,6 +307,9 @@ def run_profile(name: str, csv_path: Path, out_dir: Path, lookbacks=None, reques
                                          "validation": "expanding-window CV over the first 80 percent; model selection uses validation only",
                                          "purge_gap_bars": "equal to forecast horizon",
                                          "final_test_fraction": 0.2,
+                                         "holdout_boundary": bars.index[holdout_cutoff].isoformat() if len(bars) > holdout_cutoff else None,
+                                         "validation_boundaries": [[bars.index[start].isoformat(), bars.index[end].isoformat()]
+                                                                    for start, end in cv_ranges if end < len(bars)],
                                          "ridge_alpha": 1.0, "mlp": {"hidden_layers": [64], "dropout": 0.1},
                                          "neural": {"architecture_width": 32, "epochs": 5, "batch_size": 128,
                                                      "optimizer": "Adam", "learning_rate": 0.001,
@@ -305,13 +325,13 @@ def run_profile(name: str, csv_path: Path, out_dir: Path, lookbacks=None, reques
       for horizon in p["horizons"]:
         for lookback in lookbacks or p["lookbacks"]:
             X, y, origins, closes = make_samples(bars, lookback, horizon, p["bar_interval"], target_mode)
-            final_train, final_test = holdout_indices(origins, horizon)
+            final_train, final_test = holdout_indices(origins, horizon, cutoff_origin=holdout_cutoff)
             if not len(final_train) or not len(final_test):
                 continue
             development_ids = final_train
             local_splits = rolling_splits(origins[development_ids],
                                           bars.index[origins[development_ids]].normalize().to_numpy(),
-                                          folds=5, purge=horizon)
+                                          folds=5, purge=horizon, validation_ranges=cv_ranges)
             splits = [(development_ids[tr], development_ids[va]) for tr, va in local_splits]
             if len(splits) != 5:
                 continue
@@ -404,7 +424,7 @@ def run_profile(name: str, csv_path: Path, out_dir: Path, lookbacks=None, reques
         target_mode, horizon = selected["target_mode"], selected["horizon"]
         lookback, model_name = selected["lookback"], selected["model"]
         X, y, origins, closes = make_samples(bars, lookback, horizon, p["bar_interval"], target_mode)
-        train_ids, test_ids = holdout_indices(origins, horizon)
+        train_ids, test_ids = holdout_indices(origins, horizon, cutoff_origin=holdout_cutoff)
         if not len(train_ids) or not len(test_ids):
             continue
         test_close = closes[origins[test_ids]]

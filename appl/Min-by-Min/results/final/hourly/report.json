@@ -19,8 +19,8 @@
   "bars": 4055,
   "history_years": 1.0093,
   "source_sha256": "e3eee9c1bfa8121686bb2ea085bcb0a8272d41ece33f6c4ab5e3beb9ed8c2fba",
-  "generated_utc": "2026-10-20T02:45:06.001774+00:00",
-  "code_sha256": "70a99bf0ba62a276f3bb473d8fe37028f2a72584fae9d7c40b6f2bc365ec9b57",
+  "generated_utc": "2026-10-20T02:53:57.916091+00:00",
+  "code_sha256": "a8ded3caccdc123d15fef33401a4fe304ca1142a425736bd22c4f4298d44ff10",
   "profile_config_sha256": "1d0ab1303b3599f26a62f16966f884ea5c518d9ec6f5e2e5f1bfac452ebba0cb",
   "data_limitations": [
     "Local CSV provenance and adjustment policy are unverified."
@@ -62,6 +62,29 @@
     "validation": "expanding-window CV over the first 80 percent; model selection uses validation only",
     "purge_gap_bars": "equal to forecast horizon",
     "final_test_fraction": 0.2,
+    "holdout_boundary": "2025-03-26T09:00:00",
+    "validation_boundaries": [
+      [
+        "2024-07-29T18:00:00",
+        "2024-09-13T15:00:00"
+      ],
+      [
+        "2024-09-13T15:00:00",
+        "2024-10-30T12:00:00"
+      ],
+      [
+        "2024-10-30T12:00:00",
+        "2024-12-17T12:00:00"
+      ],
+      [
+        "2024-12-17T12:00:00",
+        "2025-02-06T12:00:00"
+      ],
+      [
+        "2025-02-06T12:00:00",
+        "2025-03-26T09:00:00"
+      ]
+    ],
     "ridge_alpha": 1.0,
     "mlp": {
       "hidden_layers": [

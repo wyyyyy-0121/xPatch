@@ -87,6 +87,29 @@ def test_final_holdout_is_after_development_and_purged():
     assert max(origins[train[v]].max() for _, v in folds) + 8 < origins[test].min()
 
 
+def test_holdout_and_validation_periods_are_shared_across_lookbacks():
+    cutoff = 160
+    ranges = [(65, 84), (84, 103), (103, 122), (122, 141), (141, cutoff)]
+    origins_by_window = [np.arange(12, 200), np.arange(48, 200)]
+    validation_origins = []
+    for origins in origins_by_window:
+        train, test = holdout_indices(origins, horizon=8, cutoff_origin=cutoff)
+        assert origins[test[0]] == cutoff
+        assert origins[train].max() + 8 < cutoff
+        splits = rolling_splits(origins[train], np.arange(len(train)), purge=8,
+                                validation_ranges=ranges)
+        assert len(splits) == 5
+        fold_origins = []
+        for (start, end), (_, valid) in zip(ranges, splits):
+            valid_origins = origins[train][valid]
+            assert valid_origins.min() >= start
+            assert valid_origins.max() < end
+            fold_origins.append(valid_origins)
+        validation_origins.append(fold_origins)
+    for short, long in zip(validation_origins[0], validation_origins[1]):
+        assert np.array_equal(short, long)
+
+
 def test_scalers_are_fit_only_on_training_partition():
     rng = np.random.default_rng(10)
     x_train = rng.normal(size=(20, 4, 5)).astype("float32")
@@ -174,6 +197,8 @@ def test_annual_profile_smoke_writes_fold_metrics(tmp_path):
     assert (tmp_path / "out" / "REPORT.md").exists()
     assert result["final_test"]["status"] == "evaluated_once_after_validation_selection"
     assert len(result["final_test"]["results"]) == 2
+    assert len(result["experiment_config"]["validation_boundaries"]) == 5
+    assert result["experiment_config"]["holdout_boundary"]
     assert all("MASE" in fold["metrics"] for row in result["rankings"] for fold in row["folds"])
     with pytest.raises(FileExistsError):
         run_profile("annual", source, tmp_path / "out", lookbacks=[12], requested_models=["last_close"])

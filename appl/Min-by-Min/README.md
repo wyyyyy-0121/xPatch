@@ -29,7 +29,7 @@ python run_experiment.py --profile minute --csv data/AAPL_1min.csv
 
 The minute profile defaults to one-minute bars. To aggregate to five-minute bars, pass `--bar-interval 5min`; its horizons become 1, 3, 6, and 12 bars (5, 15, 30, and 60 minutes).
 
-Reports are written below `results/<profile>/`. A profile that misses its minimum history or data-verification requirement writes an `insufficient_data` report and returns exit code 2 without ranking models. Validation selects a configuration; the final chronological 20% is evaluated once afterward and kept separate in the report. A completed output directory cannot be reused for another final test. Use a new `--output` directory for another experiment. Use `--lookbacks` or `--models` for a smaller diagnostic run.
+Reports are written below `results/<profile>/`. A profile that misses its minimum history or data-verification requirement writes an `insufficient_data` report and returns exit code 2 without ranking models. All lookbacks and models share five calendar ranges and one final chronological 20% boundary; each training partition is purged by that task's forecast horizon. Validation selects a configuration; the final holdout is evaluated once afterward and kept separate in the report. A completed output directory cannot be reused for another final test. Use a new `--output` directory for another experiment. Use `--lookbacks` or `--models` for a smaller diagnostic run.
 
 ## Profiles and validation
 
