@@ -1,0 +1,27 @@
+{
+  "python": "3.11.16 | packaged by conda-forge | (main, Aug 21 2026, 22:44:51) [GCC 14.4.0]",
+  "packages": {
+    "numpy": "2.4.6",
+    "pandas": "3.0.3",
+    "scipy": "1.17.1",
+    "scikit-learn": "1.9.0",
+    "joblib": "1.5.3",
+    "torch": "2.13.0",
+    "exchange-calendars": "4.13.2",
+    "pyluach": "2.3.0",
+    "toolz": "1.2.0",
+    "korean-lunar-calendar": "0.4.0",
+    "pytest": "9.1.1",
+    "matplotlib": "3.11.0",
+    "threadpoolctl": "3.6.0"
+  },
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+    "cuda_available": true,
+    "cpu_threads": 24,
+    "cpu_dataloader_workers": 24,
+    "cuda_dataloader_workers": 0,
+    "torch_version": "2.13.0+cu130"
+  },
+  "environment_note": "Project venv reuses existing local GPU package paths; no clean environment installation was claimed"
+}

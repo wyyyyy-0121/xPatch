@@ -1,0 +1,86 @@
+[
+  {
+    "symbol": "AAPL",
+    "start": "2014-05-01T00:00:00",
+    "end": "2022-06-17T00:00:00",
+    "output": "/home/ayaka/xPatch/appl/Min-by-Min/results/quarterly/report.json",
+    "status": "historically_exposed_exploratory_regression"
+  },
+  {
+    "symbol": "AAPL",
+    "start": "2014-07-01T00:00:00",
+    "end": "2022-06-17T00:00:00",
+    "output": "/home/ayaka/xPatch/appl/Min-by-Min/results/quarterly/report.json",
+    "status": "historically_exposed_exploratory_regression"
+  },
+  {
+    "symbol": "AAPL",
+    "start": "2014-05-01T00:00:00",
+    "end": "2022-06-17T00:00:00",
+    "output": "/home/ayaka/xPatch/appl/Min-by-Min/results/quarterly_final/quarterly/report.json",
+    "status": "historically_exposed_exploratory_regression"
+  },
+  {
+    "symbol": "AAPL",
+    "start": "2014-05-01T00:00:00",
+    "end": "2022-06-17T00:00:00",
+    "output": "/home/ayaka/xPatch/appl/Min-by-Min/results/quarterly_final/quarterly/report.json",
+    "status": "historically_exposed_exploratory_regression"
+  },
+  {
+    "symbol": "AAPL",
+    "start": "2014-03-01T00:00:00",
+    "end": "2022-06-17T00:00:00",
+    "output": "/home/ayaka/xPatch/appl/Min-by-Min/results/final/quarterly/report.json",
+    "status": "historically_exposed_exploratory_regression"
+  },
+  {
+    "symbol": "AAPL",
+    "start": "2014-03-01T00:00:00",
+    "end": "2022-06-17T00:00:00",
+    "output": "/home/ayaka/xPatch/appl/Min-by-Min/results/final/quarterly/report.json",
+    "status": "historically_exposed_exploratory_regression"
+  },
+  {
+    "symbol": "AAPL",
+    "start": "2014-02-26T00:00:00",
+    "end": "2022-06-17T00:00:00",
+    "output": "/home/ayaka/xPatch/appl/Min-by-Min/results/final/monthly/report.json",
+    "status": "historically_exposed_exploratory_regression"
+  },
+  {
+    "symbol": "AAPL",
+    "start": "2014-02-26T00:00:00",
+    "end": "2022-06-17T00:00:00",
+    "output": "/home/ayaka/xPatch/appl/Min-by-Min/results/final/monthly/report.json",
+    "status": "historically_exposed_exploratory_regression"
+  },
+  {
+    "symbol": "AAPL",
+    "start": "2014-03-01T00:00:00",
+    "end": "2022-06-17T00:00:00",
+    "output": "/home/ayaka/xPatch/appl/Min-by-Min/results/final/annual/report.json",
+    "status": "historically_exposed_exploratory_regression"
+  },
+  {
+    "symbol": "AAPL",
+    "start": "2014-03-01T00:00:00",
+    "end": "2022-06-17T00:00:00",
+    "output": "/home/ayaka/xPatch/appl/Min-by-Min/results/final/annual/report.json",
+    "status": "historically_exposed_exploratory_regression"
+  },
+  {
+    "symbol": "AAPL",
+    "start": "2014-05-01T00:00:00",
+    "end": "2022-06-17T00:00:00",
+    "output": "/home/ayaka/xPatch/appl/Min-by-Min/results/annual/report.json",
+    "status": "historically_exposed_exploratory_regression"
+  },
+  {
+    "symbol": "AAPL",
+    "start": "2014-05-01T00:00:00",
+    "end": "2022-06-17T00:00:00",
+    "output": "/home/ayaka/xPatch/appl/Min-by-Min/results/annual/report.json",
+    "status": "historically_exposed_exploratory_regression"
+  }
+]

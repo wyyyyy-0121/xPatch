@@ -1,52 +1,68 @@
-# AAPL Multi-Timescale Forecast Experiments
+# AAPL 多时间尺度预测
 
-This directory contains a separate, reproducible research pipeline for annual, quarterly, monthly, hourly, and minute-scale AAPL forecasts. It compares future close and future log-return targets with last-close, drift, seasonal, Ridge, MLP, GRU, LSTM, and xPatch models. It does not run a trading strategy or estimate transaction costs.
+本目录实现年度、季度、月度、小时和分钟预测，同时比较未来收盘价与相对预测起点的未来对数收益率。模型包括最后收盘价、漂移、季节性、Ridge、MLP、GRU、LSTM 和 xPatch。不做交易成本策略回测，不承诺预测收益。
 
-## Install and run
-
-From this directory, install the experiment dependencies:
+## 安装与数据
 
 ```bash
+cd appl/Min-by-Min
+python -m venv .venv
+source .venv/bin/activate
+# 为 RTX 5070 Ti 安装支持 Blackwell 的 CUDA PyTorch；不要使用不支持该卡的旧版。
+python -m pip install torch --index-url https://download.pytorch.org/whl/cu130
 python -m pip install -r requirements.txt
-```
-
-Download the longest history currently exposed by Yahoo Finance for daily or monthly bars:
-
-```bash
 python download_data.py --symbol AAPL --interval 1d
 python download_data.py --symbol AAPL --interval 1mo
 ```
 
-Run a profile using the matching CSV. The hourly and minute profiles use the local minute CSV by default:
+下载使用公开 Yahoo chart API，保存完整可得范围、来源网址、下载时间、时区、复权说明、SHA-256 及下载凭证。默认复用已有缓存，`--refresh` 重新下载；失败保留缓存并记录 `.download_failure.json`。本次网络访问返回 403，无法声称已取得最新数据。`data/README.md` 和 `data/inventory.json` 记录本地实际文件及限制；历史镜像只供过期数据的工程回归。
+
+当前机器的 `.venv` 为避免重复下载大型 CUDA 包，复用了已有 GPU Python 包路径，并单独安装交易日历依赖；环境的实际版本见 `environment.json`。在另一台机器应按上述命令安装，不能复制这台机器的绝对路径。
+
+## 运行与预测
 
 ```bash
-python run_experiment.py --profile annual --csv data/AAPL_1mo.csv
-python run_experiment.py --profile quarterly --csv data/AAPL_1mo.csv
-python run_experiment.py --profile monthly --csv data/AAPL_1d.csv
+python validate_data.py --csv data/AAPL_1min.csv --profile minute
+python audit_archive.py ../../archive.zip
+python run_experiment.py --profile annual --csv data/AAPL_1d.csv
+python run_experiment.py --profile quarterly --csv data/AAPL_1d.csv
+python run_experiment.py --profile monthly --csv data/AAPL_1d.csv --models last_close drift seasonal ridge
 python run_experiment.py --profile hourly --csv data/AAPL_1min.csv
 python run_experiment.py --profile minute --csv data/AAPL_1min.csv
+python run_experiment.py --profile minute --csv data/AAPL_1min.csv --bar-interval 5min
+python predict.py --artifact results/validation/annual/future_close_h12.joblib --csv data/AAPL_1d.csv
+python -m pytest tests/test_experiment.py -q
 ```
 
-The minute profile defaults to one-minute bars. To aggregate to five-minute bars, pass `--bar-interval 5min`; its horizons become 1, 3, 6, and 12 bars (5, 15, 30, and 60 minutes).
+默认只运行滚动验证。`--lookbacks`、`--horizons` 和 `--models` 可缩小诊断实验；配置以**交易柱数量**计，不再硬编码 48→12。5 分钟模式默认窗口 6/12/24/48/96，预测 1/3/6/12 柱，即 5/15/30/60 个交易分钟。
 
-Reports are written below `results/<profile>/`. A profile that misses its minimum history or data-verification requirement writes an `insufficient_data` report and returns exit code 2 without ranking models. All lookbacks and models share five calendar ranges and one final chronological 20% boundary; each training partition is purged by that task's forecast horizon. Validation selects a configuration; the final holdout is evaluated once afterward and kept separate in the report. A completed output directory cannot be reused for another final test. Use a new `--output` directory for another experiment. Use `--lookbacks` or `--models` for a smaller diagnostic run.
+结果包括 `REPORT.md`、`report.json`、冻结配置、所选模型的 `.joblib`、验证价格 CSV 和美元价格图。导出文件包含神经网络 state_dict 或 Ridge、特征／目标标准化器、特征顺序、架构、训练截止日期、切分设置和数据／代码哈希。基线无需拟合标准化器。`predict.py` 只接受显式指定的新格式文件，复用训练预处理并输出未来交易柱起始时间、美元收盘价、对数收益率；预测收盘发生在该柱结束时。只加载可信的本地 joblib 文件。旧 `run.py`、`train.py`、`data_processor.py` 保留作历史参考。
 
-## Profiles and validation
+## 时间、来源与缺口
 
-The full lookback, horizon, and coverage settings are in `profiles.json`. Annual and quarterly tasks use monthly bars; monthly tasks use daily bars; hourly and minute tasks aggregate the supplied intraday CSV by session. Annual/quarterly/monthly require 15/10/5 years, hourly requires one year, and minute requires six months plus verifiable intraday provenance and timezone. Yahoo Finance intraday retention does not provide this project's full-history requirement; this pipeline does not fabricate missing minutes or fill overnight gaps.
+`profiles.json` 定义五种时间尺度及最低历史：年度 15 年、季度 10 年、月度 5 年、小时 1 年、分钟 6 个月。日内默认要求每个完整常规交易日及全期间覆盖率均至少 98%。不足写 `insufficient_data` 并返回 2；无法形成五折的配置记录跳过原因，不生成虚假排名。
 
-The input contains causal OHLCV-derived features. The target is either the future close or the future log return from the forecast origin. All methods share the same chronological folds and horizon-sized purge gap. Results retain fold-level MAE, RMSE, sMAPE, MASE, direction accuracy, normalized log-return error, per-step errors, and baseline improvements. Final test results do not affect selection.
+CSV 至少包含 timestamp/Date 与 Open/High/Low/Close/Volume。排序并保留重复时间的最后一条，记录去重数量；拒绝无效数值和 OHLC 边界。仅用 XNYS 常规时段；日历包含节假日、提前收市、整天缺失和 DST。不填补缺失分钟或闭市时间。输入／标签可跨交易日，闭市跳过，真正缺柱不能压缩。小时柱从开盘起对齐，只保留完整 60 分钟；通常每天 6 柱，末尾 30 分钟不进入小时样本，8 柱预测会跨日。未来时间不是简单加自然小时。由日线生成月线时只保留完整交易月。
 
-Intraday local CSV timestamps must have a known timezone and verifiable source to pass the data gate. The included `AAPL_1min.csv` has naive timestamps and its source/adjustment policy are undocumented, so hourly and minute model rankings are intentionally withheld until that metadata is verified. It is not safe to infer regular-session boundaries from these timestamps.
+日内来源必须有哈希匹配的 sidecar 和凭证。`source_verified: true` 或来源文字本身不构成验证。自动下载凭证由下载入口生成；外部供应商数据需要人工核对原始文件、来源网址、时区、时间标签方向和复权语义，然后创建 `provenance.method=manual_review` 的凭证，记录 reviewer、source_url、review_evidence、timezone、csv_sha256、decision=verified。sidecar 通过 evidence_path / evidence_sha256 引用凭证，并声明 symbol=AAPL、timezone、sha256。模板见 `data/provenance.example.json`。这些是可追溯的本地审计记录，不是对来源真伪的密码学证明；仍需实际检查证据。数据默认应为一分钟、柱起始时间标记；不要把结束标记数据直接声明为起始标记。
 
-For a documented local intraday file, add a sibling `<file>.manifest.json` with `source_verified: true`, a descriptive `source`, the file's `sha256`, and an IANA `timezone` (for example `America/New_York`) when CSV timestamps are naive. The hash must match. This is an explicit provenance assertion and should only be set when the provider and file can be checked. Samples crossing missing bars or session boundaries are dropped; the pipeline never forward-fills across them.
+用户提供的 `archive.zip` 已全量审计为日线到分钟的线性插值，带未来端点泄漏，不适合真实分钟训练。过滤交易时段也无法修复。审计见 `data/audits/ARCHIVE_AUDIT.md`；原 ZIP 未修改、未上传。
 
-## Compute
+## 验证、选择和最终测试
 
-PyTorch models use CUDA when it is available and log the selected GPU. On the user's RTX 5070 Ti Laptop GPU this selects CUDA device 0. CPU runs set PyTorch to 24 threads and use 24 DataLoader workers; CUDA runs use zero DataLoader workers and transfer batches to the GPU. If CUDA is unavailable, the run reports CPU use rather than claiming GPU execution.
+每个预测跨度使用所有窗口的共同有效 origins，训练／验证样本与目标完全一致，五折扩展训练，每折 purge 等于预测跨度。特征／目标标准化仅拟合训练区间，早停只使用外层训练内部的带 purge 尾段。MASE 分母取共同原始训练历史的一步价格变化，与输入窗口无关。
 
-## Provenance and scope
+候选模型须同时满足中位 MASE < 1、相对最后收盘价的中位美元 RMSE 提升至少 2%、至少 3/5 折改善。通过后按归一化对数收益率 RMSE、折间波动、复杂度选择；全部失败就正式选择最后收盘价，其他候选只作探索。报告给出 MAE、RMSE、sMAPE、MASE、方向准确率、每步和每折误差、训练误差及基线提升。诊断与 hybrid 条件详见 [DIAGNOSTICS.md](DIAGNOSTICS.md)。
 
-The downloader writes a sidecar JSON manifest with provider URL, interval, retrieval time, coverage, timezone, adjustment setting, and SHA-256. The downloaded Yahoo Finance data can change as the provider revises history. Local minute files remain user-supplied and are hashed in each result report.
+最终测试默认不运行。验证完成后，在**来源已验证且测试时期未暴露**的数据上显式执行：
 
-The previous `run.py`, `train.py`, and `data_processor.py` are retained for historical reference only. Their old README performance claims and automatic install/train behavior are not part of this pipeline. Use `run_experiment.py` for new research.
+```bash
+python run_experiment.py --profile annual --csv data/AAPL_1d.csv \
+  --final --freeze results/validation/annual/frozen_config.json --output results/final_new
+```
+
+配置、数据和代码必须匹配。`results/test_use_ledger.json` 在评估前锁定登记；不同结果目录、源文件哈希和时间尺度都不能使重叠的 AAPL 测试时期恢复未接触。`results/final` 的旧报告是历史已暴露评估，旧选择逻辑有缺陷；请使用修复后的验证结果。不能用已有最终测试结果继续调参。
+
+## 计算资源
+
+CUDA 可用时使用设备 0，在本机验证为 NVIDIA GeForce RTX 5070 Ti Laptop GPU。神经网络批量训练／推断，避免将整份验证张量放到显存。CPU 训练设为 24 threads、24 DataLoader workers，Ridge 的 BLAS 线程限制为 24；CUDA DataLoader 用 0 workers。可用性与版本记录在报告中。

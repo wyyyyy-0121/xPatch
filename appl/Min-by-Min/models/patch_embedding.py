@@ -46,11 +46,8 @@ class PatchEmbedding(nn.Module):
         patch_lengths = []
         # 对每个patch大小进行处理
         for i, patch_size in enumerate(self.patch_sizes):
-            patches = []
-            for j in range(0, seq_len - patch_size + 1):
-                patch = x[:, j:j+patch_size, :].reshape(batch_size, -1)
-                patches.append(patch)
-            patches = torch.stack(patches, dim=1)  # [batch, patch_num, patch_size*input_dim]
+            patches = x.unfold(1, patch_size, 1).permute(0, 1, 3, 2)
+            patches = patches.reshape(batch_size, seq_len-patch_size+1, -1)
             patch_embedding = self.projections[i](patches)  # [batch, patch_num, hidden_size]
             patch_embeddings.append(patch_embedding)
             patch_lengths.append(patch_embedding.shape[1])

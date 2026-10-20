@@ -107,5 +107,10 @@
     "intraday timezone is unspecified; trading-session continuity cannot be verified",
     "intraday source/provenance is not independently verified"
   ],
-  "rankings": []
+  "rankings": [],
+  "historical_status": "exposed_exploratory_regression_superseded",
+  "historical_limitations": [
+    "Original window-dependent MASE and selection defects; do not infer predictive advantage.",
+    "Test labels were used in previous runs; shared ledger conservatively reserves through source end."
+  ]
 }

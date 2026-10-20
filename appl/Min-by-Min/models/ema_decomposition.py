@@ -17,6 +17,9 @@ class EMADecomposition(nn.Module):
         super().__init__()
         self.alpha = alpha
         self.input_dim = input_dim
+        if not 0 <= alpha <= 1:
+            raise ValueError('EMA alpha must be in [0, 1]')
+        self.register_buffer('_weights', torch.empty(0), persistent=False)
         
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
@@ -29,11 +32,17 @@ class EMADecomposition(nn.Module):
             tuple[torch.Tensor, torch.Tensor]: 趋势和残差成分
         """
         # 计算EMA
-        ema = torch.zeros_like(x)
-        ema[:, 0] = x[:, 0]
-        
-        for t in range(1, x.size(1)):
-            ema[:, t] = self.alpha * x[:, t] + (1 - self.alpha) * ema[:, t-1]
+        length = x.size(1)
+        if (self._weights.shape != (length, length) or self._weights.device != x.device
+                or self._weights.dtype != x.dtype):
+            t = torch.arange(length, device=x.device)
+            distance = t[:, None] - t[None, :]
+            weights = self.alpha * (1-self.alpha) ** distance.clamp_min(0).to(x.dtype)
+            weights = weights * (distance >= 0)
+            weights[:, 0] = (1-self.alpha) ** t.to(x.dtype)
+            self._weights = weights
+        # Closed-form causal recurrence; avoids one GPU kernel launch per step.
+        ema = torch.matmul(self._weights, x)
         
         # 趋势成分
         trend = ema

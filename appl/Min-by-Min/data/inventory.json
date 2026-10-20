@@ -1,0 +1,79 @@
+{
+  "generated_utc": "2026-10-20T05:59:36.948672+00:00",
+  "datasets": [
+    {
+      "path": "AAPL_1d.csv",
+      "sha256": "1600769c640b352de6bd4b5cf40b6836abd5fc303406d3362c204f7f953703a9",
+      "metadata": {
+        "rows_input": 10468,
+        "duplicate_timestamps_removed": 0,
+        "timestamp_timezone": "naive / unspecified",
+        "start": "1980-12-12T00:00:00",
+        "end": "2022-06-17T00:00:00",
+        "source": "Legacy Kaggle mirror; upstream quotes/adjustment not independently verified",
+        "source_verified": false,
+        "sha256": "1600769c640b352de6bd4b5cf40b6836abd5fc303406d3362c204f7f953703a9",
+        "sidecar_manifest": "/home/ayaka/xPatch/appl/Min-by-Min/data/AAPL_1d.csv.manifest.json",
+        "provider_url": "https://raw.githubusercontent.com/Hetal-Mehta/AAPL-Dataset/08ba60b568c300a635da1b6291a0f54eb9ef3f13/AAPL.csv",
+        "adjustment": "Legacy mirror OHLC, Adj Close excluded; corporate action semantics unverified",
+        "declared_interval": "1d",
+        "timestamp_label": null,
+        "synthetic": false,
+        "linear_second_difference_fraction": 0.0,
+        "suspected_interpolation": false
+      }
+    },
+    {
+      "path": "AAPL_1min.csv",
+      "sha256": "e3eee9c1bfa8121686bb2ea085bcb0a8272d41ece33f6c4ab5e3beb9ed8c2fba",
+      "metadata": {
+        "rows_input": 242612,
+        "duplicate_timestamps_removed": 0,
+        "timestamp_timezone": "naive / unspecified",
+        "start": "2024-06-03T04:00:00",
+        "end": "2025-06-06T19:59:00",
+        "source": "local CSV; provenance unverified",
+        "source_verified": false,
+        "sha256": "e3eee9c1bfa8121686bb2ea085bcb0a8272d41ece33f6c4ab5e3beb9ed8c2fba",
+        "sidecar_manifest": null,
+        "provider_url": null,
+        "adjustment": null,
+        "declared_interval": null,
+        "timestamp_label": null,
+        "synthetic": false,
+        "linear_second_difference_fraction": 0.0,
+        "suspected_interpolation": false,
+        "expected_regular_minutes": 98520,
+        "observed_regular_minutes": 98520,
+        "calendar_minute_coverage": 1.0,
+        "minimum_session_coverage": 1.0,
+        "median_within_day_minute_coverage": 1.0,
+        "missing_sessions": 0,
+        "sessions": 254,
+        "outside_regular_rows": 144092
+      }
+    },
+    {
+      "path": "AAPL_1mo.csv",
+      "sha256": "5814c9d717509f1c11ad6b60a2e1edff1a85f7fd1fc46747ed2765f7e022564e",
+      "metadata": {
+        "rows_input": 497,
+        "duplicate_timestamps_removed": 0,
+        "timestamp_timezone": "naive / unspecified",
+        "start": "1981-01-01T00:00:00",
+        "end": "2022-05-01T00:00:00",
+        "source": "Legacy Kaggle mirror; upstream quotes/adjustment not independently verified",
+        "source_verified": false,
+        "sha256": "5814c9d717509f1c11ad6b60a2e1edff1a85f7fd1fc46747ed2765f7e022564e",
+        "sidecar_manifest": "/home/ayaka/xPatch/appl/Min-by-Min/data/AAPL_1mo.csv.manifest.json",
+        "provider_url": "https://raw.githubusercontent.com/Hetal-Mehta/AAPL-Dataset/08ba60b568c300a635da1b6291a0f54eb9ef3f13/AAPL.csv",
+        "adjustment": "Legacy mirror OHLC, Adj Close excluded; corporate action semantics unverified",
+        "declared_interval": "1mo",
+        "timestamp_label": null,
+        "synthetic": false,
+        "linear_second_difference_fraction": 0.0,
+        "suspected_interpolation": false
+      }
+    }
+  ]
+}

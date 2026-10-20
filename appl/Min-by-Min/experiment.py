@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -26,7 +26,7 @@ class ExperimentProfile:
     bar_interval: str
     lookbacks: list
     horizons: list
-    target_modes: tuple = ('future_close', 'future_log_return')
+    target_modes: list = field(default_factory=lambda: ['future_close', 'future_log_return'])
     data_source: str = 'local CSV with manifest'
 
 
@@ -49,13 +49,16 @@ def features(bars):
     close = bars.close.to_numpy(dtype=float)
     if not len(close):
         return np.empty((0, 5), dtype='float32')
-    return np.column_stack([np.log(bars.open / close), np.log(bars.high / close),
-                            np.log(bars.low / close), np.log(close / np.r_[close[0], close[:-1]]),
+    return np.column_stack([np.log(bars.open), np.log(bars.high),
+                            np.log(bars.low), np.log(close),
                             np.log1p(bars.volume)]).astype('float32')
 
 
 def sequence_ids(bars, interval):
     if interval in INTRADAY:
+        cached = bars.attrs.get('sequence_ids')
+        if cached is not None and len(cached) == len(bars):
+            return np.asarray(cached, dtype=np.int64)
         grid = expected_index(bars.index, interval)
         return grid.get_indexer(as_market(bars.index))
     if interval == '1mo':
@@ -184,7 +187,7 @@ def selection_key(record):
 def code_hash():
     import hashlib
     digest = hashlib.sha256()
-    for name in ('experiment.py', 'data_quality.py', 'forecast_models.py', 'test_ledger.py', 'profiles.json'):
+    for name in ('experiment.py', 'data_quality.py', 'forecast_models.py', 'test_ledger.py', 'predict.py', 'profiles.json'):
         digest.update((HERE/name).read_bytes())
     for path in sorted((HERE/'models').glob('*.py')):
         digest.update(path.read_bytes())
@@ -225,6 +228,11 @@ def run_profile(name, csv_path, out_dir, lookbacks=None, requested_models=None,
                                      'holdout_boundary':bars.index[cutoff].isoformat() if len(bars) else None,
                                      'validation':'common origin intersection; expanding purged five-fold; final 20% excluded',
                                      'selection':'acceptance gates then normalized return RMSE, variability, simplicity',
+                                     'neural':{'maximum_epochs':20,'early_stopping_patience':3,
+                                               'stopping_partition':'purged final 15% of outer training only',
+                                               'seed':2026,'batch_size':128,'learning_rate':.001,
+                                               'weight_decay':.0001,'gradient_clip':1.,'width':32,
+                                               'layers':1,'dropout':.1,'mlp_width':64},
                                      'hourly_semantics':'complete 60-minute bars from exchange open; terminal partial bar dropped; horizons count valid bars across sessions'},
                   compute=compute_manifest(), rankings=[], skipped=[], selections=[],
                   hybrid={'status':'not_enabled', 'reason':'validation OOF complementarity and stable gains unproven'},
@@ -251,8 +259,19 @@ def run_profile(name, csv_path, out_dir, lookbacks=None, requested_models=None,
         result['rankings'] = frozen['rankings']
     else:
         for horizon in spans:
+            feasible = []
+            for window in windows:
+                candidate = eligible_origins(bars, window, horizon, interval)
+                candidate = candidate[candidate+horizon < cutoff]
+                if len(candidate) >= 12 and len(rolling_splits(candidate, folds=5, purge=horizon)) == 5:
+                    feasible.append(window)
+                else:
+                    result['skipped'].append(dict(horizon=horizon,lookback=window,
+                                                   reason='window cannot support five purged development folds'))
+            if not feasible:
+                continue
             # Use the same maximal-window origins for ALL candidate windows, including training.
-            common = eligible_origins(bars, max(windows), horizon, interval)
+            common = eligible_origins(bars, max(feasible), horizon, interval)
             development, _ = holdout_indices(common, horizon, cutoff_origin=cutoff)
             if len(development) < 12:
                 result['skipped'].append(dict(horizon=horizon, reason='too few common purged development origins'))
@@ -263,7 +282,7 @@ def run_profile(name, csv_path, out_dir, lookbacks=None, requested_models=None,
                 result['skipped'].append(dict(horizon=horizon, reason='cannot form five nonempty purged folds'))
                 continue
             for mode in profile.target_modes:
-                for window in windows:
+                for window in feasible:
                     X, y, origins, closes = make_samples(bars, window, horizon, interval, mode, common_dev)
                     for model_name in models:
                         scores = []
@@ -283,6 +302,9 @@ def run_profile(name, csv_path, out_dir, lookbacks=None, requested_models=None,
                             naive = metrics(actual, baseline('last_close', closes, origins[va], horizon, window, interval, mode), closes[origins[va]], scale)
                             train_actual = closes[origins[tr,None]+np.arange(1,horizon+1)]
                             train_score = metrics(train_actual, train_pred, closes[origins[tr]], scale)
+                            train_naive = metrics(train_actual, baseline('last_close', closes, origins[tr], horizon,
+                                                  window, interval, mode), closes[origins[tr]], scale)
+                            train_score['normalized_return_error'] = train_score['log_return_RMSE']/max(train_naive['log_return_RMSE'],1e-12)
                             gain = 1-score['RMSE']/max(naive['RMSE'],1e-12)
                             score['normalized_return_error'] = score['log_return_RMSE']/max(naive['log_return_RMSE'],1e-12)
                             scores.append(dict(fold=fold, metrics=score, train_metrics=train_score,
@@ -291,8 +313,12 @@ def run_profile(name, csv_path, out_dir, lookbacks=None, requested_models=None,
                                                origin_sha256=__import__('hashlib').sha256(origins[va].tobytes()).hexdigest(),
                                                train_label_end=bars.index[scale_cut-1].isoformat(),
                                                validation_start=bars.index[origins[va[0]]].isoformat(),
-                                               validation_end=bars.index[origins[va[-1]]+horizon].isoformat()))
+                                               validation_end=bars.index[origins[va[-1]]+horizon].isoformat(),
+                                               price_examples=[dict(timestamp=bars.index[origins[va[j]]+horizon].isoformat(),
+                                                                    actual=float(actual[j,-1]),predicted=float(pred[j,-1]))
+                                                               for j in np.unique(np.linspace(0,len(va)-1,min(100,len(va)),dtype=int))]))
                         row = dict(model=model_name, target_mode=mode, lookback=window, horizon=horizon, folds=scores,
+                                   comparison_lookback=max(feasible),
                                    median_MASE=float(np.median([f['metrics']['MASE'] for f in scores])),
                                    median_RMSE=float(np.median([f['metrics']['RMSE'] for f in scores])),
                                    median_normalized_return_error=float(np.median([f['metrics']['normalized_return_error'] for f in scores])),
@@ -310,7 +336,7 @@ def run_profile(name, csv_path, out_dir, lookbacks=None, requested_models=None,
                 passing = [r for r in rows if r['accepted']]
                 selected = min(passing, key=selection_key) if passing else next((r for r in rows if r['model']=='last_close'), None)
                 if selected:
-                    result['selections'].append({k:selected[k] for k in ('model','target_mode','lookback','horizon','accepted')})
+                    result['selections'].append({k:selected[k] for k in ('model','target_mode','lookback','horizon','accepted','comparison_lookback')})
         result['acceptance_criteria'] = dict(accepted_run_exists=any(r['accepted'] for r in result['rankings']))
         if not result['rankings']:
             result.update(status='insufficient_data', reasons=['No configuration supports five purged folds; see skipped'])
@@ -318,7 +344,9 @@ def run_profile(name, csv_path, out_dir, lookbacks=None, requested_models=None,
     # Export deployment artifacts using development labels only, also for baseline fallback.
     for selected in result['selections']:
         horizon, window, mode, model_name = (selected[k] for k in ('horizon','lookback','target_mode','model'))
-        common = eligible_origins(bars, max(windows), horizon, interval)
+        common = eligible_origins(bars, selected['comparison_lookback'], horizon, interval)
+        if not final:
+            common = common[common+horizon < cutoff]
         X, y, origins, closes = make_samples(bars, window, horizon, interval, mode, common)
         tr, te = holdout_indices(origins, horizon, cutoff_origin=cutoff)
         bundle = (dict(name=model_name, lookback=window, horizon=horizon) if model_name in BASELINES
@@ -344,6 +372,11 @@ def run_profile(name, csv_path, out_dir, lookbacks=None, requested_models=None,
         result.update(status='final_complete')
         result['final_test']['status'] = 'claimed_and_evaluated_once'
     else:
+        save_validation_plots(result, out_dir)
+        # Keep plot examples in their own CSVs; all metrics still use every origin.
+        for row in result['rankings']:
+            for fold in row['folds']:
+                fold.pop('price_examples', None)
         result['freeze_sha256'] = None
         frozen_path = out_dir/'frozen_config.json'
         frozen_path.write_text(json.dumps(result, indent=2, allow_nan=False)+'\n')
@@ -351,12 +384,38 @@ def run_profile(name, csv_path, out_dir, lookbacks=None, requested_models=None,
     return write_result(out_dir, result)
 
 
+def save_validation_plots(result, out_dir):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    for selected in result['selections']:
+        row = next(r for r in result['rankings'] if all(r[k] == selected[k]
+                   for k in ('model','target_mode','lookback','horizon')))
+        points = [p for fold in row['folds'] for p in fold['price_examples']]
+        df = pd.DataFrame(points)
+        stem = f"{selected['target_mode']}_h{selected['horizon']}_validation_prices"
+        df.to_csv(out_dir/(stem+'.csv'), index=False)
+        fig, ax = plt.subplots(figsize=(10,4))
+        dates = pd.to_datetime(df.timestamp, utc=True)
+        ax.plot(dates,df.actual,label='Actual close',lw=1)
+        ax.plot(dates,df.predicted,label=f"{selected['model']} forecast",lw=1)
+        ax.set(ylabel='USD',title=f"AAPL {result['profile']}: validation, lead {selected['horizon']} bars")
+        ax.legend()
+        fig.autofmt_xdate()
+        fig.tight_layout()
+        fig.savefig(out_dir/(stem+'.png'),dpi=140)
+        plt.close(fig)
+
+
 def diagnose(row):
+    train_error = np.median([f['train_metrics']['normalized_return_error'] for f in row['folds']])
     ratios = [f['metrics']['log_return_RMSE']/max(f['train_metrics']['log_return_RMSE'],1e-12) for f in row['folds']]
     if row['return_error_std'] > .3:
         return 'unstable_across_folds: inspect market regimes and data quality'
     if np.median(ratios) > 2:
         return 'possible_overfit_or_regime_change: reduce features/capacity, regularize, rolling retrain'
+    if train_error >= 1 and row['median_normalized_return_error'] >= 1:
+        return 'possible_underfit_or_target_data_issue: audit labels/features/frequency/history before capacity'
     if row['median_normalized_return_error'] >= 1:
         return 'no_baseline_advantage: inspect data/target/alignment before increasing capacity'
     return 'candidate_advantage_requires_all_acceptance_gates'
@@ -385,6 +444,7 @@ def render_report(result):
     for r in result['rankings']:
         lines.append(f"| {r['target_mode']} | {r['model']} | {r['lookback']} | {r['horizon']} | {r['median_MASE']:.4f} | {r['median_normalized_return_error']:.4f} | {r['median_baseline_RMSE_gain']:.2%} | {r['return_error_std']:.4f} |")
     lines += ['', 'Full per-fold, per-step and training errors, skips, hashes and diagnostic flags: `report.json`.',
+              'Price charts/CSVs show at most 100 final-lead examples per fold; metrics use all validation samples.',
               'Diagnostic actions and hybrid/stopping rules: `DIAGNOSTICS.md` in the project root.',
               'Hourly bars exclude the incomplete terminal 30 minutes; horizons count complete trading bars across sessions.',
               'No predictive advantage is claimed unless every acceptance gate passes.', '']

@@ -1,0 +1,24 @@
+{
+  "manifest_template_only": {
+    "symbol": "AAPL",
+    "interval": "1min",
+    "timezone": "America/New_York",
+    "timestamp_label": "bar_start",
+    "sha256": "REPLACE_WITH_ACTUAL_CSV_HASH",
+    "source": "REPLACE_WITH_ACTUAL_PROVIDER",
+    "adjustment": "REPLACE_WITH_VERIFIED_CORPORATE_ACTION_POLICY",
+    "provenance": {
+      "method": "manual_review",
+      "evidence_path": "provider_review.json",
+      "evidence_sha256": "REPLACE_WITH_ACTUAL_REVIEW_HASH"
+    }
+  },
+  "review_template_only": {
+    "decision": "unverified",
+    "reviewer": null,
+    "source_url": null,
+    "review_evidence": [],
+    "timezone": "America/New_York",
+    "csv_sha256": "REPLACE_WITH_ACTUAL_CSV_HASH"
+  }
+}

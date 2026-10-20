@@ -1,0 +1,7 @@
+{
+  "status": "download_failed",
+  "url": "https://query1.finance.yahoo.com/v8/finance/chart/AAPL?period1=0&period2=1792475522&interval=1d&events=history",
+  "attempted_utc": "2026-10-20T05:52:02.912955+00:00",
+  "error": "HTTP Error 403: Forbidden",
+  "existing_cache_preserved": false
+}

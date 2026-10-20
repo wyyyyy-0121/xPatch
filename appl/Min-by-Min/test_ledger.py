@@ -20,8 +20,12 @@ def migrate_history(root):
             continue
         for row in report.get('final_test', {}).get('results', []):
             if row.get('test_start') and row.get('test_end'):
+                # Older reports stored the last origin rather than label end.
+                # Conservatively reserve through the source end as well.
+                source_end = report.get('data', {}).get('end', row['test_end'])
+                end = max((row['test_end'], source_end), key=timestamp)
                 entries.append(dict(symbol=report.get('symbol','AAPL'), start=row['test_start'],
-                                    end=row['test_end'], output=str(path.resolve()),
+                                    end=end, output=str(path.resolve()),
                                     status='historically_exposed_exploratory_regression'))
     return entries
 

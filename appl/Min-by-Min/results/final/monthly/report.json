@@ -43491,7 +43491,7 @@
     "reason": "out-of-fold error complementarity has not been established"
   },
   "final_test": {
-    "status": "evaluated_once_after_validation_selection",
+    "status": "historically_exposed_exploratory_regression",
     "results": [
       {
         "model": "last_close",
@@ -43743,7 +43743,8 @@
           ]
         }
       }
-    ]
+    ],
+    "original_status": "evaluated_once_after_validation_selection"
   },
   "validation_diagnostic": {
     "status": "no_candidate_met_acceptance_thresholds",
@@ -46510,5 +46511,10 @@
       }
     ]
   },
-  "note": "Final test results are reported separately and are not used to select models or windows."
+  "note": "Final test results are reported separately and are not used to select models or windows.",
+  "historical_status": "exposed_exploratory_regression_superseded",
+  "historical_limitations": [
+    "Original window-dependent MASE and selection defects; do not infer predictive advantage.",
+    "Test labels were used in previous runs; shared ledger conservatively reserves through source end."
+  ]
 }

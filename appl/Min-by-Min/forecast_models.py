@@ -3,8 +3,7 @@ from __future__ import annotations
 
 import numpy as np
 
-FEATURE_ORDER = ['log_open_close', 'log_high_close', 'log_low_close',
-                 'one_bar_log_return', 'log1p_volume']
+FEATURE_ORDER = ['log_open', 'log_high', 'log_low', 'log_close', 'log1p_volume']
 BASELINES = {'last_close', 'drift', 'seasonal'}
 MODEL_ORDER = ['last_close', 'drift', 'seasonal', 'ridge', 'mlp', 'gru', 'lstm', 'xpatch']
 
@@ -62,7 +61,8 @@ def train_model(name, X, y, horizon):
     if name == 'ridge':
         from sklearn.linear_model import Ridge
         with threadpool_limits(limits=24):
-            bundle['estimator'] = Ridge(alpha=1.).fit(x.reshape(len(x), -1), yt)
+            bundle['estimator'] = Ridge(alpha=1.).fit(x.reshape(len(x), -1).astype('float64'),
+                                                     yt.astype('float64'))
         return bundle
     import torch
     from torch.utils.data import DataLoader, TensorDataset
@@ -123,7 +123,7 @@ def train_model(name, X, y, horizon):
 def predict_model(bundle, X):
     x = bundle['feature_scaler'].transform(X.reshape(-1, 5)).reshape(X.shape).astype('float32')
     if bundle['name'] == 'ridge':
-        prediction = bundle['estimator'].predict(x.reshape(len(x), -1))
+        prediction = bundle['estimator'].predict(x.reshape(len(x), -1).astype('float64'))
     else:
         import torch
         device = 'cuda' if torch.cuda.is_available() else 'cpu'

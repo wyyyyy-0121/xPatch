@@ -1,0 +1,20 @@
+{
+  "symbol": "AAPL",
+  "interval": "1mo",
+  "source": "Legacy Kaggle mirror; upstream quotes/adjustment not independently verified",
+  "provider": "Hetal-Mehta/AAPL-Dataset",
+  "provider_url": "https://raw.githubusercontent.com/Hetal-Mehta/AAPL-Dataset/08ba60b568c300a635da1b6291a0f54eb9ef3f13/AAPL.csv",
+  "mirror_commit": "08ba60b568c300a635da1b6291a0f54eb9ef3f13",
+  "downloaded_utc": null,
+  "prepared_utc": "2026-10-20T05:59:36.465454+00:00",
+  "timezone": "daily date, timezone not applicable",
+  "source_verified": false,
+  "start": "1981-01-01T00:00:00",
+  "end": "2022-05-01T00:00:00",
+  "sha256": "5814c9d717509f1c11ad6b60a2e1edff1a85f7fd1fc46747ed2765f7e022564e",
+  "raw_sha256": "9cfa57d3b9a2b0776d6275cb1b86f0ae08048ad2e61958c1dca9913a0cd03576",
+  "adjustment": "Legacy mirror OHLC, Adj Close excluded; corporate action semantics unverified",
+  "intended_use": "stale unverified engineering regression only, not current AAPL forecasts",
+  "derived_from_sha256": "1600769c640b352de6bd4b5cf40b6836abd5fc303406d3362c204f7f953703a9",
+  "derivation": "XNYS complete calendar months only"
+}

@@ -122,6 +122,7 @@ def load_ohlcv(path):
                 source_verified=bool(verified), sha256=digest,
                 sidecar_manifest=str(sidecar) if sidecar.exists() else None,
                 provider_url=declared.get('provider_url'), adjustment=declared.get('adjustment'),
+                declared_interval=declared.get('interval'), timestamp_label=declared.get('timestamp_label'),
                 synthetic=declared.get('synthetic', False))
     # Detect continuous interpolation even when a misleading manifest is supplied.
     if len(df) >= 100:
@@ -184,9 +185,10 @@ def aggregate_bars(df, interval):
         # in a calendar month, including both boundary months.
         if len(df) > 1 and pd.Series(df.index).diff().median() < pd.Timedelta(days=20):
             keep = []
+            all_sessions = schedule(str(result.index[0].date()),
+                                    str((result.index[-1]+pd.offsets.MonthEnd(0)).date())).index
             for stamp in result.index:
-                end = stamp + pd.offsets.MonthEnd(0)
-                required = schedule(str(stamp.date()), str(end.date())).index
+                required = all_sessions[(all_sessions.year == stamp.year) & (all_sessions.month == stamp.month)]
                 actual = df.index[(df.index.year == stamp.year) & (df.index.month == stamp.month)]
                 actual = actual.tz_localize(None).normalize() if actual.tz else actual.normalize()
                 required = required.tz_localize(None) if required.tz else required
@@ -212,6 +214,10 @@ def data_gate(profile, bars, meta, requirements):
             issues.append('intraday timezone is unspecified')
         if meta.get('source_verified') is not True:
             issues.append('intraday source/provenance lacks a hash-bound verification receipt')
+        if meta.get('declared_interval') != '1min' or meta.get('timestamp_label') != 'bar_start':
+            issues.append('intraday source must declare one-minute bar_start timestamps')
+        if not meta.get('adjustment'):
+            issues.append('intraday corporate-action adjustment policy is unspecified')
         minimum = req.get('minimum_session_coverage', .98)
         for field in ('calendar_minute_coverage', 'minimum_session_coverage'):
             coverage = meta.get(field, 0.)

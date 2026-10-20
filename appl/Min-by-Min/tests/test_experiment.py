@@ -61,6 +61,22 @@ def test_provenance_boolean_and_source_string_cannot_bypass(tmp_path):
         load_ohlcv(path)
 
 
+def test_hash_bound_review_receipt_and_complete_coverage(tmp_path):
+    path=save(frame(trading()),tmp_path/'valid_fixture.csv')
+    review=dict(decision='verified',reviewer='unit test fixture',source_url='https://example.test/provider',
+                review_evidence=['fixture only, not market data'],timezone='America/New_York',csv_sha256=sha256(path))
+    receipt=tmp_path/'review.json'; receipt.write_text(json.dumps(review))
+    manifest=dict(symbol='AAPL',interval='1min',timestamp_label='bar_start',adjustment='fixture: none',
+                  timezone='America/New_York',sha256=sha256(path),
+                  provenance=dict(method='manual_review',evidence_path=receipt.name,evidence_sha256=sha256(receipt)))
+    path.with_suffix('.csv.manifest.json').write_text(json.dumps(manifest))
+    bars,meta=load_ohlcv(path)
+    assert meta['source_verified'] and meta['calendar_minute_coverage']==1
+    assert data_gate('minute',bars,meta,{'minute':{}})==[]
+    receipt.write_text('{}')
+    assert not load_ohlcv(path)[1]['source_verified']
+
+
 def test_two_minutes_are_not_full_coverage_and_missing_whole_session(tmp_path):
     index=pd.DatetimeIndex(['2024-01-02 09:30','2024-01-02 09:31',
                             '2024-01-04 09:30','2024-01-04 09:31'])
@@ -215,6 +231,33 @@ def test_cross_directory_test_reuse_and_history_migration(tmp_path):
         claim_period(ledger,'AAPL','2023-06-01','2024-06-01','another_folder','def')
 
 
+def test_explicit_final_freeze_and_project_ledger(monthly_csv,tmp_path,monkeypatch):
+    import experiment
+    original = experiment.load_ohlcv
+    def test_fixture_loader(path):
+        bars,meta = original(path)
+        meta['source_verified'] = True  # unit fixture only; never written as a real provider receipt
+        return bars,meta
+    monkeypatch.setattr(experiment,'load_ohlcv',test_fixture_loader)
+    common = dict(lookbacks=[12], requested_models=['last_close'])
+    validation=run_profile('annual',monthly_csv,tmp_path/'validation',**common)
+    assert validation['final_test']['results']==[]
+    freeze=tmp_path/'validation'/'frozen_config.json'
+    ledger=tmp_path/'ledger.json'
+    final=run_profile('annual',monthly_csv,tmp_path/'final',**common,
+                      final=True,freeze_path=freeze,ledger_path=ledger)
+    assert final['status']=='final_complete' and len(final['final_test']['results'])==2
+    with pytest.raises(ValueError,match='overlaps'):
+        run_profile('annual',monthly_csv,tmp_path/'different_final',**common,
+                    final=True,freeze_path=freeze,ledger_path=ledger)
+
+
+def test_impossible_window_is_skipped_without_losing_valid_window(monthly_csv,tmp_path):
+    result=run_profile('annual',monthly_csv,tmp_path/'out',lookbacks=[12,9999],requested_models=['last_close'])
+    assert result['status']=='validation_complete'
+    assert len(result['rankings'])==2 and result['skipped'][0]['lookback']==9999
+
+
 def test_future_timestamps_skip_holidays_and_hourly_partial_bin():
     last=pd.Timestamp('2024-07-03 11:30',tz='America/New_York')
     future=future_timestamps(last,2,'1h')
@@ -229,3 +272,36 @@ def test_synthetic_interpolation_gate(tmp_path):
     assert meta['suspected_interpolation']
     reasons=data_gate('minute',df,meta,{'minute':{}})
     assert any('synthetic' in r for r in reasons)
+
+
+@pytest.mark.parametrize('length',[12,252,480])
+def test_vectorized_ema_preserves_causal_recurrence_and_gradients(length):
+    import torch
+    from models.ema_decomposition import EMADecomposition
+    torch.manual_seed(10)
+    x=torch.randn(2,length,5,dtype=torch.float64,requires_grad=True)
+    expected=[x[:,0]]
+    for i in range(1,length):
+        expected.append(.1*x[:,i]+.9*expected[-1])
+    expected=torch.stack(expected,dim=1)
+    actual,_=EMADecomposition(5,.1)(x)
+    assert torch.allclose(actual,expected,atol=1e-12,rtol=1e-12)
+    ga=torch.autograd.grad(actual.square().sum(),x,retain_graph=True)[0]
+    ge=torch.autograd.grad(expected.square().sum(),x)[0]
+    assert torch.allclose(ga,ge,atol=1e-11,rtol=1e-11)
+
+
+def test_unfold_patches_preserve_time_major_order():
+    import torch
+    from models.patch_embedding import PatchEmbedding
+    torch.manual_seed(10)
+    model=PatchEmbedding(5,8,[3,5]).double()
+    x=torch.randn(2,12,5,dtype=torch.float64,requires_grad=True)
+    reference=[]
+    for size,projection in zip(model.patch_sizes,model.projections):
+        patches=torch.stack([x[:,j:j+size].reshape(2,-1) for j in range(12-size+1)],dim=1)
+        reference.append(projection(patches))
+    minimum=min(v.shape[1] for v in reference)
+    expected=torch.stack([v[:,:minimum] for v in reference],dim=1).mean(1)+model.pos_embedding[:,:minimum]
+    actual=model(x)
+    assert torch.allclose(actual,expected,atol=1e-12,rtol=1e-12)
