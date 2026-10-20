@@ -1,0 +1,28 @@
+{
+  "archive": "/home/ayaka/xPatch/archive.zip",
+  "archive_sha256": "1369abc807f7e8682eebb40154e480b09941f36349f08c32bfc378380d8c54b9",
+  "member": "aapl_1min_data From 2006 -2024.csv",
+  "uncompressed_bytes": 1122786157,
+  "scanned_utc": "2026-10-20T05:49:08.906052+00:00",
+  "start": "2006-01-03T00:00:00",
+  "end": "2024-05-13T00:00:00",
+  "rows": 8689184,
+  "weekend_rows": 2376000,
+  "fractional_volume_rows": 7580822,
+  "linear_triplets": 8684718,
+  "triplets": 8689182,
+  "linear_second_difference_fraction": 0.9994862577397965,
+  "first_1441_rows_linear_interpolation_max_error": [
+    4.440892098500626e-16,
+    4.440892098500626e-16,
+    4.440892098500626e-16,
+    4.440892098500626e-16,
+    4.440892098500626e-16,
+    0.0
+  ],
+  "decision": "rejected_synthetic_interpolation",
+  "eligible_for_intraday_training": false,
+  "reason": "Nearly all OHLCV triplets are linear; weekend/off-session timestamps and fractional volumes indicate daily-to-minute interpolation. Future daily endpoints contaminate intermediate timestamps.",
+  "source_url": "https://www.kaggle.com/datasets/deltatrup/aapl-1-minute-historical-stock-data-2006-2024",
+  "source_url_status": "matching metadata only; local download URL is absent"
+}

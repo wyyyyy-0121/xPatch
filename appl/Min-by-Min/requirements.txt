@@ -9,3 +9,5 @@ tqdm>=4.62.3
 joblib>=1.0.1
 python-dotenv>=0.19.0
 yfinance>=0.2.54
+exchange-calendars>=4.13
+pytest>=8
