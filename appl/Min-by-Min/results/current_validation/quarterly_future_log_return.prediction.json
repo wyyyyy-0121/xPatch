@@ -1,0 +1,27 @@
+{
+  "symbol": "AAPL",
+  "origin": "2022-05-01T00:00:00",
+  "model": "last_close",
+  "training_label_end": "2014-01-01T00:00:00",
+  "timestamp_convention": "start of target bar; predicted close occurs at bar end",
+  "predictions": [
+    {
+      "step": 1,
+      "timestamp": "2022-06-01T00:00:00",
+      "future_close": 148.839996,
+      "future_log_return": 0.0
+    },
+    {
+      "step": 2,
+      "timestamp": "2022-07-01T00:00:00",
+      "future_close": 148.839996,
+      "future_log_return": 0.0
+    },
+    {
+      "step": 3,
+      "timestamp": "2022-08-01T00:00:00",
+      "future_close": 148.839996,
+      "future_log_return": 0.0
+    }
+  ]
+}
