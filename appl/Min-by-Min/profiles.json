@@ -1,0 +1,18 @@
+{
+  "symbol": "AAPL",
+  "data_source": "Yahoo Finance via yfinance; local OHLCV CSV for intraday",
+  "requirements": {
+    "annual": {"minimum_years": 15},
+    "quarterly": {"minimum_years": 10},
+    "monthly": {"minimum_years": 5},
+    "hourly": {"minimum_years": 1},
+    "minute": {"minimum_months": 6, "minimum_session_coverage": 0.98}
+  },
+  "profiles": {
+    "annual": {"bar_interval": "1mo", "lookbacks": [12, 24, 36, 60], "horizons": [12], "purge": 12},
+    "quarterly": {"bar_interval": "1mo", "lookbacks": [6, 12, 24, 36], "horizons": [3], "purge": 3},
+    "monthly": {"bar_interval": "1d", "lookbacks": [21, 63, 126, 252], "horizons": [21], "purge": 21},
+    "hourly": {"bar_interval": "1h", "lookbacks": [12, 24, 48, 96], "horizons": [1, 4, 8], "purge": 8},
+    "minute": {"bar_interval": "1min", "lookbacks": [30, 60, 120, 240, 480], "horizons": [5, 15, 30, 60], "purge": 60}
+  }
+}
