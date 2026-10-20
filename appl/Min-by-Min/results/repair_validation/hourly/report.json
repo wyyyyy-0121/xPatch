@@ -1,0 +1,145 @@
+{
+  "profile": "hourly",
+  "symbol": "AAPL",
+  "status": "insufficient_data",
+  "generated_utc": "2026-10-20T06:08:53.086845+00:00",
+  "data": {
+    "rows_input": 242612,
+    "duplicate_timestamps_removed": 0,
+    "timestamp_timezone": "naive / unspecified",
+    "start": "2024-06-03T04:00:00",
+    "end": "2025-06-06T19:59:00",
+    "source": "local CSV; provenance unverified",
+    "source_verified": false,
+    "sha256": "e3eee9c1bfa8121686bb2ea085bcb0a8272d41ece33f6c4ab5e3beb9ed8c2fba",
+    "sidecar_manifest": null,
+    "provider_url": null,
+    "adjustment": null,
+    "declared_interval": null,
+    "timestamp_label": null,
+    "synthetic": false,
+    "linear_second_difference_fraction": 0.0,
+    "suspected_interpolation": false,
+    "expected_regular_minutes": 98520,
+    "observed_regular_minutes": 98520,
+    "calendar_minute_coverage": 1.0,
+    "minimum_session_coverage": 1.0,
+    "median_within_day_minute_coverage": 1.0,
+    "missing_sessions": 0,
+    "sessions": 254,
+    "outside_regular_rows": 144092
+  },
+  "source_sha256": "e3eee9c1bfa8121686bb2ea085bcb0a8272d41ece33f6c4ab5e3beb9ed8c2fba",
+  "code_sha256": "44758e133723fe2a07c1a1017a4695b99f79cb3af602bde267d9d5380ba6727e",
+  "data_manifest": {
+    "path": "/home/ayaka/xPatch/appl/Min-by-Min/data/AAPL_1min.csv",
+    "sha256": "e3eee9c1bfa8121686bb2ea085bcb0a8272d41ece33f6c4ab5e3beb9ed8c2fba",
+    "metadata": {
+      "rows_input": 242612,
+      "duplicate_timestamps_removed": 0,
+      "timestamp_timezone": "naive / unspecified",
+      "start": "2024-06-03T04:00:00",
+      "end": "2025-06-06T19:59:00",
+      "source": "local CSV; provenance unverified",
+      "source_verified": false,
+      "sha256": "e3eee9c1bfa8121686bb2ea085bcb0a8272d41ece33f6c4ab5e3beb9ed8c2fba",
+      "sidecar_manifest": null,
+      "provider_url": null,
+      "adjustment": null,
+      "declared_interval": null,
+      "timestamp_label": null,
+      "synthetic": false,
+      "linear_second_difference_fraction": 0.0,
+      "suspected_interpolation": false,
+      "expected_regular_minutes": 98520,
+      "observed_regular_minutes": 98520,
+      "calendar_minute_coverage": 1.0,
+      "minimum_session_coverage": 1.0,
+      "median_within_day_minute_coverage": 1.0,
+      "missing_sessions": 0,
+      "sessions": 254,
+      "outside_regular_rows": 144092
+    }
+  },
+  "bars": 1515,
+  "history_years": 1.0081201758648934,
+  "bar_interval": "1h",
+  "experiment_config": {
+    "symbol": "AAPL",
+    "bar_interval": "1h",
+    "lookbacks": [
+      12,
+      24,
+      48,
+      96
+    ],
+    "horizons": [
+      1,
+      4,
+      8
+    ],
+    "target_modes": [
+      "future_close",
+      "future_log_return"
+    ],
+    "data_source": "local CSV with manifest",
+    "models": [
+      "last_close",
+      "drift",
+      "seasonal",
+      "ridge",
+      "mlp",
+      "gru",
+      "lstm",
+      "xpatch"
+    ],
+    "rolling_folds": 5,
+    "purge_gap_bars": "equal to horizon",
+    "holdout_boundary": "2025-03-26T12:30:00-04:00",
+    "validation": "common origin intersection; expanding purged five-fold; final 20% excluded",
+    "selection": "acceptance gates then normalized return RMSE, variability, simplicity",
+    "neural": {
+      "maximum_epochs": 20,
+      "early_stopping_patience": 3,
+      "stopping_partition": "purged final 15% of outer training only",
+      "seed": 2026,
+      "batch_size": 128,
+      "learning_rate": 0.001,
+      "weight_decay": 0.0001,
+      "gradient_clip": 1.0,
+      "width": 32,
+      "layers": 1,
+      "dropout": 0.1,
+      "mlp_width": 64
+    },
+    "hourly_semantics": "complete 60-minute bars from exchange open; terminal partial bar dropped; horizons count valid bars across sessions"
+  },
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+    "cuda_available": true,
+    "cpu_threads": 24,
+    "cpu_dataloader_workers": 24,
+    "cuda_dataloader_workers": 0,
+    "torch_version": "2.13.0+cu130"
+  },
+  "rankings": [],
+  "skipped": [],
+  "selections": [],
+  "hybrid": {
+    "status": "not_enabled",
+    "reason": "validation OOF complementarity and stable gains unproven"
+  },
+  "final_test": {
+    "status": "not_requested",
+    "results": []
+  },
+  "data_limitations": [
+    "Source remains unverified: results are exploratory/regression evidence."
+  ],
+  "reasons": [
+    "intraday timezone is unspecified",
+    "intraday source/provenance lacks a hash-bound verification receipt",
+    "intraday source must declare one-minute bar_start timestamps",
+    "intraday corporate-action adjustment policy is unspecified"
+  ]
+}

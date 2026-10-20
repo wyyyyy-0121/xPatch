@@ -50,4 +50,4 @@ class EMADecomposition(nn.Module):
         # 残差成分
         residual = x - trend
         
-        return trend, residual 
+        return trend, residual

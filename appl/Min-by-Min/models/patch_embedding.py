@@ -57,4 +57,4 @@ class PatchEmbedding(nn.Module):
         combined = torch.stack(patch_embeddings, dim=1).mean(dim=1)  # [batch, min_len, hidden_size]
         # 添加位置编码
         combined = combined + self.pos_embedding[:, :combined.size(1), :]
-        return combined 
+        return combined

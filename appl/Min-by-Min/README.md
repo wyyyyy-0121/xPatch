@@ -38,6 +38,8 @@ python -m pytest tests/test_experiment.py -q
 
 结果包括 `REPORT.md`、`report.json`、冻结配置、所选模型的 `.joblib`、验证价格 CSV 和美元价格图。导出文件包含神经网络 state_dict 或 Ridge、特征／目标标准化器、特征顺序、架构、训练截止日期、切分设置和数据／代码哈希。基线无需拟合标准化器。`predict.py` 只接受显式指定的新格式文件，复用训练预处理并输出未来交易柱起始时间、美元收盘价、对数收益率；预测收盘发生在该柱结束时。只加载可信的本地 joblib 文件。旧 `run.py`、`train.py`、`data_processor.py` 保留作历史参考。
 
+本次完整比较见 `results/repair_validation/SUMMARY.md`。可用 `python summarize_results.py` 重新生成汇总及每折涨跌／波动背景表。价格图每折最多展示 100 个最终预测步样本，指标使用全部有效样本；输入为 log OHLC 和 log1p volume 五个因果通道。
+
 ## 时间、来源与缺口
 
 `profiles.json` 定义五种时间尺度及最低历史：年度 15 年、季度 10 年、月度 5 年、小时 1 年、分钟 6 个月。日内默认要求每个完整常规交易日及全期间覆盖率均至少 98%。不足写 `insufficient_data` 并返回 2；无法形成五折的配置记录跳过原因，不生成虚假排名。
