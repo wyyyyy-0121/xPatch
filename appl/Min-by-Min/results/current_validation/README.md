@@ -4,6 +4,11 @@ This directory contains the six model artifacts, validation reports, validation
 plots/CSVs, and prediction JSON files regenerated with the current code on
 2026-10-20.
 
+This is the authoritative current validation directory. The older
+`../repair_validation/` directory is retained for history and its verification
+record reports the superseded code hash `44758e...`; do not use it as the
+current model or report source.
+
 ## Decision
 
 Annual, quarterly, and monthly validation each evaluated both `future_close`

@@ -41,7 +41,7 @@ python -m pytest tests/test_experiment.py -q
 
 结果包括 `REPORT.md`、`report.json`、冻结配置、所选模型的 `.joblib`、验证价格 CSV 和美元价格图。导出文件包含神经网络 state_dict 或 Ridge、特征／目标标准化器、特征顺序、架构、训练截止日期、切分设置和数据／代码哈希。基线无需拟合标准化器。`predict.py` 只接受显式指定的新格式文件，复用训练预处理并输出未来交易柱起始时间、美元收盘价、对数收益率；预测收盘发生在该柱结束时。只加载可信的本地 joblib 文件。旧 `run.py`、`train.py`、`data_processor.py` 保留作历史参考。
 
-本次完整比较见 `results/repair_validation/SUMMARY.md`。可用 `python summarize_results.py` 重新生成汇总及每折涨跌／波动背景表。价格图每折最多展示 100 个最终预测步样本，指标使用全部有效样本；输入为 log OHLC 和 log1p volume 五个因果通道。
+当前正式验证结果以 `results/current_validation/README.md` 及其下的三个 profile 报告为准；其中的六个模型 artifact 使用当前代码重新生成，并已通过当前 `predict.py` 的哈希检查。`results/repair_validation/` 保留的是历史验证结果，其 `VERIFICATION.md` 记录旧代码哈希 `44758e...`，不得与当前结果混用。可用 `python summarize_results.py` 重新生成汇总及每折涨跌／波动背景表。价格图每折最多展示 100 个最终预测步样本，指标使用全部有效样本；输入为 log OHLC 和 log1p volume 五个因果通道。
 
 ## 时间、来源与缺口
 
