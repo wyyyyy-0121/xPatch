@@ -1,0 +1,30 @@
+[
+  {
+    "name": "market_data",
+    "url": "https://docs.alpaca.markets/docs/about-market-data-api",
+    "status": 200,
+    "bytes": 479255,
+    "sha256": "96a25694e4a688058c5587c4699423ea7cc3f6f59f061215df8d7b3c141c53d0"
+  },
+  {
+    "name": "historical_bars",
+    "url": "https://docs.alpaca.markets/reference/stockbars",
+    "status": 200,
+    "bytes": 795368,
+    "sha256": "e63c861d4fc6207805d1f94cdad7cdeeea11917c56524ff48b5a9b711b66c5f9"
+  },
+  {
+    "name": "stock_quotes",
+    "url": "https://docs.alpaca.markets/reference/stockquotes-1",
+    "status": 200,
+    "bytes": 785809,
+    "sha256": "589ff04f6f992fb1e1b31a8ccb47367ab0c77a2644e1de1a0ff809513bab028d"
+  },
+  {
+    "name": "faq",
+    "url": "https://docs.alpaca.markets/docs/market-data-faq",
+    "status": 200,
+    "bytes": 615971,
+    "sha256": "72a699a6eb0b7c7283be5d0b876573bedafa9d3684ed0bddbd01aac3c3f3b6c6"
+  }
+]
