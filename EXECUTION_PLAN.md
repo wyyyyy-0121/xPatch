@@ -42,3 +42,4 @@
 - `artifacts/aapl_v2/benchmark/benchmark.json` 记录仅在首次验证季前历史上取得的运行预算和因果接口检查；无验证期分数用于资源选择。维持一步长一分钟。
 - 协议替换了无四年分母的稳定性规则：7/10 季度、2023/2024/2025H1 三段、全部固定种子均改善，主要指标须通过 Holm 及单日/五会话块门槛。
 - 2026-11-02 中途修订及重跑：首批 47 次完整运行与 1 次中断运行保存在 `artifacts/aapl_v2/main_pre_protocol_fix_20261102`，不用于最终排名。`b72d229` 使最终拟合也排除选择区前的 purge 日，统计方法明确为 bootstrap 差值在零以上的尾概率。原居中 bootstrap 公式本身并非方向错误；此前错误定性已更正。详细边界与原因见 `research/AAPL_V2_AMENDMENTS.md`。
+- 修订后早期回放凭证：`artifacts/aapl_v2/setup/early_replay_current.json`，签名与当前整轮一致。检查当时已完成的 `2023Q1/close` 11 次运行，重新核对直接累计标签、日期分区、尺度、校准和指标；监督模型完整重现季度预测，预训练模型重现首尾固定批次，最终拟合均排除 purge 日期。其范围不含当时尚未完成的 Kronos 第三个种子与 Chronos，也不能替代全部 260 次运行结束后的独立 `verify`。
