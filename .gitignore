@@ -4,3 +4,8 @@ test_results
 result.txt
 __pycache__
 checkpoints
+artifacts/
+.pytest_cache/
+
+# Windows alternate data stream sidecar copied into WSL checkouts
+*Zone.Identifier

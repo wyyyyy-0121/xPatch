@@ -15,6 +15,19 @@
 
 This is an official implementation of [xPatch: Dual-Stream Time Series Forecasting with Exponential Seasonal-Trend Decomposition](https://arxiv.org/pdf/2412.17323).
 
+## Financial long/short-stream experiments
+
+This fork adds **xPatch-LS**: a 240-minute trend stream and a 48-minute residual stream for the next 12 minute log returns. See the [experiment guide](finance_ls/README.md) for the architecture, chronological validation, frozen held-out evaluation, baselines, ablations, and independent artifact verification. Run from the repository root:
+
+```bash
+python -m pip install -r requirements-finance.txt
+python -m pytest tests/test_finance_ls.py -q
+python -m finance_ls.run --stage all
+python -m finance_ls.verify
+```
+
+The financial entrypoint is separate from the older `appl/Min-by-Min` scripts. Research results are generated in `artifacts/finance_ls/REPORT.md`; predictive improvements must be established by those experiments.
+
 ## Model Overview
 
 E**x**ponential **Patch** (xPatch) is a novel dual-stream architecture that utilizes exponential decomposition.

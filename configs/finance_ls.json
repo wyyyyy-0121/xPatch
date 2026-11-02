@@ -1,0 +1,22 @@
+{
+  "data": "appl/Min-by-Min/data/AAPL_1min.csv",
+  "lookback": 240,
+  "short_len": 48,
+  "horizon": 12,
+  "pool": 5,
+  "alpha": 0.1,
+  "patch_len": 12,
+  "stride": 6,
+  "seeds": [2026, 2027, 2028],
+  "models": ["zero", "ridge", "xpatch48", "xpatch240", "ls", "ls_unpooled", "ls_no_decomp", "long_only", "short_only"],
+  "folds": 3,
+  "test_fraction": 0.2,
+  "batch_size": 128,
+  "learning_rate": 0.001,
+  "max_epochs": 30,
+  "patience": 5,
+  "ridge_alpha": 1.0,
+  "bootstrap_repeats": 5000,
+  "device": "auto",
+  "threads": 4
+}

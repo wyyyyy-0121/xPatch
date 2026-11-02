@@ -2,8 +2,12 @@ import torch
 from torch import nn
 
 class Network(nn.Module):
-    def __init__(self, seq_len, pred_len, patch_len, stride, padding_patch):
+    def __init__(self, seq_len, pred_len, patch_len, stride, padding_patch,
+                 trend_seq_len=None, streams='both'):
         super(Network, self).__init__()
+        if streams not in ('both', 'long', 'short'):
+            raise ValueError('Unknown stream configuration')
+        self.streams = streams
 
         # Parameters
         self.pred_len = pred_len
@@ -46,7 +50,7 @@ class Network(nn.Module):
 
         # Linear Stream
         # MLP
-        self.fc5 = nn.Linear(seq_len, pred_len * 4)
+        self.fc5 = nn.Linear(seq_len if trend_seq_len is None else trend_seq_len, pred_len * 4)
         self.avgpool1 = nn.AvgPool1d(kernel_size=2)
         self.ln1 = nn.LayerNorm(pred_len * 2)
 
@@ -59,6 +63,15 @@ class Network(nn.Module):
         # Streams Concatination
         self.fc8 = nn.Linear(pred_len * 2, pred_len)
 
+        # Controls retain only parameters that participate in their forward pass.
+        if streams == 'long':
+            for name in ('fc1', 'gelu1', 'bn1', 'conv1', 'gelu2', 'bn2',
+                         'fc2', 'conv2', 'gelu3', 'bn3', 'flatten1', 'fc3', 'gelu4', 'fc4', 'fc8'):
+                delattr(self, name)
+        elif streams == 'short':
+            for name in ('fc5', 'avgpool1', 'ln1', 'fc6', 'avgpool2', 'ln2', 'fc7', 'fc8'):
+                delattr(self, name)
+
     def forward(self, s, t):
         # x: [Batch, Input, Channel]
         # s - seasonality
@@ -70,9 +83,18 @@ class Network(nn.Module):
         # Channel split for channel independence
         B = s.shape[0] # Batch size
         C = s.shape[1] # Channel size
-        I = s.shape[2] # Input size
-        s = torch.reshape(s, (B*C, I)) # [Batch and Channel, Input]
-        t = torch.reshape(t, (B*C, I)) # [Batch and Channel, Input]
+        s = torch.reshape(s, (B*C, s.shape[2]))
+        t = torch.reshape(t, (B*C, t.shape[2]))
+
+        if self.streams == 'both':
+            x = self.fc8(torch.cat((self.forward_short(s), self.forward_trend(t)), dim=1))
+        elif self.streams == 'long':
+            x = self.forward_trend(t)
+        else:
+            x = self.forward_short(s)
+        return x.reshape(B, C, self.pred_len).permute(0, 2, 1)
+
+    def forward_short(self, s):
 
         # Non-linear Stream
         # Patching
@@ -108,6 +130,10 @@ class Network(nn.Module):
         s = self.gelu4(s)
         s = self.fc4(s)
 
+        return s
+
+    def forward_trend(self, t):
+
         # Linear Stream
         # MLP
         t = self.fc5(t)
@@ -120,13 +146,4 @@ class Network(nn.Module):
 
         t = self.fc7(t)
 
-        # Streams Concatination
-        x = torch.cat((s, t), dim=1)
-        x = self.fc8(x)
-
-        # Channel concatination
-        x = torch.reshape(x, (B, C, self.pred_len)) # [Batch, Channel, Output]
-
-        x = x.permute(0,2,1) # to [Batch, Output, Channel]
-
-        return x
+        return t

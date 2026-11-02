@@ -2,36 +2,31 @@ import torch
 from torch import nn
 
 class EMA(nn.Module):
-    """
-    Exponential Moving Average (EMA) block to highlight the trend of time series
-    """
-    def __init__(self, alpha):
-        super(EMA, self).__init__()
-        # self.alpha = nn.Parameter(alpha)    # Learnable alpha
-        self.alpha = alpha
+    """Causal EMA initialized at x[0], preserving input device and dtype.
 
-    # Optimized implementation with O(1) time complexity
+    Cached triangular weights avoid division by exponentially small powers.
+    The nonpersistent buffer preserves compatibility with existing checkpoints.
+    """
+
+    def __init__(self, alpha):
+        super().__init__()
+        if not 0 < alpha <= 1:
+            raise ValueError("EMA alpha must be in (0, 1]")
+        self.alpha = float(alpha)
+        self.register_buffer("_weights", torch.empty(0), persistent=False)
+        self._cache_key = None
+
     def forward(self, x):
-        # x: [Batch, Input, Channel]
-        # self.alpha.data.clamp_(0, 1)        # Clamp learnable alpha to [0, 1]
-        _, t, _ = x.shape
-        powers = torch.flip(torch.arange(t, dtype=torch.double), dims=(0,))
-        weights = torch.pow((1 - self.alpha), powers).to('cuda')
-        divisor = weights.clone()
-        weights[1:] = weights[1:] * self.alpha
-        weights = weights.reshape(1, t, 1)
-        divisor = divisor.reshape(1, t, 1)
-        x = torch.cumsum(x * weights, dim=1)
-        x = torch.div(x, divisor)
-        return x.to(torch.float32)
-    
-    # # Naive implementation with O(n) time complexity
-    # def forward(self, x):
-    #     # self.alpha.data.clamp_(0, 1)        # Clamp learnable alpha to [0, 1]
-    #     s = x[:, 0, :]
-    #     res = [s.unsqueeze(1)]
-    #     for t in range(1, x.shape[1]):
-    #         xt = x[:, t, :]
-    #         s = self.alpha * xt + (1 - self.alpha) * s
-    #         res.append(s.unsqueeze(1))
-    #     return torch.cat(res, dim=1)
+        if x.ndim != 3 or x.shape[1] == 0 or not x.is_floating_point():
+            raise ValueError("EMA expects nonempty floating [batch, time, channel]")
+        t = x.shape[1]
+        key = (t, x.device, x.dtype, self.alpha)
+        if self._cache_key != key:
+            position = torch.arange(t, device=x.device)
+            lag = position[:, None] - position[None, :]
+            weights = self.alpha * torch.pow(1 - self.alpha, lag.clamp_min(0).to(x.dtype))
+            weights = weights.masked_fill(lag < 0, 0)
+            weights[:, 0] = torch.pow(1 - self.alpha, position.to(x.dtype))
+            self._weights = weights
+            self._cache_key = key
+        return torch.matmul(x.transpose(1, 2), self._weights.T).transpose(1, 2)
