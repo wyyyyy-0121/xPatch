@@ -15,9 +15,19 @@
 
 This is an official implementation of [xPatch: Dual-Stream Time Series Forecasting with Exponential Seasonal-Trend Decomposition](https://arxiv.org/pdf/2412.17323).
 
+## AAPL minute forecasting v2
+
+The current research entrypoint is [finance_v2](finance_v2/README.md). The [execution ledger](EXECUTION_PLAN.md) records the fixed stage order and evidence; the [protocol](PROTOCOL.md) fixes the information sets, ten quarterly walk-forward folds, calibration, statistical gates, and resource budget. The [literature review](research/AAPL_MINUTE_REVIEW.md) distinguishes finance journal evidence from model benchmarks and author technical reports.
+
+Verified Alpaca SIP/raw history covers 2021-01-04 through 2026-06-30: 1,378 sessions and 535,620 regular-session minute bars, with 100% per-session calendar coverage. See the [data-source audit](data_acquisition/V2_SOURCE_AUDIT.md). The comparison includes zero returns, Ridge, LightGBM, original xPatch48/240, Kronos-small, and Chronos-2, with immutable pretrained [checkpoint identities](configs/aapl_v2_model_lock.json).
+
+Development validation is running; no overall predictive advantage has been established. Previously exposed historical dates are not a pristine holdout, and historical final bars do not establish publication-time availability or trading profitability. Credentials, market data, model weights, and generated experiment artifacts remain local. Reproduction commands and the sequential supervisor are described in the v2 guide.
+
 ## Financial long/short-stream experiments
 
 This fork adds **xPatch-LS**: a 240-minute trend stream and a 48-minute residual stream for the next 12 minute log returns. See the [experiment guide](finance_ls/README.md) for the architecture, chronological validation, frozen held-out evaluation, baselines, ablations, and independent artifact verification. Run from the repository root:
+
+This v1 experiment is complete: the primary long/short proposal did not establish stable improvement over original xPatch under its protocol. Retain its [results](finance_ls/RESULTS.md) as a historical record; use the v2 entrypoint for the new data and comparison.
 
 ```bash
 python -m pip install -r requirements-finance.txt
