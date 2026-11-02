@@ -21,7 +21,7 @@ The current research entrypoint is [finance_v2](finance_v2/README.md). The [exec
 
 Verified Alpaca SIP/raw history covers 2021-01-04 through 2026-06-30: 1,378 sessions and 535,620 regular-session minute bars, with 100% per-session calendar coverage. See the [data-source audit](data_acquisition/V2_SOURCE_AUDIT.md). The comparison includes zero returns, Ridge, LightGBM, original xPatch48/240, Kronos-small, and Chronos-2, with immutable pretrained [checkpoint identities](configs/aapl_v2_model_lock.json).
 
-Development validation is running; no overall predictive advantage has been established. Previously exposed historical dates are not a pristine holdout, and historical final bars do not establish publication-time availability or trading profitability. Credentials, market data, model weights, and generated experiment artifacts remain local. Reproduction commands and the sequential supervisor are described in the v2 guide.
+Development validation is complete: all 260 runs passed two artifact and prediction verification rounds. Every candidate had higher pooled 12-minute MSE than zero returns, so neither panel passed the predeclared development gate; historical confirmation and trading research were skipped. See the [results and limitations](finance_v2/RESULTS.md) and [machine-readable summary](finance_v2/results_summary.json). The 240-minute same-session context limits evaluated origins to afternoon trading. Previously exposed historical dates are not a pristine holdout, and historical final bars do not establish publication-time availability or trading profitability. Credentials, market data, model weights, and generated experiment artifacts remain local.
 
 ## Financial long/short-stream experiments
 
