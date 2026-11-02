@@ -1,5 +1,18 @@
 # AAPL数据取得工具
 
+2026-11-02 的实际 SIP 访问与 20 日验收已完成，见 [v2 供应商验收](V2_SOURCE_AUDIT.md) 和仓库根 [执行台账](../EXECUTION_PLAN.md)。后续使用 `~/.venvs/xpatch-v2/bin/python`，从仓库根以模块形式运行审计器。
+
+下载器会在环境变量不存在时读取本地 `~/.config/alpaca/credentials.env` 的两个字面赋值；不执行 shell 文件。支持 `--credentials-file` 指定文件，以及 `--resume --output <原目录>` 校验已取得的原始分页后续传。最多 4 个日期范围并发，各范围仍按分页顺序请求。
+
+```bash
+~/.venvs/xpatch-v2/bin/python -m data_acquisition.audit_alpaca_sip \
+  --run data_acquisition/runs/alpaca_audit20_20261102T0800Z
+~/.venvs/xpatch-v2/bin/python -m data_acquisition.audit_history \
+  --run data_acquisition/runs/alpaca_development_20261102
+```
+
+`audit_history` 要求下载完整；会从原始响应重建 CSV 并核对全部 OHLCV、trade_count、vwap 字段，然后按请求完整日期范围审计（包含整日漏数）。覆盖合格不自动意味着正式点时研究资格。
+
 当前成果和限制见[获取报告](REPORT.md)。公开FirstRate Data短样本已下载并做结构审计；多年历史SIP尚需账户权限实测。
 
 ## 使用已有环境

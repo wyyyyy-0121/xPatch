@@ -9,3 +9,7 @@ artifacts/
 
 # Windows alternate data stream sidecar copied into WSL checkouts
 *Zone.Identifier
+
+# Local API credential files
+.env
+.env.*

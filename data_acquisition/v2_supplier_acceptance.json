@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "phase": "supplier_audit",
+  "completed_on": "2026-11-02",
+  "source": "Alpaca authenticated historical stocks bars endpoint",
+  "symbol": "AAPL",
+  "feed": "sip",
+  "adjustment": "raw",
+  "timestamp_label": "bar_start",
+  "research_scope": "retrospective",
+  "formal_eligible": false,
+  "point_in_time_verified": false,
+  "evidence": {
+    "audit20": {
+      "root": "data_acquisition/runs/alpaca_audit20_20261102T0800Z",
+      "passed": true,
+      "receipt_sha256": "4d8d722bbe1b0b83288eb6e73e375973a7c674ea6d9e302e48aef84251f66ed1",
+      "csv_sha256": "1e9c39cc40942e343f37319c7046b54c23158d6a9fcb703f65d4ebefc651f080",
+      "pages_verified": 20,
+      "ranges_verified": 20,
+      "rows_verified": 15188,
+      "fields_verified": [
+        "timestamp",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "trade_count",
+        "vwap"
+      ],
+      "raw_to_csv_all_fields_verified": true,
+      "formal_eligible": false,
+      "point_in_time_available": "not established"
+    },
+    "independent_price_crosscheck": {
+      "root": "data_acquisition/runs/alpaca_crosscheck_20261102",
+      "passed": true,
+      "receipt_sha256": "9905010448a3da01c1f2b3bc515af4d91d1404c3e55d542cb0b84f2f80695e12",
+      "csv_sha256": "3f87d0918f9fd7769f1577cb8f9c397918e1414f2f94ace77448161fdc61f9ab",
+      "pages_verified": 2,
+      "ranges_verified": 1,
+      "rows_verified": 10181,
+      "fields_verified": [
+        "timestamp",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "trade_count",
+        "vwap"
+      ],
+      "raw_to_csv_all_fields_verified": true,
+      "formal_eligible": false,
+      "point_in_time_available": "not established"
+    }
+  },
+  "audit20": {
+    "sessions": 20,
+    "expected_rth_minutes": 7620,
+    "observed_rth_minutes": 7620,
+    "minimum_session_coverage": 1.0,
+    "dst_verified": true,
+    "early_close_minutes": 210,
+    "audit_sha256": "36fe417880893f49bea14523641cb4e11fc46ae1cc2b7d0fb4354d7cce1c3133"
+  },
+  "price_crosscheck": {
+    "minutes": 4290,
+    "prices_within_one_cent": true,
+    "maximum_close_difference_usd": 0.00010000000003174137,
+    "volume_independently_validated": false,
+    "audit_sha256": "376f92739123111db08ccfb26c8d7fd5f1c0664967f8bcb9b69523dd1f751de3"
+  },
+  "limits": [
+    "Sample passed structural/price-concordance checks; this is not proof of point-in-time causal availability.",
+    "Volume differs materially between suppliers and has not been independently validated.",
+    "Historical data already overlaps prior project exposure and cannot be relabeled pristine holdout."
+  ]
+}
