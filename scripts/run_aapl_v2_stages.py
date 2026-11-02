@@ -35,6 +35,26 @@ def pid_identity(pid):
         return None
 
 
+def validation_progress(output):
+    manifest = json.loads((output / "manifest.json").read_text())
+    config = manifest["identity"]["config"]
+    splits = json.loads((output / "splits.json").read_text())
+    model_runs = sum(len(config["seeds"]) if name in {"xpatch48", "xpatch240", "kronos_small"} else 1
+                     for name in config["models"])
+    planned = len(splits) * len(config["feature_sets"]) * model_runs
+    receipts = list(output.glob("20*Q*/*/*/result.json"))
+    counts = {}
+    for receipt in receipts:
+        quarter = receipt.relative_to(output).parts[0]
+        counts[quarter] = counts.get(quarter, 0) + 1
+    active = [str(path.parent.relative_to(output)) for path in output.glob("20*Q*/*/*/scaler.json")
+              if not (path.parent / "result.json").exists()]
+    return {"completed_runs": len(receipts), "planned_runs": planned,
+            "completed_fraction": len(receipts) / planned if planned else None,
+            "by_quarter": dict(sorted(counts.items())), "active_or_incomplete": sorted(active),
+            "checked_at_utc": utc_now(), "scope": "presence only; independent stage verifies integrity and scores"}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", default="artifacts/aapl_v2/main")
@@ -55,7 +75,10 @@ def main():
                          validation_process_starttime=original)
             write_status(state_path, state)
             while original is not None and pid_identity(pid) == original:
+                state["validation_progress"] = validation_progress(output)
+                write_status(state_path, state)
                 time.sleep(10)
+            state["validation_progress"] = validation_progress(output)
             state["validation_process_exited_at_utc"] = utc_now()
             # Completeness and integrity are checked by the independent verify
             # command; disappearance of a PID alone is never treated as success.
