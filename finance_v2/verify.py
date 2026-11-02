@@ -38,6 +38,9 @@ def verify(output, full_models=True):
             dates = training_dates(split["train_dates"], config)
             order = [dates["early_fit"], dates["selection_purged"], dates["epoch_selection"],
                      dates["calibration_purged"], dates["calibration"], split["purged_dates"], split["eval_dates"]]
+            expected_final_fit = np.concatenate([dates["early_fit"], dates["epoch_selection"]]).tolist()
+            if dates["final_fit"] != expected_final_fit:
+                raise AssertionError("Final fitting dates include a purge or exclude a permitted segment")
             for earlier, later in zip(order, order[1:]):
                 if max(earlier) >= min(later):
                     raise AssertionError("Date partition leakage")

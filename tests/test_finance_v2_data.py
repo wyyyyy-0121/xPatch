@@ -5,6 +5,7 @@ import pytest
 
 from data_acquisition.download_alpaca_sip import read_credentials
 from finance_v2.data import audit_bars, calendar_grid, load_market_data, quarterly_splits, read_bars
+from finance_v2.data import training_dates
 
 
 def make_prices(path, days=("2024-03-08", "2024-03-11", "2024-11-29")):
@@ -106,6 +107,14 @@ def test_quarterly_splits_use_last_trading_session_purge():
     assert splits[-1]["kind"] == "historical_walk_forward"
     for s in splits:
         assert max(s["train_dates"]) < min(s["purged_dates"]) < min(s["eval_dates"])
+        p = training_dates(s["train_dates"], {"purge_sessions": 1,
+            "training": {"calibration_sessions": 20, "inner_epoch_selection_sessions": 20}})
+        groups = [p[k] for k in ("early_fit", "selection_purged", "epoch_selection",
+                                  "calibration_purged", "calibration", "final_fit")]
+        assert p["final_fit"] == p["early_fit"] + p["epoch_selection"]
+        assert not set(p["selection_purged"]) & set(p["final_fit"])
+        assert not set(p["calibration_purged"]) & set(p["final_fit"])
+        assert max(p["calibration"]) < min(s["purged_dates"])
 
 
 def test_credentials_literal_file_does_not_execute_shell(tmp_path, monkeypatch):

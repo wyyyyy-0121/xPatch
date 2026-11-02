@@ -237,14 +237,26 @@ def fit_calibration_dates(train_dates, calibration_sessions=20, purge_sessions=1
 
 
 def training_dates(train_dates, config):
-    """Outer training dates -> earlier fit, inner epoch selection, final fit, calibration."""
+    """Disjoint outer-training partitions; inner purges never enter final fitting."""
+    train_dates = np.asarray(train_dates, dtype=str)
     t, purge = config["training"], config["purge_sessions"]
-    final, calibration = fit_calibration_dates(train_dates, t["calibration_sessions"], purge)
-    early, selection = fit_calibration_dates(final, t["inner_epoch_selection_sessions"], purge)
-    return {"early_fit": early, "epoch_selection": selection, "final_fit": final,
-            "calibration": calibration,
-            "selection_purged": final[len(early):len(early) + purge],
-            "calibration_purged": train_dates[len(final):len(final) + purge]}
+    calibration_n = t["calibration_sessions"]
+    selection_n = t["inner_epoch_selection_sessions"]
+    if purge < 1 or len(train_dates) <= calibration_n + selection_n + 2 * purge:
+        raise ValueError("Insufficient outer training dates for disjoint selection/calibration and purges")
+
+    calibration = train_dates[-calibration_n:]
+    calibration_purged = train_dates[-(calibration_n + purge):-calibration_n]
+    pre_calibration = train_dates[:-(calibration_n + purge)]
+    epoch_selection = pre_calibration[-selection_n:]
+    selection_purged = pre_calibration[-(selection_n + purge):-selection_n]
+    early_fit = pre_calibration[:-(selection_n + purge)]
+    # After choosing the epoch on its inner dates, refit on both disjoint fit
+    # segments, while preserving their one-session purge boundary.
+    final_fit = np.concatenate([early_fit, epoch_selection])
+    return {"early_fit": early_fit.tolist(), "selection_purged": selection_purged.tolist(),
+            "epoch_selection": epoch_selection.tolist(), "final_fit": final_fit.tolist(),
+            "calibration_purged": calibration_purged.tolist(), "calibration": calibration.tolist()}
 
 
 def confirmation_split(config):

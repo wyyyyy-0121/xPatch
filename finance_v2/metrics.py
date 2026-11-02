@@ -59,8 +59,9 @@ def forecast_metrics(y, pred, horizons=(1, 5, 12), quantiles=None, levels=(0.1, 
 def paired_block_bootstrap(loss_difference, dates, repeats=5000, seed=2026, block_days=1):
     """Sample contiguous date blocks, retaining every intraday window and seed-mean loss.
 
-    The null p value uses the empirical distribution centered at the observed
-    paired mean. It is a bootstrap approximation, not an iid minute test.
+    The one-sided p value is the upper-tail probability at zero because a
+    negative loss difference favors the candidate. It is a bootstrap
+    approximation, not an iid minute test.
     """
     delta, dates = np.asarray(loss_difference, dtype=np.float64), np.asarray(dates).astype(str)
     if delta.ndim != 1 or len(delta) != len(dates) or not len(delta) or not np.isfinite(delta).all():
@@ -81,8 +82,9 @@ def paired_block_bootstrap(loss_difference, dates, repeats=5000, seed=2026, bloc
         draw = ((starts[..., None] + offsets) % n).reshape(size, -1)[:, :n]
         estimates[start:start + size] = sums[draw].sum(axis=1) / counts[draw].sum(axis=1)
     observed = float(delta.mean())
-    centered = estimates - observed
-    p = (1 + int(np.sum(centered <= observed))) / (repeats + 1)
+    # For H1 candidate loss < baseline loss, the null boundary is zero; use the
+    # bootstrap distribution of the paired difference and its upper tail.
+    p = (1 + int(np.sum(estimates >= 0.0))) / (repeats + 1)
     return {"mse_difference": observed, "ci95": np.quantile(estimates, [0.025, 0.975]).tolist(),
             "p_value_one_sided_candidate_better": p, "days": n, "block_days": block_days,
             "repeats": repeats, "seed": seed,

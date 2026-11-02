@@ -36,6 +36,16 @@ def test_day_and_moving_blocks_do_not_treat_intraday_replication_as_independent(
     assert holm({"a": .01, "b": .04, "c": .03}) == {"a": .03, "c": .06, "b": .06}
 
 
+def test_one_sided_block_bootstrap_p_value_uses_null_centered_root():
+    dates = np.array([f"2024-01-{i+1:02}" for i in range(40)])
+    rng = np.random.default_rng(31)
+    noise = rng.normal(0, 0.1, len(dates))
+    null = paired_block_bootstrap(noise, dates, repeats=5000, seed=2026)
+    alternative = paired_block_bootstrap(noise - 0.2, dates, repeats=5000, seed=2026)
+    assert null["p_value_one_sided_candidate_better"] > 0.05
+    assert alternative["p_value_one_sided_candidate_better"] < 0.01
+
+
 @pytest.fixture(scope="module")
 def synthetic_data(tmp_path_factory):
     directory = tmp_path_factory.mktemp("v2_execution")
