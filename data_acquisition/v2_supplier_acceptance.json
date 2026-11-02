@@ -76,5 +76,96 @@
     "Sample passed structural/price-concordance checks; this is not proof of point-in-time causal availability.",
     "Volume differs materially between suppliers and has not been independently validated.",
     "Historical data already overlaps prior project exposure and cannot be relabeled pristine holdout."
-  ]
+  ],
+  "historical_data": {
+    "root": "data_acquisition/runs/alpaca_development_20261102",
+    "passed": true,
+    "receipt_sha256": "0baef3973f66b7c146ae10541095693e23b98e05c2f135d8fd6e039359e0434e",
+    "csv_sha256": "dafb2d2ac05ae7652fea0334caea209457db6418368efdcad8b7d648cdfb5830",
+    "pages_verified": 134,
+    "ranges_verified": 67,
+    "rows_verified": 1061536,
+    "fields_verified": [
+      "timestamp",
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "trade_count",
+      "vwap"
+    ],
+    "raw_to_csv_all_fields_verified": true,
+    "formal_eligible": false,
+    "point_in_time_available": "not established",
+    "start": "2021-01-04",
+    "end": "2026-06-30",
+    "regular_rows": 535620,
+    "expected_regular_rows": 535620,
+    "overall_regular_coverage": 1.0,
+    "minimum_daily_coverage": 1.0,
+    "sessions": 1378,
+    "eligible_same_session_240m_to_12m_origins": 188784,
+    "abs_adjacent_regular_return_over_5pct_count": 0,
+    "per_year": {
+      "2021": {
+        "sessions": 252,
+        "expected_rows": 98100,
+        "observed_rows": 98100,
+        "eligible_origins": 34638,
+        "half_days": 1,
+        "sessions_below_98pct": 0,
+        "coverage": 1.0
+      },
+      "2022": {
+        "sessions": 251,
+        "expected_rows": 97710,
+        "observed_rows": 97710,
+        "eligible_origins": 34500,
+        "half_days": 1,
+        "sessions_below_98pct": 0,
+        "coverage": 1.0
+      },
+      "2023": {
+        "sessions": 250,
+        "expected_rows": 97140,
+        "observed_rows": 97140,
+        "eligible_origins": 34224,
+        "half_days": 2,
+        "sessions_below_98pct": 0,
+        "coverage": 1.0
+      },
+      "2024": {
+        "sessions": 252,
+        "expected_rows": 97740,
+        "observed_rows": 97740,
+        "eligible_origins": 34362,
+        "half_days": 3,
+        "sessions_below_98pct": 0,
+        "coverage": 1.0
+      },
+      "2025": {
+        "sessions": 250,
+        "expected_rows": 96960,
+        "observed_rows": 96960,
+        "eligible_origins": 34086,
+        "half_days": 3,
+        "sessions_below_98pct": 0,
+        "coverage": 1.0
+      },
+      "2026": {
+        "sessions": 123,
+        "expected_rows": 47970,
+        "observed_rows": 47970,
+        "eligible_origins": 16974,
+        "half_days": 0,
+        "sessions_below_98pct": 0,
+        "coverage": 1.0
+      }
+    },
+    "history_audit_sha256": "f0350ce28a487e4d033a57dbb55efb441c3743464bb0d5bdfc21bf3a0c8735e0",
+    "historical_research_eligible": true,
+    "independent_test": false
+  },
+  "prospective_confirmation_required": true
 }
