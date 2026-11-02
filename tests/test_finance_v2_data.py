@@ -96,13 +96,14 @@ def test_scaler_uses_training_only_and_features_ignore_future(tmp_path):
 
 def test_quarterly_splits_use_last_trading_session_purge():
     config = {"purge_sessions": 1, "periods": {"development_start": "2021-01-04",
-              "development_end": "2025-06-30", "validation_start": "2023-01-01",
-              "confirmation_start": "2025-07-01", "confirmation_end": "2026-06-30"}}
+              "development_end": "2025-06-30", "validation_start": "2023-01-01"}}
     splits = quarterly_splits(config)
-    assert len(splits) == 11
-    assert splits[0]["purged_dates"] == ["2022-12-30"]  # weekend purge is not sufficient
+    assert len(splits) == 10
+    assert splits[0]["name"] == "2023Q1"
+    assert splits[0]["purged_dates"] == ["2022-12-30"]
     assert splits[0]["train_dates"][-1] == "2022-12-29"
-    assert splits[-1]["purged_dates"] == ["2025-06-30"]
+    assert splits[-1]["name"] == "2025Q2"
+    assert splits[-1]["kind"] == "historical_walk_forward"
     for s in splits:
         assert max(s["train_dates"]) < min(s["purged_dates"]) < min(s["eval_dates"])
 

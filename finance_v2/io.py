@@ -29,7 +29,7 @@ def write_json(path, value):
 
 
 def source_hashes():
-    paths = list((ROOT / "finance_v2").glob("*.py"))
+    paths = list((ROOT / "finance_v2").rglob("*.py"))
     paths += [ROOT / p for p in ("models/xPatch.py", "layers/ema.py", "layers/network.py",
                                 "layers/decomp.py", "layers/revin.py")]
     return {str(p.relative_to(ROOT)): digest(p) for p in sorted(paths)}

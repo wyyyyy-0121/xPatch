@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "data": "data_acquisition/runs/alpaca_development_20261102/AAPL_sip_1min_raw.csv",
+  "data_sha256": "dafb2d2ac05ae7652fea0334caea209457db6418368efdcad8b7d648cdfb5830",
+  "symbol": "AAPL",
+  "feed": "sip",
+  "adjustment": "raw",
+  "timestamp_label": "bar_start",
+  "primary_feature_set": "close",
+  "feature_sets": ["close", "ohlcv"],
+  "lookback_returns": 240,
+  "horizons_minutes": [1, 5, 12],
+  "origin_stride_minutes": 1,
+  "purge_sessions": 1,
+  "periods": {
+    "development_start": "2021-01-04",
+    "development_end": "2025-06-30",
+    "validation_start": "2023-01-01",
+    "historical_confirmation_start": "2025-07-01",
+    "historical_confirmation_end": "2026-06-30"
+  },
+  "models": ["zero", "ridge", "lightgbm", "xpatch48", "xpatch240", "kronos_small", "chronos2"],
+  "seeds": [2026, 2027, 2028],
+  "pretrained": {
+    "lock": "configs/aapl_v2_model_lock.json",
+    "kronos": {"temperature": 1.0, "top_p": 0.9, "sample_count": 1, "batch_size": 32, "max_context": 512},
+    "chronos2": {"cross_learning": false, "batch_size": 128, "target": "minute_log_return"}
+  },
+  "training": {
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "max_epochs": 30,
+    "patience": 5,
+    "inner_epoch_selection_sessions": 20,
+    "calibration_sessions": 20,
+    "ridge_alpha": 1.0,
+    "lightgbm": {
+      "objective": "regression_l2",
+      "num_leaves": 31,
+      "learning_rate": 0.05,
+      "n_estimators": 300,
+      "max_depth": -1,
+      "verbosity": -1
+    }
+  },
+  "calibration": {
+    "method": "empirical_additive_residual_quantiles_on_disjoint_training_tail",
+    "quantile_levels": [0.1, 0.5, 0.9]
+  },
+  "statistics": {
+    "primary_horizon_minutes": 12,
+    "primary_metric": "cumulative_log_return_mse",
+    "bootstrap_unit": "whole_trading_day",
+    "bootstrap_repeats": 5000,
+    "bootstrap_seed": 2026,
+    "multiple_testing": "Holm across candidate-vs-zero primary-horizon comparisons",
+    "secondary_horizons_exploratory": [1, 5],
+    "report_by": ["quarter", "calendar_year", "model_seed"],
+    "positive_quarters_required": 7,
+    "positive_calendar_year_segments_required": ["2023", "2024", "2025H1"],
+    "trade_cost_evaluation": false
+  },
+  "runtime": {
+    "device": "cuda_if_available",
+    "torch_threads": 4,
+    "batch_size_inference": 256,
+    "max_total_artifact_gib": 30,
+    "max_validation_runtime_hours": 24
+  }
+}

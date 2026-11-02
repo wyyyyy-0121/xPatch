@@ -157,6 +157,13 @@ class MarketData:
             raise ValueError("Invalid future target")
         return np.cumsum(steps, axis=1)[:, np.array(self.horizons) - 1]
 
+    def step_targets(self, origins):
+        origins = np.asarray(origins, dtype=np.int64)
+        steps = self.returns[origins[:, None] + np.arange(1, max(self.horizons) + 1)]
+        if not np.isfinite(steps).all():
+            raise ValueError("Invalid future minute target")
+        return steps
+
 
 def load_market_data(path, lookback=240, horizons=(1, 5, 12), feature_set="close", start=None, end=None):
     if feature_set not in FEATURE_NAMES or lookback < 1 or not horizons or min(horizons) < 1:
@@ -191,11 +198,15 @@ def load_market_data(path, lookback=240, horizons=(1, 5, 12), feature_set="close
 
 
 def quarterly_splits(config):
-    """Plan dates using the exchange schedule without reading any test prices."""
+    """Build expanding quarterly historical validation splits.
+
+    Every historical date is research-exposed.  These folds are for development
+    and stability analysis, not a sealed final test.
+    """
     p = config["periods"]
-    if not (p["development_start"] <= p["development_end"] < p["confirmation_start"] <= p["confirmation_end"]):
-        raise ValueError("Overlapping/reversed development and confirmation ranges")
-    dates = np.array(sorted(calendar_grid(p["development_start"], p["confirmation_end"])))
+    if p["development_start"] > p["development_end"]:
+        raise ValueError("Reversed development range")
+    dates = np.array(sorted(calendar_grid(p["development_start"], p["development_end"])))
     development = dates[(dates >= p["development_start"]) & (dates <= p["development_end"])]
     splits = []
     quarters = pd.period_range(p["validation_start"], p["development_end"], freq="Q")
@@ -204,10 +215,10 @@ def quarterly_splits(config):
                                  (development <= str(q.end_time.date()))]
         if len(evaluation):
             train = development[development < evaluation[0]]
-            splits.append(_split(str(q), train, evaluation, config["purge_sessions"], "validation"))
-    evaluation = dates[(dates >= p["confirmation_start"]) & (dates <= p["confirmation_end"])]
-    splits.append(_split("historical_confirmation", development, evaluation,
-                         config["purge_sessions"], "historical_confirmation"))
+            splits.append(_split(f"{q.year}Q{q.quarter}", train, evaluation,
+                                 config["purge_sessions"], "historical_walk_forward"))
+    if not splits:
+        raise ValueError("No quarterly validation dates in range")
     return splits
 
 
@@ -223,3 +234,24 @@ def fit_calibration_dates(train_dates, calibration_sessions=20, purge_sessions=1
         raise ValueError("Insufficient training dates for disjoint calibration tail")
     return (train_dates[:-(calibration_sessions + purge_sessions)],
             train_dates[-calibration_sessions:])
+
+
+def training_dates(train_dates, config):
+    """Outer training dates -> earlier fit, inner epoch selection, final fit, calibration."""
+    t, purge = config["training"], config["purge_sessions"]
+    final, calibration = fit_calibration_dates(train_dates, t["calibration_sessions"], purge)
+    early, selection = fit_calibration_dates(final, t["inner_epoch_selection_sessions"], purge)
+    return {"early_fit": early, "epoch_selection": selection, "final_fit": final,
+            "calibration": calibration,
+            "selection_purged": final[len(early):len(early) + purge],
+            "calibration_purged": train_dates[len(final):len(final) + purge]}
+
+
+def confirmation_split(config):
+    p = config["periods"]
+    dates = np.array(sorted(calendar_grid(p["development_start"], p["historical_confirmation_end"])))
+    train = dates[dates <= p["development_end"]]
+    evaluation = dates[(dates >= p["historical_confirmation_start"]) &
+                       (dates <= p["historical_confirmation_end"])]
+    return _split("historical_confirmation", train, evaluation, config["purge_sessions"],
+                  "previously_exposed_historical_confirmation")
