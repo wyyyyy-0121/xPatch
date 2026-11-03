@@ -2,6 +2,8 @@
 
 2026-11-03 对正在运行的搜索进行诊断。诊断只读取任务状态、参数、样本数和耗时，没有查看正式预测分数或据此调参。机器可读证据索引为 `delivery/performance.json`。
 
+后续已完成完整 CUDA graph 执行加速验收：192 项配置/信息集/批量检查、六组训练续训检查、安装后双向恢复、最大规模预测和 30 轮持续运行通过。最大规模训练一轮约快 3.74 倍，完整评价预测约快 4.36 倍。当前结果和中止风险见 `delivery/RUN_RISK.md`，执行修订见 `delivery/rv30_acceleration_lock.json`。以下初次诊断及原耗时情景保留为历史；对应原报告另存 `delivery/amendments/performance_before_acceleration.json`。
+
 ## 本次耗时原因
 
 训练一直在完成任务。CPU 模型已结束，GPU 队列仍有大量任务。`80/120` 是模型组计数，不能解释为耗时已完成三分之二：未完成的 xPatch 组还包含 15/30 轮 halving、多种子复核及外层拟合。

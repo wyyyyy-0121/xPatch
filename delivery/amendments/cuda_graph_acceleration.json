@@ -1,0 +1,20 @@
+{
+  "started_utc": "2026-11-03T15:09:59.255901+00:00",
+  "prior_commit": "4400b47829990f508dc0ed83aba51249cddd0407",
+  "base_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+  "request": "效率实在太低 能不能优化模型，并评估该模型终止的风险。",
+  "method_to_test": "Replay original native DEMA forward/backward using CUDA graphs; no arithmetic fusion, no model or sample changes.",
+  "equivalence_required": "bitwise output and gradient equality; same optimizer/checkpoint continuation; all registered configurations.",
+  "failure_policy": "Preserve evidence and fall back to the unchanged implementation if equivalence or representative throughput fails.",
+  "formal_outer_scores_read": false,
+  "prior_driver_pid": 151901,
+  "prior_driver_ticks": "16456023",
+  "timer_start_monotonic": 173449.972453836,
+  "completed_utc": "2026-11-03T15:36:43.141800+00:00",
+  "state": "all_validation_passed_ready_for_checked_resume",
+  "elapsed_seconds": 1603.8834953019978,
+  "charged_cpu_core_hours": 9.801510249067764,
+  "charged_gpu_hours": 0.44552319313944383,
+  "runtime_lock": "delivery/rv30_acceleration_lock.json",
+  "runtime_signature": "b182048e59ae78399135f84fca8064737846c8ab96811d3de19bc3841e0712fc"
+}

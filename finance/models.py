@@ -103,11 +103,19 @@ def native_xpatch(params, channels, device):
 
 def neural_values(model, inputs, batch_size, device):
     import torch
+    from .cuda_graph import ForwardCache
     outputs = []
     model.eval()
+    graph_forward = None
+    if model.ma_type == "dema" and device.startswith("cuda"):
+        if not hasattr(model, "_inference_graphs"):
+            model._inference_graphs = ForwardCache(model)
+        graph_forward = model._inference_graphs
     with torch.inference_mode():
         for start in range(0, len(inputs), batch_size):
-            outputs.append(model(torch.as_tensor(inputs[start:start + batch_size], device=device)).cpu().numpy())
+            value = torch.as_tensor(inputs[start:start + batch_size], device=device)
+            output = model(value) if graph_forward is None else graph_forward.run(value)
+            outputs.append(output.cpu().numpy())
     values = np.concatenate(outputs).astype(np.float64)
     if not np.isfinite(values).all():
         raise ValueError("Nonfinite xPatch output; no forecast rows may be deleted")
@@ -134,6 +142,8 @@ def fit_neural(data, store, state, partition, origins, params, panel, config, se
         raise ValueError("Insufficient finite sequence training data")
     channels = x.shape[-1]
     model = native_xpatch(params, channels, device)
+    from .cuda_graph import StepCache
+    graph_steps = StepCache(model) if params["ma_type"] == "dema" and device.startswith("cuda") else None
     optimizer = torch.optim.AdamW((p for p in model.parameters() if p.requires_grad),
         lr=params["learning_rate"], weight_decay=params["weight_decay"])
     if fixed_epochs is None:
@@ -171,11 +181,17 @@ def fit_neural(data, store, state, partition, origins, params, panel, config, se
                 # Keep every sample even when BatchNorm would see a singleton.
                 model.eval()
             optimizer.zero_grad(set_to_none=True)
-            prediction = model(torch.as_tensor(x[indices], device=device))
-            loss = nn.functional.mse_loss(prediction, torch.as_tensor(y[indices], device=device))
+            inputs = torch.as_tensor(x[indices], device=device)
+            targets = torch.as_tensor(y[indices], device=device)
+            if graph_steps is None:
+                prediction = model(inputs)
+                loss = nn.functional.mse_loss(prediction, targets)
+            else:
+                prediction, loss = graph_steps.run(inputs, targets)
             if not torch.isfinite(loss):
                 raise ValueError("Nonfinite neural training loss")
-            loss.backward()
+            if graph_steps is None:
+                loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0, error_if_nonfinite=True)
             optimizer.step()
             total += float(loss.detach()) * len(indices)

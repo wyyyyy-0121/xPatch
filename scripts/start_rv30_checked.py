@@ -7,6 +7,7 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 
 def read(path):
@@ -36,8 +37,13 @@ def check(run_name, report_path):
     for path, expected in setup["source_files"].items():
         if digest(ROOT / path) != expected:
             raise ValueError("Measured fitting implementation changed: " + path)
-    if setup["script_sha256"] != digest(ROOT / "scripts/benchmark_rv30_runtime.py"):
+    if setup["script_sha256"] != digest(ROOT / setup.get("script_path", "scripts/benchmark_rv30_runtime.py")):
         raise ValueError("Benchmark implementation changed since measurement")
+    if report.get("runtime_acceleration_lock"):
+        from finance.provenance import verify_freeze
+        verified = verify_freeze(freeze["payload"]["config"])
+        if report["runtime_acceleration_lock"] not in verified["postprocessing_lock_files"]:
+            raise ValueError("Acceleration was not included in the verified execution locks")
     if run_name not in report["qualified_existing_runs"]:
         if not report["new_experiment_ready"]:
             raise ValueError("New experiments are blocked pending: " + "; ".join(report["required_before_new_experiment"]))

@@ -1,0 +1,67 @@
+{
+  "signature": "b182048e59ae78399135f84fca8064737846c8ab96811d3de19bc3841e0712fc",
+  "payload": {
+    "schema_version": 1,
+    "created_utc": "2026-11-03T15:34:08.252412+00:00",
+    "classification": "bitwise_equivalent_full_forward_loss_backward_cuda_graph_execution",
+    "base_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+    "base_freeze_sha256": "dcc00953da75049efa35b361b5dfcbee9922cd61bdbe2befeeb130aa36d3ad13",
+    "prior_statistics_lock_sha256": "0af74d7d51e079542955fc79393ca448632db10503cbaf6c7f8c357a143ed059",
+    "prior_source_snapshot_commit": "4400b47829990f508dc0ed83aba51249cddd0407",
+    "research_definitions_changed": false,
+    "model_search_space_changed": false,
+    "thresholds_changed": false,
+    "bitwise_equivalence_required": true,
+    "formal_outer_scores_read": false,
+    "changes": {
+      "finance/models.py": {
+        "before_sha256": "1cc3b611d5f21209141d5c93e4bb4883b1f72bfdafec81aecab53dbe18479702",
+        "after_sha256": "fa89a16281563c07c66a6b7eae3c1b8762ea218a4af72f9ee1a7e6f3245b459e"
+      },
+      "finance/provenance.py": {
+        "before_sha256": "5f4d65250d0e050dbfa6f9ff568b9d4b885a7b9cc8634167e687c916ea9e665a",
+        "after_sha256": "767834757be76bad9cd8d732078faf5268f429e2b39b2a06c0d09d9bde2c4e95"
+      }
+    },
+    "added_sources": {
+      "finance/cuda_graph.py": "c676cc089633e74a606a1fcb349a00759b6a6ea5eed8b08bf6a2f07f761f0588"
+    },
+    "support_sources": {
+      "scripts/start_rv30_checked.py": "4ff39d3a8635cf2184b6bd90700852ceff1c9335ef795c25ce5cecf1d460f1b9",
+      "scripts/analyze_rv30_termination.py": "59cd1d3d6504d045ae4d94a72bd3a10e2f912385f1c2ca228c3502b0c892c917",
+      "tests/test_rv30_acceleration.py": "5fe3c8a7fc66af35de73b0b28b37ca0f905a17a9ab74944f8c647238fd0ac250"
+    },
+    "validation_summary": "artifacts/rv30/setup/acceleration_20261103/summary.json",
+    "integrated_validation": "artifacts/rv30/setup/acceleration_20261103/installed_validation.json",
+    "validation_files": {
+      "artifacts/rv30/setup/acceleration_20261103/all_config_equivalence.json": "ee7ea84d51817c1cd93b96e04356c8a1245180eabe824954890fb1e6ff3a0d18",
+      "artifacts/rv30/setup/acceleration_20261103/fit_resume_equivalence.json": "b9c8ef43e10a730390429be586f0a82ec8570e482c44d9b7b7e214a3eaf9979f",
+      "artifacts/rv30/setup/acceleration_20261103/maximum_benchmark.json": "38b2c3dd2cc6170dce08add14395b38590f13916a6ae81af08ab8330c9dae8a7",
+      "artifacts/rv30/setup/acceleration_20261103/sustained.json": "b2c94052c3f06e1150581331c0f534baa05d10020ae2dd4ae63412f9fd745dc3",
+      "artifacts/rv30/setup/acceleration_20261103/summary.json": "eb0092c008784569a2ed4c69c8a4612ce6b594277042caf9a0eaf5b376e0665e",
+      "artifacts/rv30/setup/acceleration_20261103/installed_validation.json": "6e9167b03ca389a2de39886a60d10810e15375ebcb66980861f2e4a5e7b087fe",
+      "artifacts/rv30/setup/acceleration_20261103/validation_resources.json": "9a0b2f15c31517f9ad46eeb409a09be4a73c5b0abfb13779356d1d4107c29825",
+      "artifacts/rv30/setup/acceleration_20261103/engineering_tests_corrected.log": "050db4c3a8f791e8bc1badc39aa797906381768b92509f0843923aa033492db3",
+      "artifacts/rv30/setup/acceleration_20261103/full_22_thread_check.log": "35d86279d96ed65491ba8ff0748e1c8e7891711531404dc5d4b9cd6ae33de3ec",
+      "artifacts/rv30/setup/acceleration_20261103/acceleration_lock_tests.log": "b0312056bd52a988aea1222bdee92f5e4664454d315ddd8af10ca760c4a1126f",
+      "artifacts/rv30/setup/acceleration_20261103/validate_graph.py": "312478e9e8ab4f1c1cf18c64a41a05a0e6e7fcad11eb815bb41df14a9ed08ded",
+      "artifacts/rv30/setup/acceleration_20261103/validate_installed.py": "3de086ee5b13ada36b03aec01e4bd2413143cdbcd6802a80e3e1f86c1b1a6acd",
+      "artifacts/rv30/setup/acceleration_20261103/step_graph_candidate.py": "c676cc089633e74a606a1fcb349a00759b6a6ea5eed8b08bf6a2f07f761f0588",
+      "artifacts/rv30/setup/acceleration_20261103/fit_candidate.py": "e4c594a31b20797fbf3824d23b31801779b1171b25d7272c1390253a3bb77725",
+      "artifacts/rv30/setup/acceleration_20261103/models_before.py": "1cc3b611d5f21209141d5c93e4bb4883b1f72bfdafec81aecab53dbe18479702",
+      "artifacts/rv30/setup/acceleration_20261103/setup.json": "6d16313e1cecabc6e485d8e5794388b4964d3f12710fcc3369c34f05d37f7887"
+    },
+    "tests_passed": 95,
+    "scope": [
+      "all_32_registered_configs_two_panels_singleton_partial_full_batch_192_cases",
+      "six_fixed_epoch_training_checkpoint_rng_predictions_comparisons",
+      "installed_bidirectional_native_graph_resume_including_validation_history",
+      "maximum_planned_sample_counts_with_pre2023_benchmark_only_replication",
+      "maximum_scale_1_5_15_30_epoch_continuation",
+      "original_checkpoint_format_and_parameter_keys_preserved",
+      "CPU_and_EMA_execution_unchanged",
+      "earlier_DEMA_only_graph_candidate_rejected_for_RevIN_gradient_rounding"
+    ],
+    "preserved_checkpoints_compatible": true
+  }
+}
