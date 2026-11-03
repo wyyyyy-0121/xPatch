@@ -1,15 +1,15 @@
 {
   "signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
   "run_name": "development",
-  "pid": 177396,
-  "kernel_start_ticks": "17519456",
+  "pid": 184818,
+  "kernel_start_ticks": "17841641",
   "started_utc": "2026-11-03T01:53:30.265555+00:00",
-  "last_checked_utc": "2026-11-03T15:39:03.913814+00:00",
-  "next_check_after_utc": "2026-11-03T16:09:03.913814+00:00",
-  "code_commit": "b73f8993f18f739e81acaeb0092c485f5e9ab28a",
+  "last_checked_utc": "2026-11-03T16:34:13.256419+00:00",
+  "next_check_after_utc": "2026-11-03T17:04:13.256419+00:00",
+  "code_commit": "822d9e3239002e78112aa5154f240dca1b119e90",
   "run_directory": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
-  "log": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/search_resume_cuda_graph.log",
-  "state": "signed_search_running_with_verified_cuda_graph",
+  "log": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/train_throughput_resume.log",
+  "state": "signed_search_running_after_throughput_validation",
   "max_cpu_threads_total": 22,
   "heartbeat_id": "rv30",
   "prior_driver_pid": 115809,
@@ -23,14 +23,14 @@
   "next_command": "finance finalize --run-directory artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
   "resume_startup_verified": true,
   "last_observation": {
-    "checked_utc": "2026-11-03T15:41:39.506884+00:00",
-    "resume_startup_verified": true,
-    "driver_pid": 177396,
-    "driver_start_ticks": "17519456",
+    "passed": true,
+    "checked_utc": "2026-11-03T16:34:13.256419+00:00",
+    "driver_pid": 184818,
+    "driver_start_ticks": "17841641",
     "workers": [
       {
         "name": "cpu0",
-        "pid": 177423,
+        "pid": 184846,
         "cpu_ids": [
           0,
           1,
@@ -39,11 +39,13 @@
           4,
           5
         ],
-        "worker_threads": 6
+        "actual_affinity": "0-5",
+        "worker_threads": 6,
+        "nice": 10
       },
       {
         "name": "cpu1",
-        "pid": 177424,
+        "pid": 184847,
         "cpu_ids": [
           6,
           7,
@@ -52,11 +54,13 @@
           10,
           11
         ],
-        "worker_threads": 6
+        "actual_affinity": "6-11",
+        "worker_threads": 6,
+        "nice": 10
       },
       {
         "name": "cpu2",
-        "pid": 177425,
+        "pid": 184848,
         "cpu_ids": [
           12,
           13,
@@ -65,43 +69,50 @@
           16,
           17
         ],
-        "worker_threads": 6
+        "actual_affinity": "12-17",
+        "worker_threads": 6,
+        "nice": 10
       },
       {
         "name": "gpu3",
-        "pid": 177426,
+        "pid": 184849,
         "cpu_ids": [
           18,
           19,
           20,
           21
         ],
-        "worker_threads": 4
+        "actual_affinity": "18-21",
+        "worker_threads": 4,
+        "nice": 10
       }
     ],
-    "finished_groups": 80,
-    "budget_exhausted": false,
-    "gpu_hours": 13.620276006427206,
-    "cpu_core_hours": 71.41604772104436,
+    "total_cpu_affinity": 22,
+    "completed_resumed_jobs": 3,
     "first_resumed_job": {
-      "job_id": "2024Q4_aapl_xpatch/initial/xpatch_016_9218dd3954/2024Q4_inner2/s2026",
+      "job_id": "2024Q4_market_xpatch/initial/xpatch_022_113bbbf030/2024Q4_inner1/s2026",
       "status": "complete",
-      "wall_seconds": 20.931722426001215,
-      "started_utc": "2026-11-03T15:39:33.728603+00:00",
-      "finished_utc": "2026-11-03T15:39:54.656855+00:00"
+      "wall_seconds": 14.793001705023926,
+      "started_utc": "2026-11-03T16:33:15.221703+00:00",
+      "finished_utc": "2026-11-03T16:33:30.010717+00:00",
+      "completed_epochs": 5
     },
-    "first_resumed_job_completed_epochs": 5,
-    "formal_outer_scores_read": false
+    "budget_exhausted": false,
+    "gpu_hours": 14.470859997661472,
+    "cpu_core_hours": 82.7987079960111,
+    "finished_groups": 80,
+    "formal_outer_scores_read": false,
+    "waiter_verified": true
   },
   "postprocessing_lock": "delivery/rv30_statistics_lock.json",
   "independent_aggregate_statistics": "signed_ready_for_both_rounds",
   "continuation": {
     "state": "waiting_for_exact_training_process",
-    "pid": 177397,
-    "kernel_start_ticks": "17519463",
-    "training_pid": 177396,
-    "training_kernel_start_ticks": "17519456",
-    "started_utc": "2026-11-03T15:39:03.937714+00:00",
+    "pid": 184819,
+    "kernel_start_ticks": "17841644",
+    "training_pid": 184818,
+    "training_kernel_start_ticks": "17841641",
+    "started_utc": "2026-11-03T16:32:45.752750+00:00",
     "script": "artifacts/rv30/setup/await_development_finalize_20261103.py",
     "script_sha256": "2f63f30c661ab487b202322acb41aa8d25862f991a922410edaa34cd4608e1dc",
     "log": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/automatic_finalize_wait.log"
@@ -112,13 +123,17 @@
   "performance_resumed_utc": "2026-11-03T12:41:49.520472+00:00",
   "performance_report": "delivery/performance.json",
   "acceleration_evidence": "artifacts/rv30/setup/acceleration_20261103",
-  "runtime_acceleration_lock": "delivery/rv30_acceleration_lock.json",
-  "runtime_acceleration_signature": "b182048e59ae78399135f84fca8064737846c8ab96811d3de19bc3841e0712fc",
-  "validation_summary": "artifacts/rv30/setup/acceleration_20261103/summary.json",
+  "runtime_acceleration_lock": "delivery/rv30_throughput_lock.json",
+  "runtime_acceleration_signature": "105028c31159ab4b5878d03bbdac7c74288a6cba1cac510d704ff3d1910d0367",
+  "validation_summary": "artifacts/rv30/setup/throughput_20261103/full_validation_summary.json",
   "validation_passed": true,
-  "launcher_pid": 177354,
-  "launcher_start_ticks": "17519402",
+  "launcher_pid": 184774,
+  "launcher_start_ticks": "17841619",
   "acceleration_code_commit": "afe9b3517b42b38636ee6865ba9b5a881c9f7030",
   "acceleration_resumed_utc": "2026-11-03T15:39:03.913814+00:00",
-  "startup_validation": "artifacts/rv30/setup/acceleration_20261103/resume_validation.json"
+  "startup_validation": "artifacts/rv30/setup/throughput_20261103/resume_validation.json",
+  "throughput_evidence": "artifacts/rv30/setup/throughput_20261103",
+  "throughput_code_commit": "822d9e3239002e78112aa5154f240dca1b119e90",
+  "throughput_resumed_utc": "2026-11-03T16:32:45.724873+00:00",
+  "throughput_amendment": "delivery/amendments/fused_throughput.json"
 }
