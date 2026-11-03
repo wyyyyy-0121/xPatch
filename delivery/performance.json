@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "created_utc": "2026-11-03T16:30:07.149294+00:00",
+  "created_utc": "2026-11-03T23:02:01.223066+00:00",
   "base_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
   "scope": "validated_fused_execution_existing_development_search_only",
   "throughput_measurement_passed": true,
@@ -8,13 +8,13 @@
     "development"
   ],
   "new_experiment_ready": false,
-  "benchmark_directory": "artifacts/rv30/setup/throughput_20261103",
+  "benchmark_directory": "artifacts/rv30/setup/performance_replay_20261104",
   "required_before_new_experiment": [
     "Complete any new model or workload-specific maximum-size benchmarks, including Chronos if changed.",
     "Freeze a complete new experiment compute plan with remaining budget and required conditional stages."
   ],
   "runtime_acceleration_lock": "delivery/rv30_throughput_lock.json",
-  "prior_report": "delivery/amendments/performance_before_throughput.json",
+  "prior_report": "delivery/amendments/performance_before_replay_precision.json",
   "observations": {
     "all_config_bitwise_cases": 192,
     "full_fit_resume_cases": 6,
@@ -116,6 +116,14 @@
       "maximum_copy_bytes": 1073741824,
       "reserve_bytes": 1073741824,
       "fallback": "original_gather_transfer"
+    },
+    "replay_precision_refresh": "Same fixed pre-2023 ten-case throughput suite rerun after saved-model precision correction; current measured source fingerprint restored. Historical full-shape, maximum-scale and 30-epoch evidence remains bound by prior locks.",
+    "prospective_CPU_workload": {
+      "origins": 346,
+      "models": 4,
+      "mean_seconds": 0.9011812442538498,
+      "maximum_seconds": 0.9701592109922785,
+      "historical_test_only": true
     }
   },
   "search_duration_scenarios": {
@@ -162,7 +170,7 @@
   },
   "runtime_change_applied": true,
   "model_or_search_change_applied": false,
-  "outer_scores_read": false,
+  "outer_scores_read": true,
   "evidence_files": {
     "artifacts/rv30/setup/throughput_20261103/full_validation_summary.json": "a784305e1e83c3228beeb2b04319a4ced5f70cd9ad2f22c073d22d5340575ffc",
     "artifacts/rv30/setup/throughput_20261103/backward_gpu_equivalence.json": "eef45b529e7e57a6b275778f6c688b8c2f017234b7867ab064cca974fda81e5b",
@@ -198,7 +206,12 @@
     "delivery/amendments/performance_before_throughput.json": "2832958738931df409b3f60994fc3a77cd1e77d2eea8a25b33abd8de29355bd0",
     "artifacts/rv30/setup/throughput_20261103/launch_gate_checks.json": "a401b72038c8671c2f43cdfef5667599e3ab7f472790010e888e917d124a14a9",
     "artifacts/rv30/setup/throughput_20261103/check_launch.py": "84f2db25031289a9a62a984d907abc943be93f472601ba71d813a9b0c2cfadbf",
-    "delivery/amendments/fused_throughput.json": "95ac65ef190ce83c42f01a95e82b8f843de2ded77cdf352d29f53a58ff3d5f21"
+    "delivery/amendments/fused_throughput.json": "95ac65ef190ce83c42f01a95e82b8f843de2ded77cdf352d29f53a58ff3d5f21",
+    "artifacts/rv30/setup/performance_replay_20261104/progress.json": "1a310dd5cee2ae9305bc0c0333174a4d755ac499db96cc7689aa45f7878e44d5",
+    "artifacts/rv30/setup/performance_replay_20261104/setup.json": "91ed3f0630d1eeeeac9d8ae17c08771e12b58dc6022aad6de4ac8d6179125d56",
+    "artifacts/rv30/setup/performance_replay_20261104/operator_profile.json": "756ef41a5bc737e46847bac797964962397ae59a98a7f9dbf566f0f146239e6d",
+    "artifacts/rv30/setup/performance_replay_20261104/summary.json": "75022a9ba328109daffead3f91ac826a3f141138350344efe311e8d68276b7d4",
+    "delivery/amendments/performance_before_replay_precision.json": "62ecbdae16b6554f334e1ffea9776438bda48370976892ff6841b82b7229c407"
   },
   "launch_gate_behavior_checks": "artifacts/rv30/setup/throughput_20261103/launch_gate_checks.json",
   "launch_gate_behavior_checks_passed": true

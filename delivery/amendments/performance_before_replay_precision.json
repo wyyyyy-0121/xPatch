@@ -1,0 +1,205 @@
+{
+  "schema_version": 3,
+  "created_utc": "2026-11-03T16:30:07.149294+00:00",
+  "base_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+  "scope": "validated_fused_execution_existing_development_search_only",
+  "throughput_measurement_passed": true,
+  "qualified_existing_runs": [
+    "development"
+  ],
+  "new_experiment_ready": false,
+  "benchmark_directory": "artifacts/rv30/setup/throughput_20261103",
+  "required_before_new_experiment": [
+    "Complete any new model or workload-specific maximum-size benchmarks, including Chronos if changed.",
+    "Freeze a complete new experiment compute plan with remaining budget and required conditional stages."
+  ],
+  "runtime_acceleration_lock": "delivery/rv30_throughput_lock.json",
+  "prior_report": "delivery/amendments/performance_before_throughput.json",
+  "observations": {
+    "all_config_bitwise_cases": 192,
+    "full_fit_resume_cases": 6,
+    "installed_cross_implementation_resume_bitwise_equal": true,
+    "resident_fallback_bitwise_equal": true,
+    "engineering_tests_passed": 119,
+    "maximum_benchmark": [
+      {
+        "mode": "native",
+        "timings": {
+          "fit_one_epoch_seconds": 60.54544667201117,
+          "calibration_seconds": 2.3308243269857485,
+          "evaluation_seconds": 30.90569395100465
+        },
+        "max_cuda_allocated_bytes": 327803904,
+        "training_origins": 72397,
+        "calibration_origins": 6920,
+        "evaluation_origins": 86306
+      },
+      {
+        "mode": "graph",
+        "timings": {
+          "fit_one_epoch_seconds": 16.171615559025668,
+          "calibration_seconds": 0.7098974019754678,
+          "evaluation_seconds": 7.090050501021324
+        },
+        "max_cuda_allocated_bytes": 394946048,
+        "training_origins": 72397,
+        "calibration_origins": 6920,
+        "evaluation_origins": 86306
+      },
+      {
+        "mode": "installed_fused",
+        "timings": {
+          "fit_one_epoch_seconds": 9.06310791100259,
+          "calibration_seconds": 0.2244133049971424,
+          "evaluation_seconds": 2.4739803779812064
+        },
+        "training_origins": 72397,
+        "calibration_origins": 6920,
+        "evaluation_origins": 86306,
+        "max_cuda_allocated_bytes": 798731264
+      }
+    ],
+    "maximum_cold_fit_speedup_vs_native": 6.680428752096083,
+    "maximum_cold_fit_speedup_vs_graph": 1.7843344377918493,
+    "maximum_prediction_speedup_vs_native": 12.492295503258605,
+    "sustained": {
+      "passed": true,
+      "resumed_stages": [
+        1,
+        5,
+        15,
+        30
+      ],
+      "stage_seconds": [
+        {
+          "to_epoch": 1,
+          "seconds": 6.024391569982981
+        },
+        {
+          "to_epoch": 5,
+          "seconds": 25.240609229018446
+        },
+        {
+          "to_epoch": 15,
+          "seconds": 60.99400885502109
+        },
+        {
+          "to_epoch": 30,
+          "seconds": 90.91513067900087
+        }
+      ],
+      "last_15_epochs_seconds_per_epoch": 6.0610087119333915,
+      "maximum_30_epoch_checkpoint_bitwise_equal": true
+    },
+    "four_job_comparison": {
+      "base_graph_elapsed_seconds": 39.77433971501887,
+      "fused_elapsed_seconds": 17.76210824601003,
+      "speedup": 2.2392803356523587,
+      "scope": "four_full_pre2023_training_calibration_evaluation_jobs_with_controller_overhead"
+    },
+    "concurrency_rejected": {
+      "serial_seconds": 34.04881264199503,
+      "two_worker_seconds": 33.46107949101133,
+      "improvement_fraction": 0.017564679918398163,
+      "scope": "resident_plus_forward_fusion_before_full_adjoint_candidate",
+      "decision": "keep_one_GPU_worker_due_to_small_gain_slower_jobs_and_memory_cost"
+    },
+    "resource_summary": {
+      "installed_peak_rss_bytes": 4694441984,
+      "installed_max_cuda_allocated_bytes": 798731264,
+      "candidate_max_cuda_allocated_bytes": 802041344,
+      "installed_end_available_memory_bytes": 12987953152,
+      "cpu_limit": 22,
+      "gpu_workers": 1
+    },
+    "resident_admission": {
+      "maximum_copy_bytes": 1073741824,
+      "reserve_bytes": 1073741824,
+      "fallback": "original_gather_transfer"
+    }
+  },
+  "search_duration_scenarios": {
+    "scope": "remaining_xpatch_only_no_scores_or_rankings_read",
+    "scenarios": [
+      {
+        "selection_cost_scenario": "cheaper_retained",
+        "remaining_xpatch_native_hours": 12.620795330477893,
+        "remaining_xpatch_accelerated_hours": 7.765006647118993,
+        "remaining_initial_native_hours": 5.1438864804000675,
+        "remaining_initial_accelerated_hours": 1.2242824616928376,
+        "remaining_initial_jobs": 414,
+        "remaining_later_jobs": 1860
+      },
+      {
+        "selection_cost_scenario": "middle_cost_retained",
+        "remaining_xpatch_native_hours": 23.407248565725183,
+        "remaining_xpatch_accelerated_hours": 11.486245225447623,
+        "remaining_initial_native_hours": 5.1438864804000675,
+        "remaining_initial_accelerated_hours": 1.2242824616928376,
+        "remaining_initial_jobs": 414,
+        "remaining_later_jobs": 1860
+      },
+      {
+        "selection_cost_scenario": "expensive_retained",
+        "remaining_xpatch_native_hours": 186.00851994814735,
+        "remaining_xpatch_accelerated_hours": 29.88472921485929,
+        "remaining_initial_native_hours": 5.1438864804000675,
+        "remaining_initial_accelerated_hours": 1.2242824616928376,
+        "remaining_initial_jobs": 414,
+        "remaining_later_jobs": 1860
+      }
+    ],
+    "method": "Median completed initial task seconds per actual epoch and training origin; fixed 5/15/30 halving and full 30-epoch finalist/outer ceilings. Retain configurations solely by measured cost; use nested cheaper/middle/expensive subsets. Use only pre-CUDA-graph historical native timings; apply a representative 6.5x DEMA fit acceleration (conservative rounding of the maximum installed benchmark, configuration-dependent) and 0.5-second graph setup per job; EMA unchanged.",
+    "limitations": [
+      "Scenarios are not confidence intervals, probabilities or deadlines.",
+      "All-stage epochs are conservatively assumed to run to ceilings; early stopping and selected epochs are unknown.",
+      "A single longest-context maximum-scale speedup cannot establish every configuration's speedup.",
+      "Initial task totals include calibration and setup; per-sample scaling also scales these fixed costs.",
+      "Chronos remaining work, full outer prediction workloads, both independent replays, statistics and conditional confirmation are additional costs.",
+      "No predictive-effectiveness or strategy-profitability termination probability can be inferred from timing metadata."
+    ],
+    "additional_work": "Chronos, full prediction/replay/statistics, conditional confirmation, delivery and any required prospective observation are additional; scenarios are not confidence intervals or deadlines."
+  },
+  "runtime_change_applied": true,
+  "model_or_search_change_applied": false,
+  "outer_scores_read": false,
+  "evidence_files": {
+    "artifacts/rv30/setup/throughput_20261103/full_validation_summary.json": "a784305e1e83c3228beeb2b04319a4ced5f70cd9ad2f22c073d22d5340575ffc",
+    "artifacts/rv30/setup/throughput_20261103/backward_gpu_equivalence.json": "eef45b529e7e57a6b275778f6c688b8c2f017234b7867ab064cca974fda81e5b",
+    "artifacts/rv30/setup/throughput_20261103/full_seed_resume_equivalence.json": "8668036eb312f0c079f712cd918aabbed58b344a19847a1b6a8f94a1bba1d5c2",
+    "artifacts/rv30/setup/throughput_20261103/full_pilot_equivalence.json": "afbaf6351b109e4dab44232c72c1dd739a843470bc4e8c4afa996522a3e8aa06",
+    "artifacts/rv30/setup/throughput_20261103/resident_equivalence.json": "003dda428964b2059c243d135605ab09c0426ae53e0ccd0d6c6ba7bd901368af",
+    "artifacts/rv30/setup/throughput_20261103/fused_equivalence.json": "b623ce5e5d497ccfdd9618bd0befce6aefa7a6600eb2929d3a22aa79a94bf163",
+    "artifacts/rv30/setup/throughput_20261103/backward_cpu_derivation.json": "4ef6fbb60f6856efc5c37807cdbce543539380524856b6dec58f4db0289e7964",
+    "artifacts/rv30/setup/throughput_20261103/benchmark_summary.json": "c3a8bed4305c7af445d1344165647b11b1ba7a37426191f9f25148695c8c5e0f",
+    "artifacts/rv30/setup/throughput_20261103/installed_validation.json": "a26f3b6cd3a73e996642680c14e498aae1aa64fb8f66f4eaec3593b79396d11d",
+    "artifacts/rv30/setup/throughput_20261103/installed_maximum.json": "b574f5a951c8ffaf6bc961ed81bdc4bf6957672bbab7be889b53f6620686feb7",
+    "artifacts/rv30/setup/throughput_20261103/engineering_tests.log": "40aa0d8557ebe15361b71a7c0ac1d6017147c5f1e3fb98559476e383a8590ad1",
+    "artifacts/rv30/setup/throughput_20261103/full_22_thread_check.log": "f4c77b58e2280613a49ba18da1c4a02d440e862c49a6c8fe5daaf277333ff99d",
+    "artifacts/rv30/setup/throughput_20261103/validate_full.py": "9dd5fa13936153b0d226a852075657ea9b1f5877a16ac94a1c1d1cd93defaa15",
+    "artifacts/rv30/setup/throughput_20261103/validate_installed.py": "374cc6ae603d52933bee5cc00968a5e934bd096fbc8ff815afcab67d5c4e6d25",
+    "artifacts/rv30/setup/throughput_20261103/benchmark_installed.py": "00eea2eebc1825fc6a97850d1a95747082fc2eec943c95393e4d7db64ab1eb03",
+    "artifacts/rv30/setup/throughput_20261103/fused_dema_candidate.py": "e22eefb7d3250a26130b58f346ce4ea8091cb3756e97275d3fef1ca47830579d",
+    "artifacts/rv30/setup/throughput_20261103/fused_decomp_candidate.py": "fc94eece408092c06fb992c1aa5e85fad2266a74b9616eccffcf48af408d4f8f",
+    "artifacts/rv30/setup/throughput_20261103/resident_candidate.py": "f8c9e3406b7df9d869fbcf0defec507a495a15025663ccf8a71ac0c8acfbba6a",
+    "artifacts/rv30/setup/throughput_20261103/install_candidates.py": "8af6dcc3715125683663d3bdfc0c5f751b83864c8b25261f44ccff1e0994e51d",
+    "artifacts/rv30/setup/throughput_20261103/benchmark_candidates.py": "08d5af32c543621f498c7683a714e66055164c3454c297405c56f0f5057f693b",
+    "artifacts/rv30/setup/throughput_20261103/probe_backward.py": "f83eceb05cc34347e3a0ffefbae9b6cbfaf8e140592d646040f0e629f1bef102",
+    "artifacts/rv30/setup/throughput_20261103/models.py.before": "fa89a16281563c07c66a6b7eae3c1b8762ea218a4af72f9ee1a7e6f3245b459e",
+    "artifacts/rv30/setup/throughput_20261103/cuda_graph.py.before": "c676cc089633e74a606a1fcb349a00759b6a6ea5eed8b08bf6a2f07f761f0588",
+    "artifacts/rv30/setup/throughput_20261103/provenance.py.before": "767834757be76bad9cd8d732078faf5268f429e2b39b2a06c0d09d9bde2c4e95",
+    "artifacts/rv30/setup/throughput_20261103/interruption.json": "57e9652195799839dbad3c76f4400dcb86c03d79699dc8e44fea4d8d75f958fe",
+    "artifacts/rv30/setup/throughput_20261103/setup.json": "f307d77af4451af9ac18e01d88d49c86cb688374ba562f4c9f36440df5fd9c99",
+    "artifacts/rv30/setup/throughput_20261103/summary.json": "b42fc01e24b3e0bad08080d6dcfb7ff895f3d3a04aad5ac33c21a68b52100ef9",
+    "artifacts/rv30/setup/throughput_20261103/termination_risk.json": "c30b86c0556b0abc84e0ff38871faa6b3e77aa0dd7768743ebda4ed46463e420",
+    "artifacts/rv30/setup/throughput_20261103/estimate_remaining.py": "a4e0438e07e6d13d30ba0cd0348297855d1557b5776b71defec67726e251ea0f",
+    "delivery/rv30_throughput_lock.json": "193e288f007eb99f76f2177af983252617e8d395ee7536e9c568afe2247bfbe7",
+    "delivery/rv30_acceleration_lock.json": "2653313bc03885367b5361dd5a06d13aa00eae1481d1ca17cb2463d100a221c0",
+    "delivery/amendments/performance_before_throughput.json": "2832958738931df409b3f60994fc3a77cd1e77d2eea8a25b33abd8de29355bd0",
+    "artifacts/rv30/setup/throughput_20261103/launch_gate_checks.json": "a401b72038c8671c2f43cdfef5667599e3ab7f472790010e888e917d124a14a9",
+    "artifacts/rv30/setup/throughput_20261103/check_launch.py": "84f2db25031289a9a62a984d907abc943be93f472601ba71d813a9b0c2cfadbf",
+    "delivery/amendments/fused_throughput.json": "95ac65ef190ce83c42f01a95e82b8f843de2ded77cdf352d29f53a58ff3d5f21"
+  },
+  "launch_gate_behavior_checks": "artifacts/rv30/setup/throughput_20261103/launch_gate_checks.json",
+  "launch_gate_behavior_checks_passed": true
+}

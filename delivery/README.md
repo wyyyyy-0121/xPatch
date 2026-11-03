@@ -88,6 +88,32 @@ cd /home/ayaka/xPatch
 
 助手每小时检查一次长任务；本地调度器自行推进并保存进度。没有实质变化时不重复通知，也不因标准输出安静而重新启动。
 
+## 当前历史结果与前瞻准备
+
+完整搜索、开发两轮独立复核及历史确认两轮复核均已完成。AAPL 与 AAPL+SPY/QQQ 两个信息集的 Ridge 通过历史门槛；xPatch 未通过全部预设门槛，保留完整调参与比较结果，不因原始模型选择而更改判定。历史通过只准许前瞻观察，不代表已取得稳定实时收益或完整交付验收。
+
+前瞻约定见 `delivery/PROSPECTIVE_PLAN.md`，具体配置为 `configs/rv30_prospective.json`，签名与四个确认模型的精确身份在 `delivery/prospective_lock.json`。固定两个 Ridge 和各自 HAR，不重训、调参或更新校准；默认历史回放使用原主信息集 AAPL/Ridge，未取得前瞻资格。
+
+前瞻入口：
+
+```bash
+cd /home/ayaka/xPatch
+/home/ayaka/.venvs/xpatch-v2/bin/python -m finance prospective status
+/home/ayaka/.venvs/xpatch-v2/bin/python -m finance prospective admit
+/home/ayaka/.venvs/xpatch-v2/bin/python -m finance prospective observe
+```
+
+`admit` 只读请求当前三资产 SIP/raw 数据；403、延迟或非正常交易时段不能通过。它不付费或切换行情。只有当前正常会话的及时数据通过后才允许 `observe`；观察为持续的本地服务，受独占锁和资源限制保护。账本位于 `artifacts/rv30/prospective/<前瞻签名>/`，HTTP 响应、实际接收时间、预测及其落盘确认使用不可覆盖事件与哈希链。历史预热、迟到或补算都不能计入合格事前预测。该本地链提供完整性检查，不等于外部可信时间戳。
+
+助手等待你处理权限项，不代购订阅，也不每小时重复向供应商请求。权限解决后，在正常美股会话重新运行准入；通过后由本地观察器持续接收和预测，助手每小时仅检查质量及进程身份。满六十个完整合格交易日前不输出累计分数。之后顺序运行：
+
+```bash
+/home/ayaka/.venvs/xpatch-v2/bin/python -m finance prospective verify --round 1
+/home/ayaka/.venvs/xpatch-v2/bin/python -m finance prospective verify --round 2
+```
+
+两轮都完整重放预测、独立重建标签及核对统计。未满期限返回等待状态，错误或失败凭证保留且返回非零；它们不自动等于最终交付验收。
+
 ## 推理与结果资格
 
 完成冻结基线或最终模型后，可生成历史示例：
@@ -99,7 +125,7 @@ cd /home/ayaka/xPatch
   --output delivery/example_prediction.json
 ```
 
-JSON 包含模型与协议身份、实际生成时间、起点、信息截止、目标窗口、RV 单位、均值、分位数和资格状态。信息截止固定为起点前一分钟。历史示例的 `received_at` 为 null，`eligible_signal` 为 false；不能将补算输出当作当时已发出的预测。
+当前默认输出 `historical_replay_candidate`，表示经过历史确认、尚未通过真实前瞻的 Ridge 候选。JSON 包含模型与协议身份、实际生成时间、起点、信息截止、目标窗口、RV 单位、均值、分位数和资格状态。信息截止固定为起点前一分钟。历史示例的 `received_at` 为 null，`eligible_signal` 为 false；不能将补算输出当作当时已发出的预测。
 
 `--source-manifest` 可指定遵循相同审计格式的新离线三资产数据；不会改变已冻结的模型或拟合状态。`--mode live` 当前返回 `live_unavailable`，退出码 2；数据不足、非交易起点也返回相应状态，不伪造预测。成功历史回放退出码 0；签名、数据或工件核对失败返回非零。
 

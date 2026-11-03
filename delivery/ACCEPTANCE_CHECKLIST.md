@@ -26,3 +26,9 @@
 最终结论分开记录：工程交付是否完成，以及候选是否通过全部预测门槛。充分搜索后无模型通过时，必须交付可运行 HAR 参考基线及同样完整的阴性证据包，标记 `completed_no_predictive_edge`；基线本身亦须独立完整回放两轮。预算耗尽、漏模型、复核未完成、仅有一个 passed 标志，都不足以支持完整阴性结论。
 
 只有逐项证据核验通过，完整交付与本地提交完成后，才可将 Goal 标为 complete，并停止当前 `rv30` 监控。
+
+## 已通过历史门槛后的状态
+
+开发修正后第一轮和第二轮各完成 200 个模型回放及独立统计，历史确认两轮各完成四个模型。两个 Ridge 候选通过，当前不属于完整阴性交付。`delivery/prospective_lock.json` 冻结两个 Ridge 和各自 HAR 的确认模型，AAPL/Ridge 是原主信息集的默认历史回放候选；其 `prospective_qualified` 和 `active_predictive_edge_established` 均保持 false。
+
+前瞻采集、完整日质量、不可补发的落盘确认、六十日前不披露分数和两轮完整重放已具备工程入口；实际资格必须由真实观察产生。`delivery/readiness.json` 只说明历史研究与前瞻工具就绪，`delivery/manifest.json` 当前若标为等待前瞻，不能当成最终通过。尚需及时 SIP 权限、最早六十个完整合格交易日、两轮真实前瞻验证、最终工具验收和本地交付提交。

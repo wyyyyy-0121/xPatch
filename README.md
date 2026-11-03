@@ -19,6 +19,8 @@ This is an official implementation of [xPatch: Dual-Stream Time Series Forecasti
 
 The active delivery project is the [RV30 research and inference tool](delivery/README.md), with its [final acceptance goal](GOAL.md) and [current status](delivery/status.json). It predicts thirty-minute realized variance from minute origins; it does not claim price direction or trading profitability. New code uses the stable `finance/` entry point. The existing v1/v2 experiments below remain sealed historical evidence.
 
+The registered RV30 search completed all 12,200 jobs. Ridge passed the development and historical confirmation gates in both information sets, with two independent verification rounds at each stage; xPatch did not pass all gates. The [forward observation plan](delivery/PROSPECTIVE_PLAN.md) freezes the confirmed models for at least sixty genuinely prospective complete trading sessions. Timely SIP access is currently a recorded external permission requirement, so live qualification and final delivery acceptance remain pending.
+
 ### Sealed twelve-minute return experiment (v2)
 
 The sealed research entrypoint is [finance_v2](finance_v2/README.md). The [execution ledger](EXECUTION_PLAN.md) records its fixed stage order and evidence; the [protocol](PROTOCOL.md) fixes its information sets, ten quarterly walk-forward folds, calibration, statistical gates, and resource budget. The [literature review](research/AAPL_MINUTE_REVIEW.md) distinguishes finance journal evidence from model benchmarks and author technical reports.

@@ -1,0 +1,17 @@
+{
+  "base_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+  "started_utc": "2026-11-03T22:34:53.365247+00:00",
+  "completed_utc": "2026-11-03T23:02:01.227643+00:00",
+  "historical_research_changed": false,
+  "confirmed_weights_changed": false,
+  "prospective_predictions_or_scores_created": false,
+  "engineering_tests_passed": 156,
+  "exact_confirmed_model_policy": true,
+  "full_session_CPU_performance_passed": true,
+  "charge_key": "db8f12bdc92c783f68178bf1d38d1129854da0091cf51a815accfabfca114ccc",
+  "charged_cpu_core_hours": 9.948047975555557,
+  "charged_gpu_hours": 0.4521839988888889,
+  "charge_ledger": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/interrupted_resource_charges.json",
+  "cpu_limit": 22,
+  "timely_SIP_permission_action": "skipped_user_handles_subscription"
+}

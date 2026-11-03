@@ -265,11 +265,11 @@ def _throughput_sources(freeze, source_view=None, excluded_additions=()):
     return {**prior, **after, **extra}, postprocessing
 
 
-def effective_sources(freeze):
+def _replay_sources(freeze, source_view=None, excluded_additions=()):
     """Bind a precision-only replay repair and retain every failed receipt."""
     path = ROOT / "delivery/rv30_replay_lock.json"
     if not path.exists():
-        return _throughput_sources(freeze)
+        return _throughput_sources(freeze, source_view, excluded_additions)
     import hashlib
     import subprocess
     amendment = read_json(path)
@@ -285,7 +285,7 @@ def effective_sources(freeze):
             payload["thresholds_changed"] or payload["training_changed"] or
             not payload["original_predictions_preserved"]):
         raise ValueError("Replay correction cannot revise fitting or research definitions")
-    installed = {name: sha(ROOT / name) for name in freeze["payload"]["source_files"]}
+    installed = source_view if source_view is not None else {name: sha(ROOT / name) for name in freeze["payload"]["source_files"]}
     view = installed.copy()
     for name, record in payload["changes"].items():
         if installed[name] != record["after_sha256"]:
@@ -294,7 +294,7 @@ def effective_sources(freeze):
         if hashlib.sha256(previous).hexdigest() != record["before_sha256"]:
             raise ValueError("Replay predecessor source changed: " + name)
         view[name] = record["before_sha256"]
-    prior, postprocessing = _throughput_sources(freeze, view)
+    prior, postprocessing = _throughput_sources(freeze, view, excluded_additions)
     if any(prior[name] != record["before_sha256"] for name, record in payload["changes"].items()):
         raise ValueError("Replay correction does not extend the signed implementation")
     if not {payload["validation_summary"], payload["verification_retry"]["failed_attempt_index"]}.issubset(payload["validation_files"]):
@@ -323,6 +323,53 @@ def effective_sources(freeze):
     return {**prior, **after, **payload["support_sources"]}, postprocessing
 
 
+def effective_sources(freeze):
+    """Add prospective collection without replacing any historical research lock."""
+    path = ROOT / "delivery/rv30_prospective_execution_lock.json"
+    if not path.exists():
+        return _replay_sources(freeze)
+    import hashlib
+    import subprocess
+    lock = read_json(path)
+    payload = lock["payload"]
+    if (stable_hash(payload) != lock["signature"] or payload["base_signature"] != freeze["signature"] or
+            payload["base_freeze_sha256"] != sha(FREEZE_PATH) or
+            payload["prior_replay_lock_sha256"] != sha(ROOT / "delivery/rv30_replay_lock.json")):
+        raise ValueError("Prospective execution amendment or predecessor changed")
+    if (set(payload["changes"]) != {"finance/cli.py", "finance/inference.py", "finance/provenance.py"} or
+            set(payload["added_sources"]) != {"finance/prospective.py", "finance/observation.py"} or
+            payload["historical_research_changed"] or payload["model_search_space_changed"] or
+            payload["historical_thresholds_changed"] or payload["confirmed_weights_changed"] or
+            not payload["preregistered_before_live_observation"]):
+        raise ValueError("Prospective execution cannot change the completed historical research")
+    installed = {name: sha(ROOT/name) for name in freeze["payload"]["source_files"]}
+    view = installed.copy()
+    for name, change in payload["changes"].items():
+        previous = subprocess.check_output(["git", "show", f"{payload['prior_source_snapshot_commit']}:{name}"], cwd=ROOT)
+        if installed[name] != change["after_sha256"] or hashlib.sha256(previous).hexdigest() != change["before_sha256"]:
+            raise ValueError("Unregistered prospective integration: " + name)
+        view[name] = change["before_sha256"]
+    prior, amendment = _replay_sources(freeze, view, tuple(payload["added_sources"]))
+    if any(prior[name] != change["before_sha256"] for name, change in payload["changes"].items()):
+        raise ValueError("Prospective integration does not extend the signed replay implementation")
+    required = {payload["validation_summary"], payload["performance_summary"]}
+    if not required.issubset(payload["validation_files"]):
+        raise ValueError("Prospective execution must bind correctness and throughput evidence")
+    extra = {**payload["added_sources"], **payload["support_sources"]}
+    for name, digest in {**extra, **payload["validation_files"]}.items():
+        if sha(ROOT/name) != digest:
+            raise ValueError("Prospective code or validation changed: " + name)
+    validation = read_json(ROOT/payload["validation_summary"])
+    performance = read_json(ROOT/payload["performance_summary"])
+    if (not validation["passed"] or not validation["timing_and_no_backfill_checks_passed"] or
+            not performance["passed"] or performance["complete_session_origins"] != 346 or
+            performance["models"] != 4 or performance["prospective_observations_created"] or
+            performance["source_files"] != {name: sha(ROOT/name) for name in payload["added_sources"]}):
+        raise ValueError("Prospective timing, integrity and complete-workload performance must pass")
+    after = {name: change["after_sha256"] for name, change in payload["changes"].items()}
+    return {**prior, **after, **extra}, amendment
+
+
 def verify_freeze(config):
     freeze = read_json(FREEZE_PATH)
     payload = freeze["payload"]
@@ -338,6 +385,6 @@ def verify_freeze(config):
             raise ValueError(f"Signed input changed: {path}")
     lock_paths = [POSTPROCESS_PATH, POSTPROCESS_PATH.with_name("rv30_statistics_lock.json"),
         ROOT / "delivery/rv30_acceleration_lock.json", ROOT / "delivery/rv30_throughput_lock.json",
-        ROOT / "delivery/rv30_replay_lock.json"]
+        ROOT / "delivery/rv30_replay_lock.json", ROOT / "delivery/rv30_prospective_execution_lock.json"]
     return {**freeze, "effective_source_files": source_files, "postprocessing_amendment": amendment,
         "postprocessing_lock_files": {str(path.relative_to(ROOT)): sha(path) for path in lock_paths if path.exists()}}

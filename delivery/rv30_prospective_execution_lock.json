@@ -1,0 +1,57 @@
+{
+  "signature": "d125c8045e580969fd0c59bf0a06f36c6880b9fe00d0837b04cb306dcd2a8a4d",
+  "payload": {
+    "created_utc": "2026-11-03T23:02:01.227643+00:00",
+    "base_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+    "base_freeze_sha256": "dcc00953da75049efa35b361b5dfcbee9922cd61bdbe2befeeb130aa36d3ad13",
+    "prior_replay_lock_sha256": "081f254999194b4c6421f6869d53a2771f5b0744be918e811010dc071df78262",
+    "prior_source_snapshot_commit": "9e2bbb4",
+    "historical_research_changed": false,
+    "model_search_space_changed": false,
+    "historical_thresholds_changed": false,
+    "confirmed_weights_changed": false,
+    "preregistered_before_live_observation": true,
+    "changes": {
+      "finance/cli.py": {
+        "before_sha256": "9c8327f2ad788832a1959d1914960340d5f014636274185d91aa5dbd4cb8b921",
+        "after_sha256": "d4aba8dbfefeec336f31cde1e57dbbf17d93248cf80fdb56cf29103f27dfbc9a"
+      },
+      "finance/inference.py": {
+        "before_sha256": "79af006754fd213469b84ec577f8be8e0701ec495ffeb86ce25d8b8d26254988",
+        "after_sha256": "b9dd84b0cb298ce1b2a2fbc062e192cac9d0ebe1069126e64806c5c288bf5cb1"
+      },
+      "finance/provenance.py": {
+        "before_sha256": "346a13dc07ab45e08de5dd9cd6fa542ba902fa19a63b7a1e3560eb507a724cc1",
+        "after_sha256": "e055c7dc2d7b04541ab6ff9e76d4642627a353f69c098110f2a7e88f8fe07a30"
+      }
+    },
+    "added_sources": {
+      "finance/prospective.py": "079220c7579cd3f42e37da6e9f20ca4f794aee48cef33c1040c9e5324b1ee9cd",
+      "finance/observation.py": "98e0686696dedfdaeb65b47a48d4829805c8471a3bf1a9dc036a192d454977b8"
+    },
+    "support_sources": {
+      "tests/test_rv30_prospective.py": "f3a13ca60be363e85e4ae9d8261c1b44b45b85f4f476b42d143a4f9213e8e9e0",
+      "tests/test_rv30_prospective_lock.py": "c2ff641431ee935d792ec395a39d9283f41720f071defed128a0bcefa61125cb",
+      "configs/rv30_prospective.json": "0a96a51c4365d2f185aacb8a8ced40e68166f1b2dd6e0ed0f303b01da2e7ef0e",
+      "delivery/PROSPECTIVE_PLAN.md": "8d41e188605d9698557b3d03478512e009fb04a351dae12df8e8f782ebaf8933"
+    },
+    "validation_files": {
+      "artifacts/rv30/setup/prospective_20261104/performance.py": "b2181e5c36475172823815a47c7db0d21c790185cc62c5bfa59a9692fd9e1b07",
+      "artifacts/rv30/setup/prospective_20261104/performance.json": "20ed002cad2bf742bc41b444533d9c7d939e5e984e2d196721d9473660adc1e7",
+      "artifacts/rv30/setup/prospective_20261104/performance.log": "1b22a52169c13a44b0138ecff2007297af9ab9d1012ebb1df17a41b99121f65e",
+      "artifacts/rv30/setup/prospective_20261104/performance_initial.json": "56b4f77442bd334839efbadba8cd725fae2b81c833d9abcdd5f56c047d81ddfc",
+      "artifacts/rv30/setup/prospective_20261104/performance_initial.log": "46007217565ce03455e7fbcbc2c3db992dfcb962c88fc24f14938650a45c5762",
+      "artifacts/rv30/setup/prospective_20261104/run_tests.py": "bb82f775e277636071911e977e5fdfd403e76a45478a253968fd93a7c55ab836",
+      "artifacts/rv30/setup/prospective_20261104/engineering_tests.log": "3a3a4f153a8ecb959f563645466eb4f3835480132c3c8fea99058a6165970a36",
+      "artifacts/rv30/setup/prospective_20261104/validation.json": "13eb9ed83edeafa9dc863e72e18c08f2f26e757803c55e4192666d87a1d2afe1",
+      "artifacts/rv30/setup/prospective_20261104/prospective_tests.log": "9241de9074175cbbf15694f349f8cce1ecb12bcd9640d631e199d3f98b181423",
+      "artifacts/rv30/setup/prospective_20261104/cli.py.before": "9c8327f2ad788832a1959d1914960340d5f014636274185d91aa5dbd4cb8b921",
+      "artifacts/rv30/setup/prospective_20261104/inference.py.before": "79af006754fd213469b84ec577f8be8e0701ec495ffeb86ce25d8b8d26254988",
+      "artifacts/rv30/setup/prospective_20261104/provenance.py.before": "346a13dc07ab45e08de5dd9cd6fa542ba902fa19a63b7a1e3560eb507a724cc1",
+      "delivery/performance.json": "2149584c500051527f87f87a19c51f8ae3538fd3d4374ce26cd2a26a0bfc8ab6",
+      "delivery/amendments/prospective_preparation.json": "7e838a1e0a16ebc8780ea86f2c9d3e74be5718c9af4f78bd44fe586953beea67"
+    },
+    "validation_summary": "artifacts/rv30/setup/prospective_20261104/validation.json",
+    "performance_summary": "artifacts/rv30/setup/prospective_20261104/performance.json"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "model": "ridge",
+  "panel": "aapl",
+  "params": {
+    "alpha": 0.0001,
+    "feature_profile": "rich",
+    "representation": "log_rv"
+  },
+  "config_id": "ridge_002_79c7a3f7de",
+  "seed": 2026,
+  "source_directory": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/confirmation/aapl/ridge/s2026",
+  "source_result_sha256": "3e0d907543633ff2beabb2319de4a5bd488da62193b583a7845a22b24edf6dcf",
+  "trained_through": "2025-05-28",
+  "calibration_through": "2025-06-27",
+  "schema_version": 1,
+  "signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+  "outcome": "waiting_prospective_acceptance",
+  "role": "historically_confirmed_candidate_pending_prospective",
+  "historically_qualified": true,
+  "active_predictive_edge_established": false,
+  "prospective_qualified": false,
+  "prospective_plan_signature": "b0c353e6d7f0edfd76efcdb7612b26da997b890c44abf6b3d80662dd9c8dc727",
+  "direction_or_profit_claim": false,
+  "default_mode": "historical_replay",
+  "selection_policy": "original_primary_information_set_preference_not_forecast_score_ranking",
+  "prerequisites": {
+    "evaluation": {
+      "path": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/confirmation/evaluation.json",
+      "sha256": "fc24f9990c0f2b1c51a4024f97f28c42650d6908b1581432fbe3addf9b4e12aa"
+    },
+    "verifications": {
+      "1": {
+        "path": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/confirmation/verify_1/summary.json",
+        "sha256": "1cb7e5c9cce0dc10211d506b9768c42d86abc448b325e82dffa8479f9abea49d"
+      },
+      "2": {
+        "path": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/confirmation/verify_2/summary.json",
+        "sha256": "59e02cf45c730a422bbb5311a88e28bedf56bb18565f4d546f8f0242c0728ecb"
+      }
+    },
+    "not_before_utc": "2026-11-03T22:34:53.077167+00:00"
+  }
+}

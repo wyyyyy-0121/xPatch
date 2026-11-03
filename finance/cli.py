@@ -34,12 +34,38 @@ def main():
     inference.add_argument("--source-manifest")
     inference.add_argument("--mode", choices=("historical", "live"), default="historical")
     inference.add_argument("--output")
+    prospective = subparsers.add_parser("prospective", help="Freeze confirmed models, admit actual SIP, collect or verify forward evidence")
+    prospective.add_argument("action", choices=("freeze", "admit", "observe", "status", "verify"))
+    prospective.add_argument("--run-directory")
+    prospective.add_argument("--round", type=int, choices=(1, 2))
     args = parser.parse_args()
     config = read_json(ROOT / args.config)
     # Keep all 22 IDs available for spawning disjoint workers; main BLAS remains 1.
-    configure(4 if args.command in ("smoke", "infer", "deliver", "finalize") else 1, nice_increment=config["runtime"]["nice_increment"])
+    configure(4 if args.command in ("smoke", "infer", "deliver", "finalize", "prospective") else 1, nice_increment=config["runtime"]["nice_increment"])
+    if args.command == "prospective" and args.action == "status":
+        from .prospective import status
+        print(json.dumps(status(config)))
+        return 0
     with exclusive_run(ROOT / "artifacts/rv30/driver.lock"):
-        if args.command == "prepare":
+        if args.command == "prospective":
+            from . import prospective
+            if args.action == "freeze":
+                if not args.run_directory:
+                    parser.error("prospective freeze requires --run-directory")
+                result = prospective.freeze_plan(config, ROOT/args.run_directory)
+                print(json.dumps({"plan_signature":result["signature"],"status":"frozen_pending_actual_SIP_and_60_complete_sessions"}))
+                return 0
+            if args.action == "admit":
+                result = prospective.admission(config)
+            elif args.action == "observe":
+                result = prospective.observe(config)
+            else:
+                if args.round is None:
+                    parser.error("prospective verify requires --round")
+                result = prospective.verify_observation(config,args.round)
+            print(json.dumps(result))
+            return 0 if result.get("passed",False) else 2
+        elif args.command == "prepare":
             from .cache import prepare_data
             directory, identity = prepare_data(config)
             print(json.dumps({"directory": str(directory), "identity": identity}))

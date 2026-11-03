@@ -106,7 +106,8 @@ def infer(config, model_manifest="delivery/model.json", as_of=None, mode="histor
     raw = raw_predictions(manifest["model"], model, data, store, state, [origin], manifest["params"], manifest["panel"], config, device)
     mean, quantiles = calibration.predict(raw)
     stamp = data.timestamps[origin]
-    return {**base, "status": "historical_replay_baseline", "as_of": str(stamp),
+    replay_status = "historical_replay_candidate" if manifest.get("historically_qualified") else "historical_replay_baseline"
+    return {**base, "status": replay_status, "as_of": str(stamp),
         "data_cutoff_at": str(stamp - pd.Timedelta(minutes=1)), "received_at": None,
         "target_window_start": str(stamp), "target_first_return_end": str(stamp + pd.Timedelta(minutes=1)),
         "target_window_end": str(stamp + pd.Timedelta(minutes=30)), "rv_mean": float(mean[0]),
