@@ -1,0 +1,69 @@
+{
+  "signature": "4888f19dec994b2abfa8209db78c3280bd2e4facad8b2a04c1f1933978f8c77f",
+  "payload": {
+    "schema_version": 1,
+    "created_utc": "2026-11-03T03:15:15.289579+00:00",
+    "classification": "independent_aggregate_statistics_replay_coverage",
+    "base_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+    "base_freeze_sha256": "dcc00953da75049efa35b361b5dfcbee9922cd61bdbe2befeeb130aa36d3ad13",
+    "base_code_commit": "b73f8993f18f739e81acaeb0092c485f5e9ab28a",
+    "prior_postprocessing_lock_sha256": "e688aeb67e107e9bac32fba2be2eebae4ae3fa50a5dcd8dd865e48b4e7f944f8",
+    "prior_postprocessing_signature": "81590ebbb929a459884d5669ad133839b7dfe8b15cfa3f8e71c658433cd3d972",
+    "prior_source_snapshot_commit": "88fd6508805314f5dc60f187c5fb3c9af2a78caa",
+    "research_definitions_changed": false,
+    "model_search_space_changed": false,
+    "thresholds_changed": false,
+    "human_formal_outer_scores_read_before_amendment": false,
+    "training_restart_required": false,
+    "changes": {
+      "finance/acceptance.py": {
+        "before_sha256": "418ffc90c884b267e212f8139008dff66ad8d67332ef97d95f4b6918a7ed7e8f",
+        "after_sha256": "cdef705d9ec05474a16861ace7740245af3c249d610703dcf3657412ab6cc9fe"
+      },
+      "finance/cli.py": {
+        "before_sha256": "c70ffac7ece7089f9636ea66687a71e1e60ee416af7008b85813b75a9dba048a",
+        "after_sha256": "9c8327f2ad788832a1959d1914960340d5f014636274185d91aa5dbd4cb8b921"
+      },
+      "finance/confirmation.py": {
+        "before_sha256": "77fd8584269e58189fe49fb5c576ac39d5b69144dd6fc943c8ea8fd9de8e9f60",
+        "after_sha256": "0d39c3016f427b9f11eb9b1e2725fc607d6630524cbd679e32bf2907d434f2dc"
+      },
+      "finance/delivery.py": {
+        "before_sha256": "4ff9152258046891e5bb82b57c7cd61b2a89f4d8cb37f6fa7e8151060e3453e9",
+        "after_sha256": "6f28356c02fde6efc06eba99df0b439d3495465c7c95574f34bd81043af79bfd"
+      },
+      "finance/inference.py": {
+        "before_sha256": "80200245297cb530bbe8ee0c381a79cfd3adb6a3090e236a2b3de947528c1215",
+        "after_sha256": "79af006754fd213469b84ec577f8be8e0701ec495ffeb86ce25d8b8d26254988"
+      },
+      "finance/provenance.py": {
+        "before_sha256": "9d83c6181c818775f8e223f5951a5de40e1cf6bc91fc4c62c8e7b898722f7206",
+        "after_sha256": "5f4d65250d0e050dbfa6f9ff568b9d4b885a7b9cc8634167e687c916ea9e665a"
+      },
+      "finance/verify.py": {
+        "before_sha256": "a98c8d10a292d484db9e497522c5766ce51baf74ea4aa0973f6061d2a70e1568",
+        "after_sha256": "bab72c0d7f7064441b43fa2881a90a551628ee8ecef1af9847068daa387977bf"
+      }
+    },
+    "added_sources": {
+      "tests/test_finance_rv_postprocessing.py": "166fd505ed26c6340054b618a51bd46bbf71594eadd54bfee292cb33e927358c",
+      "tests/test_finance_rv_independent_statistics.py": "21b36c4147555cfa7e16d15becf5f0e5f7b88bbbc0b418cd6c6ccaa618ce882a"
+    },
+    "validation_files": {
+      "artifacts/rv30/setup/independent_statistics_engineering_final_20261103.log": "abedddb629b4c30015403ea51022507ea6dc3712fd5bff076febc5d29a6956d6",
+      "delivery/amendments/statistical_replay_coverage.json": "d222d8f4c95b3448507a625e444a98aabe9ad6d849deb85388b66244731c655d"
+    },
+    "engineering_tests_passed": 85,
+    "scope": [
+      "three_seed_ensemble_intervals",
+      "equal_day_qlike_log_mse",
+      "intraday_quarter_year_and_seed_stability",
+      "daily_MZ_HAC5",
+      "daily_DM_HAC5",
+      "daily_and_five_session_circular_bootstrap_5000",
+      "fixed_ten_comparison_Holm",
+      "all_preregistered_gate_checks"
+    ],
+    "reference_implementation_does_not_call_primary_statistical_functions": true
+  }
+}

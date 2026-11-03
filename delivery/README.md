@@ -69,4 +69,6 @@ cd /home/ayaka/xPatch
 
 验收器检查历史封存、源代码/依赖/数据身份、完整搜索覆盖、日等权指标与门槛、各阶段两轮独立复核、冻结工件、推理示例和文档。复核按确切模型、种子、来源指纹、阶段和轮次逐项核对，数量相同但漏模型或重复任务也会失败；起点、时间戳、日期与校准样本必须等于预定网格。任何未完成项返回非零；结果在运行目录的 `acceptance.json`。监督模型完整回放校准与评价预测；Chronos 每个任务回放固定首尾批次，所有标签和主分数仍从原始 AAPL CSV 独立重算。独立复核入口为 `python -m finance verify --run-directory artifacts/rv30/<签名>/development --scope development --round 1`；`--scope` 另支持 `confirmation` 和 `delivery`，第二轮需先有该范围的第一轮成功证据。
 
+每轮还保存 `statistics.json`，直接从原始预测与校准工件重建三种子集成、日等权损失、经验区间、时段/季度/年度分段、MZ、DM/HAC、日和五日块 bootstrap、Holm 及全部门槛；独立实现不调用主评价器的这些统计函数。汇总评价的指纹必须与两轮统计证据一致后才能进入确认。此补充覆盖的后处理签名为 `delivery/rv30_statistics_lock.json`，它引用并保留前一份后处理锁、原研究冻结与对应 Git 快照。
+
 `delivery/manifest.json` 是唯一最终索引，引用代码提交、原研究签名、后处理纠错签名、模型、报告、推理样例和验收证据。其 `artifact_index` 连接每份任务凭证与凭证下的模型/预测逐文件哈希，覆盖失败试验。小修复使用 Git 提交与运行编号，不复制 `finance_v3/v4` 等目录。`finance_ls/`、`finance_v2/` 及其签名、权重和结果作为历史保留；旧十二分钟收益实验的阴性结论继续有效。

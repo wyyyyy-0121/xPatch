@@ -5,15 +5,17 @@
   "code_commit": "b73f8993f18f739e81acaeb0092c485f5e9ab28a",
   "run_record": "delivery/run.json",
   "run_directory": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
-  "engineering_tests_passed": 70,
+  "engineering_tests_passed": 85,
   "pre_outer_forecast_jobs_passed": 16,
   "pre_outer_independent_replays_passed": 16,
   "final_acceptance": false,
   "external_items": "delivery/external_dependencies.json",
   "heartbeat": "rv30",
-  "next_check_after_utc": "2026-11-03T03:02:55.494834+00:00",
-  "postprocessing_signature": "81590ebbb929a459884d5669ad133839b7dfe8b15cfa3f8e71c658433cd3d972",
+  "next_check_after_utc": "2026-11-03T03:35:05.239401+00:00",
+  "postprocessing_signature": "4888f19dec994b2abfa8209db78c3280bd2e4facad8b2a04c1f1933978f8c77f",
   "postprocessing_correction": "signed_and_validated",
   "additional_pre2023_saved_cpu_replays_passed": 8,
-  "next_command": "finance finalize --run-directory artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development"
+  "next_command": "finance finalize --run-directory artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
+  "last_checked_utc": "2026-11-03T03:05:05.239401+00:00",
+  "independent_aggregate_statistics": "signed_ready_for_both_rounds"
 }

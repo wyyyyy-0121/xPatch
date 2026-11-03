@@ -99,7 +99,7 @@ def artifact_index(directory, signature):
         jobs[str(path.relative_to(ROOT))] = {"sha256": sha(path), "request_hash": result["request_hash"],
             "status": result["status"], "phase": result["phase"], "files": result["files"]}
     metadata = [p for p in Path(directory).rglob("*.json") if p.name in
-        ("setup.json", "selection.json", "experiment.json", "summary.json", "run.json", "scheduler.json")]
+        ("setup.json", "selection.json", "experiment.json", "summary.json", "run.json", "scheduler.json", "statistics.json", "statistics_failure.json")]
     return {"schema_version": 1, "signature": signature, "jobs": jobs, "job_count": len(jobs),
         "metadata": {str(path.relative_to(ROOT)): sha(path) for path in sorted(metadata)}}
 
@@ -162,8 +162,7 @@ def accept(config, run_directory):
         committed_files = dict(freeze["effective_source_files"])
         committed_files["delivery/rv30_freeze.json"] = sha(ROOT / "delivery/rv30_freeze.json")
         amendment = freeze["postprocessing_amendment"]
-        if amendment:
-            committed_files["delivery/rv30_postprocessing_lock.json"] = sha(ROOT / "delivery/rv30_postprocessing_lock.json")
+        committed_files.update(freeze["postprocessing_lock_files"])
         import hashlib
         matches = []
         for path, expected in committed_files.items():
@@ -191,8 +190,7 @@ def accept(config, run_directory):
                 "delivery/README.md", "delivery/results.json", "delivery/rv30_freeze.json", "delivery/rv30_dependencies.json",
                 "delivery/data.json", "delivery/history.json", "delivery/external_dependencies.json", "delivery/example_prediction.json",
                 "configs/rv30.json", "configs/rv30_search.json", "configs/rv30_model_lock.json")]
-            if amendment:
-                files.append(ROOT / "delivery/rv30_postprocessing_lock.json")
+            files.extend(ROOT / path for path in freeze["postprocessing_lock_files"])
             files += [directory / path for path in ("evaluation.json", "daily_losses.csv", "search_coverage.json", "artifact_index.json", "confirmation/evaluation.json")]
             for proofs in (development_verifications, conditional_evidence["verifications"], delivery_verifications):
                 files.extend(ROOT / proof["path"] for proof in proofs.values())

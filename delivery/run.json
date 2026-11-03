@@ -4,8 +4,8 @@
   "pid": 117833,
   "kernel_start_ticks": "12802621",
   "started_utc": "2026-11-03T01:53:30.265555+00:00",
-  "last_checked_utc": "2026-11-03T02:32:55.494834+00:00",
-  "next_check_after_utc": "2026-11-03T03:02:55.494834+00:00",
+  "last_checked_utc": "2026-11-03T03:05:05.239401+00:00",
+  "next_check_after_utc": "2026-11-03T03:35:05.239401+00:00",
   "code_commit": "b73f8993f18f739e81acaeb0092c485f5e9ab28a",
   "run_directory": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
   "log": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/search_resume.log",
@@ -17,9 +17,17 @@
   "resumed_utc": "2026-11-03T02:32:55.494834+00:00",
   "command": "finance train --run-name development",
   "postprocessing_amendment": "delivery/amendments/postprocessing_correction.json",
-  "postprocessing_signature": "81590ebbb929a459884d5669ad133839b7dfe8b15cfa3f8e71c658433cd3d972",
+  "postprocessing_signature": "4888f19dec994b2abfa8209db78c3280bd2e4facad8b2a04c1f1933978f8c77f",
   "postprocessing_correction_completed_utc": "2026-11-03T02:47:42.526382+00:00",
   "training_source_snapshot_commit": "b73f8993f18f739e81acaeb0092c485f5e9ab28a",
   "next_command": "finance finalize --run-directory artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
-  "resume_startup_verified": true
+  "resume_startup_verified": true,
+  "last_observation": {
+    "driver_identity_matches": true,
+    "finished_groups": 80,
+    "budget_exhausted": false,
+    "gpu_wall_hours": 1.1260475212322207
+  },
+  "postprocessing_lock": "delivery/rv30_statistics_lock.json",
+  "independent_aggregate_statistics": "signed_ready_for_both_rounds"
 }

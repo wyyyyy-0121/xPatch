@@ -106,6 +106,33 @@ def effective_sources(freeze):
     if not POSTPROCESS_PATH.exists():
         raise ValueError("Postprocessing changes require a separately signed amendment")
     amendment = read_json(POSTPROCESS_PATH)
+    extension_path = POSTPROCESS_PATH.with_name("rv30_statistics_lock.json")
+    if extension_path.exists():
+        import hashlib
+        import subprocess
+        extension = read_json(extension_path)
+        extended = extension["payload"]
+        previous = amendment["payload"]
+        if (stable_hash(previous) != amendment["signature"] or previous["base_signature"] != freeze["signature"] or
+                previous["base_freeze_sha256"] != sha(FREEZE_PATH) or
+                extended["prior_postprocessing_lock_sha256"] != sha(POSTPROCESS_PATH) or
+                extended["prior_postprocessing_signature"] != amendment["signature"]):
+            raise ValueError("Independent-statistics amendment predecessor changed")
+        snapshot = extended["prior_source_snapshot_commit"]
+        for path, record in previous["changes"].items():
+            if path not in POSTPROCESS_ALLOWED or record["before_sha256"] != base[path]:
+                raise ValueError("Predecessor amendment includes a research change")
+            blob = subprocess.check_output(["git", "show", f"{snapshot}:{path}"], cwd=ROOT)
+            if hashlib.sha256(blob).hexdigest() != record["after_sha256"]:
+                raise ValueError("Predecessor amended source snapshot changed")
+        for path, expected in previous.get("added_sources", {}).items():
+            blob = subprocess.check_output(["git", "show", f"{snapshot}:{path}"], cwd=ROOT)
+            if hashlib.sha256(blob).hexdigest() != expected:
+                raise ValueError("Predecessor validation source snapshot changed")
+        for path, expected in previous["validation_files"].items():
+            if sha(ROOT / path) != expected:
+                raise ValueError("Predecessor validation evidence changed")
+        amendment = extension
     payload = amendment["payload"]
     if stable_hash(payload) != amendment["signature"] or payload["base_signature"] != freeze["signature"]:
         raise ValueError("Postprocessing amendment identity changed")
@@ -143,4 +170,6 @@ def verify_freeze(config):
             (payload["cache_directory"] + "/data.json", "cache_metadata_sha256")):
         if sha(ROOT / path) != payload[key]:
             raise ValueError(f"Signed input changed: {path}")
-    return {**freeze, "effective_source_files": source_files, "postprocessing_amendment": amendment}
+    lock_paths = [POSTPROCESS_PATH, POSTPROCESS_PATH.with_name("rv30_statistics_lock.json")]
+    return {**freeze, "effective_source_files": source_files, "postprocessing_amendment": amendment,
+        "postprocessing_lock_files": {str(path.relative_to(ROOT)): sha(path) for path in lock_paths if path.exists()}}

@@ -117,6 +117,15 @@ def make_replay_round(config, directory, number):
         "completed_utc": "2026-11-03T02:31:00+00:00", "job_directories": [r["directory"] for r in requests],
         "sources": {r["source_directory"]: r["source_result_sha256"] for r in requests}}
     path = verify.verification_directory(directory, number, "development") / "summary.json"
+    evaluation_path = directory / "evaluation.json"
+    if not evaluation_path.exists():
+        write_json(evaluation_path, {"fixture": True})
+    statistics_path = path.parent / "statistics.json"
+    write_json(statistics_path, {"passed": True, "signature": "signed", "scope": "development", "round": number,
+        "completed_utc": summary["completed_utc"], "sources": summary["sources"],
+        "evaluation": {"path": str(evaluation_path.relative_to(verify.ROOT)), "sha256": sha(evaluation_path)}})
+    summary["statistics_sha256"] = sha(statistics_path)
+    summary["statistics_file"] = str(statistics_path.relative_to(verify.ROOT))
     write_json(path, summary)
     return path, summary
 
