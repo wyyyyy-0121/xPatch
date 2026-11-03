@@ -8,9 +8,30 @@
 
 在 `/home/ayaka/xPatch` 运行。现有已验证环境为 Python 3.13：`/home/ayaka/.venvs/xpatch-v2/bin/python`。沿用这个环境不改变旧实验工件或创建新的产品大版本。正式环境清单在冻结后生成的 `delivery/rv30_dependencies.json`，包括全部已安装包版本。
 
+需要在另一台 Linux/WSL x86_64 机器重建时，先准备 Python **3.13.13** 和兼容当前 PyTorch CUDA 构建的 NVIDIA 驱动，再在独立环境安装完整分发包快照：
+
+```bash
+cd /home/ayaka/xPatch
+python3.13 -m venv /home/ayaka/.venvs/xpatch-replay
+/home/ayaka/.venvs/xpatch-replay/bin/python -m pip install --no-deps -r delivery/requirements.lock.txt
+/home/ayaka/.venvs/xpatch-replay/bin/python -m pip check
+```
+
+`requirements.lock.txt` 从已签名的依赖 JSON 导出，包含 68 个分发包；`--no-deps` 使用完整快照，避免解析器另装未登记的依赖。Python 补丁版本、包名与版本的完整集合都参与环境核验。当前研究继续使用现有环境；上述另一环境的下载、安装和 GPU 兼容性尚未实测，包源可用性也不由快照保证。正式回放前需通过以下核对，不能通过重新冻结来绕过环境不匹配：
+
+```bash
+/home/ayaka/.venvs/xpatch-replay/bin/python -c 'from finance.io import ROOT,read_json; from finance.provenance import verify_freeze; v=verify_freeze(read_json(ROOT/"configs/rv30.json")); print(v["signature"])'
+```
+
+预训练权重沿用 `configs/rv30_model_lock.json` 中的精确模型目录、文件与 SHA256，需从原本地工件备份恢复，或取得该锁对应的同一份权重后逐文件核对。模型训练与回放不会自动改用最新权重。完整权重和行情数据未加入 Git，仅克隆代码不足以复现实验。
+
 Alpaca 凭据保留在 `/home/ayaka/.config/alpaca/credentials.env`，仅数据采集客户端通过环境读取；不把凭据加入命令参数、日志或 Git。已有数据接入、逐页原始记录与特殊日期审计见 `data_acquisition/DELIVERY_SOURCE_AUDIT.md`，统一数据身份见 `delivery/data.json`。
 
 AAPL、SPY、QQQ 使用相同 SIP/raw 分钟柱与交易所日历。缺口保留，不插值；所有面板按相同的过去输入及 AAPL 标签资格配对。CSV、大权重、缓存和完整实验输出保留本地，不提交 Git。历史文件不能证明当时的发布和接收时刻。
+
+数据恢复先按 `delivery/data.json` 的路径还原原始分页、CSV 和审计凭证，再运行 `finance audit` 与 `finance prepare`。数据采集入口 `python -m data_acquisition.delivery_data audit20 --symbol SPY --output <新目录>` 对固定 20 日做审计，`history` 对固定的 2021-01-04—2026-06-30 采集；`--symbol` 支持三个标的，`verify` 与 `audit` 可重建已有目录的分页和日历核查。重新向供应商下载可能得到修订后的数据，须保留为独立来源，不能覆盖当前签名中的输入。
+
+新增离线日期用于推理时，为三个标的准备相同 SIP/raw 口径的完整历史，按 `delivery/data.json` 的结构另存经过核验的清单，并用 `infer --source-manifest <新清单>` 指定；至少保留 22 个完整历史会话及 512 分钟输入所需的上下文。新增清单不会改变本轮训练、选择或统计样本。实时采集仍须先解决 `delivery/external_dependencies.json` 中的及时 SIP 与真实接收时间准入项。
 
 ## 固定工作流程
 
@@ -72,3 +93,5 @@ cd /home/ayaka/xPatch
 每轮还保存 `statistics.json`，直接从原始预测与校准工件重建三种子集成、日等权损失、经验区间、时段/季度/年度分段、MZ、DM/HAC、日和五日块 bootstrap、Holm 及全部门槛；独立实现不调用主评价器的这些统计函数。汇总评价的指纹必须与两轮统计证据一致后才能进入确认。此补充覆盖的后处理签名为 `delivery/rv30_statistics_lock.json`，它引用并保留前一份后处理锁、原研究冻结与对应 Git 快照。
 
 `delivery/manifest.json` 是唯一最终索引，引用代码提交、原研究签名、后处理纠错签名、模型、报告、推理样例和验收证据。其 `artifact_index` 连接每份任务凭证与凭证下的模型/预测逐文件哈希，覆盖失败试验。小修复使用 Git 提交与运行编号，不复制 `finance_v3/v4` 等目录。`finance_ls/`、`finance_v2/` 及其签名、权重和结果作为历史保留；旧十二分钟收益实验的阴性结论继续有效。
+
+完整交付逐项核对表见 `delivery/ACCEPTANCE_CHECKLIST.md`。该表区分已有工程证据与仍待正式实验产生的验收证据。
