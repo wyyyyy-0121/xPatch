@@ -100,7 +100,7 @@ cd /home/ayaka/xPatch
 cd /home/ayaka/xPatch
 /home/ayaka/.venvs/xpatch-v2/bin/python -m finance prospective status
 /home/ayaka/.venvs/xpatch-v2/bin/python -m finance prospective admit
-/home/ayaka/.venvs/xpatch-v2/bin/python -m finance prospective observe
+/home/ayaka/.venvs/xpatch-v2/bin/python -m finance.forward_runtime observe
 ```
 
 `admit` 只读请求当前三资产 SIP/raw 数据；403、延迟或非正常交易时段不能通过。它不付费或切换行情。只有当前正常会话的及时数据通过后才允许 `observe`；观察为持续的本地服务，受独占锁和资源限制保护。账本位于 `artifacts/rv30/prospective/<前瞻签名>/`，HTTP 响应、实际接收时间、预测及其落盘确认使用不可覆盖事件与哈希链。历史预热、迟到或补算都不能计入合格事前预测。该本地链提供完整性检查，不等于外部可信时间戳。
@@ -108,11 +108,16 @@ cd /home/ayaka/xPatch
 助手等待你处理权限项，不代购订阅，也不每小时重复向供应商请求。权限解决后，在正常美股会话重新运行准入；通过后由本地观察器持续接收和预测，助手每小时仅检查质量及进程身份。满六十个完整合格交易日前不输出累计分数。之后顺序运行：
 
 ```bash
-/home/ayaka/.venvs/xpatch-v2/bin/python -m finance prospective verify --round 1
-/home/ayaka/.venvs/xpatch-v2/bin/python -m finance prospective verify --round 2
+/home/ayaka/.venvs/xpatch-v2/bin/python -m finance.forward_runtime verify --round 1
+/home/ayaka/.venvs/xpatch-v2/bin/python -m finance.forward_runtime verify --round 2
+/home/ayaka/.venvs/xpatch-v2/bin/python -m finance.forward_runtime finalize
 ```
 
 两轮都完整重放预测、独立重建标签及核对统计。未满期限返回等待状态，错误或失败凭证保留且返回非零；它们不自动等于最终交付验收。
+
+实际观察、两轮前瞻复核及最终验收使用上述计费入口；它调用原已冻结的采集和模型实现，不改变预测、样本或门槛。进程只分配四个逻辑 CPU，包含守护线程；观察器明确的休眠不租用 CPU，其他活动按四核乘活动墙钟时间计费。每次操作先写不可覆盖的预算预留，正常退出写实际活动用量；异常中断后保留整笔预留，确认原 PID/启动身份已结束才关闭记录，不能把未知用量记为零。观察单次活动上限七日，两轮各十二小时，最终化/验收各一小时；这些上限受原累计 2000 核时、240 GPU 小时约束，不扩大总预算。前瞻适配器只运行 CPU 模型，GPU 用量为零；原训练和诊断用量继续累计。
+
+最终验收重新核对实际及时 SIP 准入、最早六十日的完整网格、输入前缀、模型来源、独立标签、两轮统计与选择顺序，并索引全部原始响应和事件文件。按原信息集优先顺序选通过者，不能挑最低前瞻分数；无前瞻通过者时交付确切 AAPL/HAR 基线，结论为 `completed_no_prospective_edge`，保留先前历史通过的事实。执行追加锁为 `delivery/rv30_completion_lock.json`；它保留原研究与前瞻计划。工程合成测试不能计入真实六十日。
 
 ## 推理与结果资格
 
@@ -137,8 +142,7 @@ cd /home/ayaka/xPatch
 
 ```bash
 cd /home/ayaka/xPatch
-/home/ayaka/.venvs/xpatch-v2/bin/python -m finance accept \
-  --run-directory artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development
+/home/ayaka/.venvs/xpatch-v2/bin/python -m finance.forward_runtime accept
 ```
 
 验收器检查历史封存、源代码/依赖/数据身份、完整搜索覆盖、日等权指标与门槛、各阶段两轮独立复核、冻结工件、推理示例和文档。复核按确切模型、种子、来源指纹、阶段和轮次逐项核对，数量相同但漏模型或重复任务也会失败；起点、时间戳、日期与校准样本必须等于预定网格。任何未完成项返回非零；结果在运行目录的 `acceptance.json`。监督模型完整回放校准与评价预测；Chronos 每个任务回放固定首尾批次，所有标签和主分数仍从原始 AAPL CSV 独立重算。独立复核入口为 `python -m finance verify --run-directory artifacts/rv30/<签名>/development --scope development --round 1`；`--scope` 另支持 `confirmation` 和 `delivery`，第二轮需先有该范围的第一轮成功证据。

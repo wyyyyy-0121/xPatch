@@ -109,6 +109,9 @@ def accept(config, run_directory):
     from .inference import infer
     from .verify import require_verifications
     directory = Path(run_directory)
+    if (ROOT / 'delivery/prospective_lock.json').exists():
+        from .completion import accept_forward
+        return accept_forward(config, directory)
     checks, errors = {}, []
     manifest = None
     outcome = None
@@ -139,9 +142,8 @@ def accept(config, run_directory):
         checks["conditional_confirmation_recomputed_and_verified"] = True
         confirmation = read_json(directory / "confirmation/evaluation.json")
         if confirmation["passed_candidates"]:
-            # A passed flag or a backfilled prediction cannot qualify a prospective run.
-            checks["qualified_prospective_60_sessions"] = False
-            outcome = "waiting_prospective_acceptance"
+            from .completion import accept_forward
+            return accept_forward(config, directory)
         else:
             outcome = "completed_no_predictive_edge"
         if not rebuilt["passed_candidates"]:

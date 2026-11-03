@@ -9,6 +9,9 @@ from .verify import verify_run
 
 
 def finish(config, directory):
+    if (ROOT / "delivery/prospective_lock.json").exists():
+        from .completion import finalize_forward
+        return finalize_forward(config, directory)
     evaluation = evaluate(directory, config)
     if evaluation["errors"] or evaluation["complete_model_panel_results"] != 12:
         return {"passed": False, "stage": "development_evaluation_incomplete"}
@@ -33,14 +36,17 @@ def finish(config, directory):
         failure = verify_scope("confirmation")
         if failure:
             return failure
-    report(config, directory)
     if confirmation["passed_candidates"]:
+        if (ROOT / "delivery/prospective_lock.json").exists():
+            from .completion import finalize_forward
+            return finalize_forward(config, directory)
         status = {"goal_status": "active", "stage": "waiting_prospective_admission",
             "run_directory": str(directory.relative_to(ROOT)), "passed_historical_candidates": confirmation["passed_candidates"],
             "required": ["resolve_timely_SIP_permission", "freeze_prospective_issuance_and_verifier", "60_complete_on_time_sessions"],
             "final_acceptance": False, "external_items": "delivery/external_dependencies.json"}
         write_json(ROOT / "delivery/status.json", status)
         return {"passed": False, **status}
+    report(config, directory)
     freeze_baseline(config, directory)
     failure = verify_scope("delivery")
     if failure:

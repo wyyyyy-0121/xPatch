@@ -1,0 +1,14 @@
+{
+  "created_utc": "2026-11-03T23:31:08.998598+00:00",
+  "reason": "The pending-forever acceptance branch could not finalize actual forward evidence; add strict finalization and cumulative resource accounting.",
+  "historical_evidence_preserved": true,
+  "original_prospective_plan_preserved": true,
+  "research_definitions_changed": false,
+  "thresholds_changed": false,
+  "model_fitting_changed": false,
+  "actual_prospective_sessions": 0,
+  "final_acceptance": false,
+  "accounting": "four allocated CPU IDs; exclude only registered observer idle sleeps; immutable reservations and completed receipts; unknown interruptions charged at full reservation",
+  "limits": "original cumulative 2000 CPU core hours and 240 GPU hours; observation 7 active days per action; verification 12 active hours per round; finalization and acceptance 1 active hour",
+  "validation": "artifacts/rv30/setup/completion_20261104/validation.json"
+}
