@@ -80,6 +80,8 @@ cd /home/ayaka/xPatch
 
 没有候选通过时，冻结 HAR 参考基线，并对最终基线再完整回放两轮。任一阶段复核失败都停止其依赖步骤。当前运行将训练和后处理分开，以保留原训练签名，并对后处理的顺序与验收覆盖纠错。原始研究冻结文件保持原样，纠错见 `delivery/amendments/postprocessing_correction.json`，独立纠错签名见 `delivery/rv30_postprocessing_lock.json`；它不能豁免数据、特征、模型拟合、搜索或门槛的修改。
 
+正式搜索于 2026-11-04 完成全部 120 组、12,200 个任务。首次开发复核有 42 个 xPatch 回放失败：新进程默认启用 cuDNN TF32，与训练设置不同。`delivery/rv30_replay_lock.json` 仅登记模型加载时恢复训练数值设置，以及保存失败记录后的复核重试；全部 60 个已保存 xPatch 的 1,620,216 个评价/校准预测逐位回放通过，134 项工程测试通过。原 `verify_1/` 原地保留；修正后的第一轮使用 `verify_1_replay_correction/`，第二轮仍为 `verify_2/`。两轮都须全量正式完成，不能用工程抽查替代；研究冻结、训练、预测、搜索和门槛均未改动，失败与诊断用量继续计入原预算。
+
 输出在 `artifacts/rv30/<协议签名>/development/`。每个任务保存请求、资源、参数、拟合状态、校准、模型、预测及指纹；各模型组保存搜索阶段和内层选择。`progress.json`、`scheduler.json` 用于查看进度；`evaluation.json` 和 `daily_losses.csv` 在全部模型组结束后生成。正式搜索期间不根据已生成的外层分数改变空间。
 
 所有实验进程共享最多 22 个逻辑 CPU：三个 CPU 工作进程各六个、一个 GPU 工作进程四个，BLAS 每进程一个，LightGBM 使用其分配的六个。调度器限制亲和性、嵌套线程和优先级，内存不足暂停新任务；WSL 亲和性不等于 Windows 独占物理线程。计算预算、超时和停止规则在 `configs/rv30.json` 与 `RESEARCH_PROTOCOL.md` 冻结。

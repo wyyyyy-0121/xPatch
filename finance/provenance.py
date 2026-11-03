@@ -211,11 +211,11 @@ def _acceleration_sources(freeze, source_view=None, excluded_additions=()):
     return {**prior, **after, **extra}, postprocessing
 
 
-def effective_sources(freeze):
+def _throughput_sources(freeze, source_view=None, excluded_additions=()):
     """Extend execution evidence without overwriting any prior signed lock."""
     path = ROOT / "delivery/rv30_throughput_lock.json"
     if not path.exists():
-        return _acceleration_sources(freeze)
+        return _acceleration_sources(freeze, source_view, excluded_additions)
     import hashlib
     import subprocess
     amendment = read_json(path)
@@ -231,7 +231,7 @@ def effective_sources(freeze):
             payload["research_definitions_changed"] or payload["model_search_space_changed"] or
             payload["thresholds_changed"] or not payload["bitwise_equivalence_required"]):
         raise ValueError("Throughput lock cannot change research definitions or arbitrary source files")
-    installed = {name: sha(ROOT / name) for name in freeze["payload"]["source_files"]}
+    installed = source_view if source_view is not None else {name: sha(ROOT / name) for name in freeze["payload"]["source_files"]}
     view = installed.copy()
     for name, record in payload["changes"].items():
         if installed[name] != record["after_sha256"]:
@@ -240,7 +240,7 @@ def effective_sources(freeze):
         if hashlib.sha256(previous).hexdigest() != record["before_sha256"]:
             raise ValueError("Throughput predecessor source changed: " + name)
         view[name] = record["before_sha256"]
-    prior, postprocessing = _acceleration_sources(freeze, view, payload["added_sources"])
+    prior, postprocessing = _acceleration_sources(freeze, view, (*payload["added_sources"], *excluded_additions))
     if any(prior[name] != record["before_sha256"] for name, record in payload["changes"].items()):
         raise ValueError("Throughput does not extend the signed implementation")
     extra = {**payload["added_sources"], **payload["support_sources"]}
@@ -258,11 +258,69 @@ def effective_sources(freeze):
     integrated = read_json(ROOT / payload["integrated_validation"])
     if (not integrated["passed"] or not integrated["cross_implementation_resume_bitwise_equal"] or
             not integrated["resident_fallback_bitwise_equal"] or
-            integrated["source_files"] != {name: sha(ROOT / name)
+            integrated["source_files"] != {name: installed[name] if name in installed else sha(ROOT / name)
                 for name in ("finance/models.py", "finance/cuda_graph.py", "finance/throughput.py")}):
         raise ValueError("Installed throughput implementation did not pass recovery validation")
     after = {name: record["after_sha256"] for name, record in payload["changes"].items()}
     return {**prior, **after, **extra}, postprocessing
+
+
+def effective_sources(freeze):
+    """Bind a precision-only replay repair and retain every failed receipt."""
+    path = ROOT / "delivery/rv30_replay_lock.json"
+    if not path.exists():
+        return _throughput_sources(freeze)
+    import hashlib
+    import subprocess
+    amendment = read_json(path)
+    payload = amendment["payload"]
+    if (stable_hash(payload) != amendment["signature"] or
+            payload["base_signature"] != freeze["signature"] or
+            payload["base_freeze_sha256"] != sha(FREEZE_PATH) or
+            payload["prior_throughput_lock_sha256"] != sha(ROOT / "delivery/rv30_throughput_lock.json")):
+        raise ValueError("Replay amendment or predecessor identity changed")
+    if (set(payload["changes"]) != {"finance/models.py", "finance/verify.py", "finance/provenance.py"} or
+            set(payload["support_sources"]) != {"tests/test_rv30_replay.py"} or
+            payload["research_definitions_changed"] or payload["model_search_space_changed"] or
+            payload["thresholds_changed"] or payload["training_changed"] or
+            not payload["original_predictions_preserved"]):
+        raise ValueError("Replay correction cannot revise fitting or research definitions")
+    installed = {name: sha(ROOT / name) for name in freeze["payload"]["source_files"]}
+    view = installed.copy()
+    for name, record in payload["changes"].items():
+        if installed[name] != record["after_sha256"]:
+            raise ValueError("Unregistered replay correction source: " + name)
+        previous = subprocess.check_output(["git", "show", f"{payload['prior_source_snapshot_commit']}:{name}"], cwd=ROOT)
+        if hashlib.sha256(previous).hexdigest() != record["before_sha256"]:
+            raise ValueError("Replay predecessor source changed: " + name)
+        view[name] = record["before_sha256"]
+    prior, postprocessing = _throughput_sources(freeze, view)
+    if any(prior[name] != record["before_sha256"] for name, record in payload["changes"].items()):
+        raise ValueError("Replay correction does not extend the signed implementation")
+    if not {payload["validation_summary"], payload["verification_retry"]["failed_attempt_index"]}.issubset(payload["validation_files"]):
+        raise ValueError("Replay correction must bind the full replay and preserved failures")
+    for name, expected in {**payload["support_sources"], **payload["validation_files"]}.items():
+        if sha(ROOT / name) != expected:
+            raise ValueError("Replay correction evidence changed: " + name)
+    validation = read_json(ROOT / payload["validation_summary"])
+    if (not validation["passed"] or validation["models"] != 60 or
+            not validation["all_full_predictions_bitwise_equal"] or validation["outer_scores_read"] or
+            validation["source_files"] != {name: installed[name] for name in ("finance/models.py", "finance/verify.py")}):
+        raise ValueError("Every saved xPatch must replay in full at the fitting precision")
+    retry = payload["verification_retry"]
+    original = ROOT / retry["run_directory"] / "verify_1"
+    if (retry["scope"] != "development" or retry["round"] != 1 or
+            retry["original_directory"] != str(original.relative_to(ROOT)) or
+            retry["replacement_directory"] != str((original.parent / "verify_1_replay_correction").relative_to(ROOT)) or
+            sha(original / "summary.json") != retry["original_summary_sha256"]):
+        raise ValueError("Replay retry must preserve the original failed first round")
+    index = read_json(ROOT / retry["failed_attempt_index"])
+    actual = {str(p.relative_to(ROOT)): sha(p) for p in original.rglob("*") if p.is_file()}
+    if (index["directory"] != retry["original_directory"] or actual != index["files"] or
+            len(index["failed_receipts"]) != 42 or read_json(original / "summary.json")["passed"]):
+        raise ValueError("Failed replay records were omitted, overwritten or substituted")
+    after = {name: record["after_sha256"] for name, record in payload["changes"].items()}
+    return {**prior, **after, **payload["support_sources"]}, postprocessing
 
 
 def verify_freeze(config):
@@ -279,6 +337,7 @@ def verify_freeze(config):
         if sha(ROOT / path) != payload[key]:
             raise ValueError(f"Signed input changed: {path}")
     lock_paths = [POSTPROCESS_PATH, POSTPROCESS_PATH.with_name("rv30_statistics_lock.json"),
-        ROOT / "delivery/rv30_acceleration_lock.json", ROOT / "delivery/rv30_throughput_lock.json"]
+        ROOT / "delivery/rv30_acceleration_lock.json", ROOT / "delivery/rv30_throughput_lock.json",
+        ROOT / "delivery/rv30_replay_lock.json"]
     return {**freeze, "effective_source_files": source_files, "postprocessing_amendment": amendment,
         "postprocessing_lock_files": {str(path.relative_to(ROOT)): sha(path) for path in lock_paths if path.exists()}}

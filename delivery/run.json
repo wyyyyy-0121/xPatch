@@ -4,12 +4,12 @@
   "pid": 206740,
   "kernel_start_ticks": "19893747",
   "started_utc": "2026-11-03T01:53:30.265555+00:00",
-  "last_checked_utc": "2026-11-03T22:15:47.955560+00:00",
-  "next_check_after_utc": "2026-11-03T23:15:47.955560+00:00",
+  "last_checked_utc": "2026-11-03T22:28:25.081962+00:00",
+  "next_check_after_utc": "2026-11-03T23:28:25.081962+00:00",
   "code_commit": "822d9e3239002e78112aa5154f240dca1b119e90",
   "run_directory": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
   "log": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/finalize.log",
-  "state": "signed_finalization_running",
+  "state": "replay_precision_corrected_ready_for_finalization",
   "max_cpu_threads_total": 22,
   "heartbeat_id": "rv30",
   "prior_driver_pid": 115809,
@@ -107,7 +107,7 @@
   "postprocessing_lock": "delivery/rv30_statistics_lock.json",
   "independent_aggregate_statistics": "signed_ready_for_both_rounds",
   "continuation": {
-    "state": "finalization_started",
+    "state": "finalization_exited",
     "pid": 184819,
     "kernel_start_ticks": "17841644",
     "training_pid": 184818,
@@ -116,7 +116,9 @@
     "script": "artifacts/rv30/setup/await_development_finalize_20261103.py",
     "script_sha256": "2f63f30c661ab487b202322acb41aa8d25862f991a922410edaa34cd4608e1dc",
     "log": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/automatic_finalize_wait.log",
-    "finalizer_pid": 206740
+    "finalizer_pid": 206740,
+    "exit_code": 1,
+    "completed_utc": "2026-11-03T22:17:17.965954+00:00"
   },
   "performance_diagnostic": "delivery/amendments/performance_diagnostic.json",
   "prior_search_pid": 184818,
@@ -142,5 +144,7 @@
   "monitor_interval_minutes": 60,
   "finalization_started_utc": "2026-11-03T22:14:46.756159+00:00",
   "finalization_code_commit": "064c9aee1f20d3f95604afc6b40befa115fae2fe",
-  "search_completion_evidence": "artifacts/rv30/setup/throughput_20261103/search_completion.json"
+  "search_completion_evidence": "artifacts/rv30/setup/throughput_20261103/search_completion.json",
+  "replay_correction_lock": "delivery/rv30_replay_lock.json",
+  "replay_correction_signature": "0bcdde87ba028550244cbdcc7f8608fe2e885dda615eba258e8884662e5d750d"
 }

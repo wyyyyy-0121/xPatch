@@ -149,6 +149,22 @@ def verification_directory(directory, round_number, scope):
     if round_number not in (1, 2) or scope not in SCOPES:
         raise ValueError("Verification needs a registered scope and round 1 or 2")
     parent = Path(directory) if scope == "development" else Path(directory) / ("confirmation" if scope == "confirmation" else "delivery_verification")
+    correction = ROOT / "delivery/rv30_replay_lock.json"
+    if scope == "development" and round_number == 1 and correction.exists():
+        lock = read_json(correction)
+        payload = lock["payload"]
+        if stable_hash(payload) != lock["signature"]:
+            raise ValueError("Replay correction signature changed")
+        retry = payload["verification_retry"]
+        if parent == ROOT / retry["run_directory"]:
+            original = parent / "verify_1"
+            replacement = parent / "verify_1_replay_correction"
+            if (retry["scope"] != scope or retry["round"] != round_number or
+                    retry["original_directory"] != str(original.relative_to(ROOT)) or
+                    retry["replacement_directory"] != str(replacement.relative_to(ROOT)) or
+                    sha(original / "summary.json") != retry["original_summary_sha256"]):
+                raise ValueError("The preserved failed verification attempt changed")
+            return replacement
     return parent / f"verify_{round_number}"
 
 
@@ -250,8 +266,9 @@ def expected_sources(config, run_directory, scope):
 
 def verification_requests(directory, round_number, scope, sources):
     destination = verification_directory(directory, round_number, scope)
+    attempt = destination.name.removeprefix(f"verify_{round_number}")
     return [{**{key: source[key] for key in ("signature", "model", "panel", "config_id", "params", "seed", "partition")},
-        "job_id": f"verify{round_number}/{scope}/{source['job_id']}",
+        "job_id": f"verify{round_number}{attempt}/{scope}/{source['job_id']}",
         "directory": str((destination / source["job_id"]).relative_to(ROOT)), "phase": "verify",
         "verification_scope": scope, "verification_round": round_number, "source_directory": path,
         "source_result_sha256": sha(ROOT / path / "result.json")} for path, source in sorted(sources.items())]

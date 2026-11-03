@@ -1,0 +1,58 @@
+{
+  "signature": "0bcdde87ba028550244cbdcc7f8608fe2e885dda615eba258e8884662e5d750d",
+  "payload": {
+    "created_utc": "2026-11-03T22:28:25.081962+00:00",
+    "base_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+    "base_freeze_sha256": "dcc00953da75049efa35b361b5dfcbee9922cd61bdbe2befeeb130aa36d3ad13",
+    "prior_throughput_lock_sha256": "193e288f007eb99f76f2177af983252617e8d395ee7536e9c568afe2247bfbe7",
+    "prior_source_snapshot_commit": "2abe1934405dabe7fb57550be5ec7916d66e973f",
+    "research_definitions_changed": false,
+    "model_search_space_changed": false,
+    "thresholds_changed": false,
+    "training_changed": false,
+    "original_predictions_preserved": true,
+    "reason": "Fresh saved-model loads inherited cuDNN TF32=true while fitting disabled TF32. Restore original seed and deterministic/precision settings before constructing the saved xPatch and capturing CUDA graphs.",
+    "changes": {
+      "finance/models.py": {
+        "before_sha256": "02d109fa3ecdc4cc6522f0932c59fbb0ae1057d485f428a02baeaad5c8e64fe9",
+        "after_sha256": "3271d2714c1270e7278e3183b41c7b928fa94240d747a364086e4b73dfe014f7"
+      },
+      "finance/verify.py": {
+        "before_sha256": "bab72c0d7f7064441b43fa2881a90a551628ee8ecef1af9847068daa387977bf",
+        "after_sha256": "b58fb8fb459ca61c6e570977d4b4026c083013b51c77b9fe2bbfcf7fbcd6e893"
+      },
+      "finance/provenance.py": {
+        "before_sha256": "3ff532d2867fbbab77897428cabc05942d956877b0e8bc16fa41f1e555d37408",
+        "after_sha256": "346a13dc07ab45e08de5dd9cd6fa542ba902fa19a63b7a1e3560eb507a724cc1"
+      }
+    },
+    "support_sources": {
+      "tests/test_rv30_replay.py": "36ebf13fe22f20c7b67a89f588c01771238e2aec1971e47e640b7de784cec482"
+    },
+    "validation_summary": "artifacts/rv30/setup/replay_20261104/full_replay.json",
+    "validation_files": {
+      "artifacts/rv30/setup/replay_20261104/diagnose.py": "30440b2e0a8db044338ba2b44ab7ed562c5af53b4c56ef8af7c46a3ce968f889",
+      "artifacts/rv30/setup/replay_20261104/diagnosis.json": "edb6845ed0c567c287d79c9d9da742fec8b855dbaa8f320650b32fc8a1bb44b8",
+      "artifacts/rv30/setup/replay_20261104/full_replay.py": "9a01b8edc4616db631f512087aeeca7571699d329062800bb5781f8699bd7261",
+      "artifacts/rv30/setup/replay_20261104/full_replay.json": "9fcce604259d512e3eb2444449bbab6ee82930c6c842e1ffbdef1f5c033d355e",
+      "artifacts/rv30/setup/replay_20261104/full_replay.log": "0d6b9c6abd9cdd469f9db5d407516d744db5d851a4320a626db21467a59380db",
+      "artifacts/rv30/setup/replay_20261104/run_tests.py": "aad509fa6632aca85823b446e1bf2d7dbbfa7ab969dd082a2241883116d6b9d4",
+      "artifacts/rv30/setup/replay_20261104/engineering_tests.log": "6386ac0bfbc1750c0855b99fa345b45c2064e56b45ab75d8a414b51bea0019f7",
+      "artifacts/rv30/setup/replay_20261104/engineering_tests_stdin_harness_failed.log": "976de798f659d07e2014ee6aa46c5d8a044d59b17a15e695f6d2a639be9631b8",
+      "artifacts/rv30/setup/replay_20261104/failed_attempt_index.json": "5adf2f9e91a8e55b0b2096120824b3bc2212e3b8d05ae13140c7d40c41a8e951",
+      "artifacts/rv30/setup/replay_20261104/models.py.before": "02d109fa3ecdc4cc6522f0932c59fbb0ae1057d485f428a02baeaad5c8e64fe9",
+      "artifacts/rv30/setup/replay_20261104/verify.py.before": "bab72c0d7f7064441b43fa2881a90a551628ee8ecef1af9847068daa387977bf",
+      "artifacts/rv30/setup/replay_20261104/provenance.py.before": "3ff532d2867fbbab77897428cabc05942d956877b0e8bc16fa41f1e555d37408",
+      "delivery/amendments/replay_correction.json": "c915f294b4babfcfed707195cb9488db17c1d7e1d413c0d52825243938138d6a"
+    },
+    "verification_retry": {
+      "scope": "development",
+      "round": 1,
+      "run_directory": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
+      "original_directory": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/verify_1",
+      "replacement_directory": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/verify_1_replay_correction",
+      "original_summary_sha256": "5d92f4b5f0a6065ac0c92e14d30c9a760554986a1b73b11332f4c3b28b1c86f9",
+      "failed_attempt_index": "artifacts/rv30/setup/replay_20261104/failed_attempt_index.json"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "started_utc": "2026-11-03T22:17:17.965954+00:00",
+  "completed_utc": "2026-11-03T22:28:25.081962+00:00",
+  "state": "validated_ready_for_signed_replay_retry",
+  "reason": "Fresh saved-model loads inherited cuDNN TF32=true while fitting disabled TF32. Restore original seed and deterministic/precision settings before constructing the saved xPatch and capturing CUDA graphs.",
+  "base_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+  "prior_commit": "2abe1934405dabe7fb57550be5ec7916d66e973f",
+  "outer_scores_read": false,
+  "training_changed": false,
+  "thresholds_changed": false,
+  "original_failed_attempt_preserved": true,
+  "failed_replays": 42,
+  "original_verification_jobs": 200,
+  "corrected_full_xpatch_replays": 60,
+  "bitwise_prediction_values": 1620216,
+  "engineering_tests_passed": 134,
+  "elapsed_seconds": 667.116008,
+  "charged_cpu_core_hours": 4.076820048888889,
+  "charged_gpu_hours": 0.18531000222222221,
+  "charge_key": "3c66eadea4c0d95f88bf9f9d17e372d611bb53218c2d3a60b531ee89da2ce256",
+  "charge_ledger": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/interrupted_resource_charges.json"
+}

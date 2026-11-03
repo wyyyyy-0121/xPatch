@@ -335,6 +335,9 @@ def load_model(name, directory, params, config, device="cuda", chronos=None):
     if name == "xpatch":
         import torch
         saved = torch.load(directory / "model.pt", map_location="cpu", weights_only=False)
+        # A fresh replay/inference process must use the fitting precision before
+        # any convolution runs or a CUDA graph captures its numerical kernels.
+        seed_torch(saved["seed"])
         model = native_xpatch(params, saved["channels"], device)
         model.load_state_dict(saved["state_dict"])
         return model.eval()
