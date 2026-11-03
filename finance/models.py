@@ -94,6 +94,9 @@ def native_xpatch(params, channels, device):
         # Scalars in the original DEMA are attributes rather than buffers.
         model.decomp.ma.alpha = model.decomp.ma.alpha.to(device)
         model.decomp.ma.beta = model.decomp.ma.beta.to(device)
+        if device.startswith("cuda"):
+            from .throughput import FusedDecomp
+            model.decomp = FusedDecomp(model.decomp)
     if not params["revin"]:
         # Unused parameters remain in the original module/state for source fidelity.
         for parameter in model.revin_layer.parameters():
@@ -143,6 +146,8 @@ def fit_neural(data, store, state, partition, origins, params, panel, config, se
     channels = x.shape[-1]
     model = native_xpatch(params, channels, device)
     from .cuda_graph import StepCache
+    from .throughput import ResidentTraining
+    resident = ResidentTraining.maybe(x, y, batch, device)
     graph_steps = StepCache(model) if params["ma_type"] == "dema" and device.startswith("cuda") else None
     optimizer = torch.optim.AdamW((p for p in model.parameters() if p.requires_grad),
         lr=params["learning_rate"], weight_decay=params["weight_decay"])
@@ -181,8 +186,11 @@ def fit_neural(data, store, state, partition, origins, params, panel, config, se
                 # Keep every sample even when BatchNorm would see a singleton.
                 model.eval()
             optimizer.zero_grad(set_to_none=True)
-            inputs = torch.as_tensor(x[indices], device=device)
-            targets = torch.as_tensor(y[indices], device=device)
+            if resident is None:
+                inputs = torch.as_tensor(x[indices], device=device)
+                targets = torch.as_tensor(y[indices], device=device)
+            else:
+                inputs, targets = resident.batch(indices)
             if graph_steps is None:
                 prediction = model(inputs)
                 loss = nn.functional.mse_loss(prediction, targets)

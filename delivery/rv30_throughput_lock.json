@@ -1,0 +1,82 @@
+{
+  "signature": "105028c31159ab4b5878d03bbdac7c74288a6cba1cac510d704ff3d1910d0367",
+  "payload": {
+    "schema_version": 1,
+    "created_utc": "2026-11-03T16:28:20.745421+00:00",
+    "classification": "bitwise_equivalent_fused_DEMA_forward_adjoint_and_bounded_resident_gather",
+    "base_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+    "base_freeze_sha256": "dcc00953da75049efa35b361b5dfcbee9922cd61bdbe2befeeb130aa36d3ad13",
+    "prior_acceleration_lock_sha256": "2653313bc03885367b5361dd5a06d13aa00eae1481d1ca17cb2463d100a221c0",
+    "prior_acceleration_signature": "b182048e59ae78399135f84fca8064737846c8ab96811d3de19bc3841e0712fc",
+    "prior_source_snapshot_commit": "0b2179a1d6a7dc550bf028914e825fbed5abc551",
+    "research_definitions_changed": false,
+    "model_search_space_changed": false,
+    "thresholds_changed": false,
+    "bitwise_equivalence_required": true,
+    "formal_outer_scores_read": false,
+    "changes": {
+      "finance/models.py": {
+        "before_sha256": "fa89a16281563c07c66a6b7eae3c1b8762ea218a4af72f9ee1a7e6f3245b459e",
+        "after_sha256": "02d109fa3ecdc4cc6522f0932c59fbb0ae1057d485f428a02baeaad5c8e64fe9"
+      },
+      "finance/provenance.py": {
+        "before_sha256": "767834757be76bad9cd8d732078faf5268f429e2b39b2a06c0d09d9bde2c4e95",
+        "after_sha256": "3ff532d2867fbbab77897428cabc05942d956877b0e8bc16fa41f1e555d37408"
+      }
+    },
+    "added_sources": {
+      "finance/throughput.py": "5ec43d40bf0e88be3729d3fc8fa485e2ffa8a8e097ec0072d670e5628fc63402"
+    },
+    "support_sources": {
+      "tests/test_rv30_throughput.py": "3606ac0a45498b9cc3046406211c3f02b3ccf4633f15a66390f5944339895620"
+    },
+    "validation_summary": "artifacts/rv30/setup/throughput_20261103/full_validation_summary.json",
+    "integrated_validation": "artifacts/rv30/setup/throughput_20261103/installed_validation.json",
+    "validation_files": {
+      "artifacts/rv30/setup/throughput_20261103/full_validation_summary.json": "a784305e1e83c3228beeb2b04319a4ced5f70cd9ad2f22c073d22d5340575ffc",
+      "artifacts/rv30/setup/throughput_20261103/backward_gpu_equivalence.json": "eef45b529e7e57a6b275778f6c688b8c2f017234b7867ab064cca974fda81e5b",
+      "artifacts/rv30/setup/throughput_20261103/full_seed_resume_equivalence.json": "8668036eb312f0c079f712cd918aabbed58b344a19847a1b6a8f94a1bba1d5c2",
+      "artifacts/rv30/setup/throughput_20261103/full_pilot_equivalence.json": "afbaf6351b109e4dab44232c72c1dd739a843470bc4e8c4afa996522a3e8aa06",
+      "artifacts/rv30/setup/throughput_20261103/resident_equivalence.json": "003dda428964b2059c243d135605ab09c0426ae53e0ccd0d6c6ba7bd901368af",
+      "artifacts/rv30/setup/throughput_20261103/fused_equivalence.json": "b623ce5e5d497ccfdd9618bd0befce6aefa7a6600eb2929d3a22aa79a94bf163",
+      "artifacts/rv30/setup/throughput_20261103/backward_cpu_derivation.json": "4ef6fbb60f6856efc5c37807cdbce543539380524856b6dec58f4db0289e7964",
+      "artifacts/rv30/setup/throughput_20261103/benchmark_summary.json": "c3a8bed4305c7af445d1344165647b11b1ba7a37426191f9f25148695c8c5e0f",
+      "artifacts/rv30/setup/throughput_20261103/installed_validation.json": "a26f3b6cd3a73e996642680c14e498aae1aa64fb8f66f4eaec3593b79396d11d",
+      "artifacts/rv30/setup/throughput_20261103/installed_maximum.json": "b574f5a951c8ffaf6bc961ed81bdc4bf6957672bbab7be889b53f6620686feb7",
+      "artifacts/rv30/setup/throughput_20261103/engineering_tests.log": "40aa0d8557ebe15361b71a7c0ac1d6017147c5f1e3fb98559476e383a8590ad1",
+      "artifacts/rv30/setup/throughput_20261103/full_22_thread_check.log": "f4c77b58e2280613a49ba18da1c4a02d440e862c49a6c8fe5daaf277333ff99d",
+      "artifacts/rv30/setup/throughput_20261103/validate_full.py": "9dd5fa13936153b0d226a852075657ea9b1f5877a16ac94a1c1d1cd93defaa15",
+      "artifacts/rv30/setup/throughput_20261103/validate_installed.py": "374cc6ae603d52933bee5cc00968a5e934bd096fbc8ff815afcab67d5c4e6d25",
+      "artifacts/rv30/setup/throughput_20261103/benchmark_installed.py": "00eea2eebc1825fc6a97850d1a95747082fc2eec943c95393e4d7db64ab1eb03",
+      "artifacts/rv30/setup/throughput_20261103/fused_dema_candidate.py": "e22eefb7d3250a26130b58f346ce4ea8091cb3756e97275d3fef1ca47830579d",
+      "artifacts/rv30/setup/throughput_20261103/fused_decomp_candidate.py": "fc94eece408092c06fb992c1aa5e85fad2266a74b9616eccffcf48af408d4f8f",
+      "artifacts/rv30/setup/throughput_20261103/resident_candidate.py": "f8c9e3406b7df9d869fbcf0defec507a495a15025663ccf8a71ac0c8acfbba6a",
+      "artifacts/rv30/setup/throughput_20261103/install_candidates.py": "8af6dcc3715125683663d3bdfc0c5f751b83864c8b25261f44ccff1e0994e51d",
+      "artifacts/rv30/setup/throughput_20261103/benchmark_candidates.py": "08d5af32c543621f498c7683a714e66055164c3454c297405c56f0f5057f693b",
+      "artifacts/rv30/setup/throughput_20261103/probe_backward.py": "f83eceb05cc34347e3a0ffefbae9b6cbfaf8e140592d646040f0e629f1bef102",
+      "artifacts/rv30/setup/throughput_20261103/models.py.before": "fa89a16281563c07c66a6b7eae3c1b8762ea218a4af72f9ee1a7e6f3245b459e",
+      "artifacts/rv30/setup/throughput_20261103/cuda_graph.py.before": "c676cc089633e74a606a1fcb349a00759b6a6ea5eed8b08bf6a2f07f761f0588",
+      "artifacts/rv30/setup/throughput_20261103/provenance.py.before": "767834757be76bad9cd8d732078faf5268f429e2b39b2a06c0d09d9bde2c4e95",
+      "artifacts/rv30/setup/throughput_20261103/interruption.json": "57e9652195799839dbad3c76f4400dcb86c03d79699dc8e44fea4d8d75f958fe"
+    },
+    "tests_passed": 119,
+    "scope": [
+      "192_registered_config_panel_batch_bitwise_output_loss_gradient_update_checks",
+      "six_seed_training_and_checkpoint_resume_comparisons",
+      "maximum_72397_training_origins_1_5_15_30_epoch_continuation",
+      "maximum_checkpoint_and_86306_evaluation_predictions_bitwise_equal",
+      "installed_bidirectional_recovery_with_validation_history_and_EMA_control",
+      "installed_optional_resident_fallback_bitwise_equal",
+      "installed_maximum_workload_measured_before_checked_resume",
+      "one_GPU_worker_retained_after_two_worker_test_1p76_percent_gain"
+    ],
+    "preserved_checkpoints_compatible": true,
+    "resident_admission": {
+      "maximum_copy_bytes": 1073741824,
+      "reserved_free_bytes": 1073741824,
+      "fallback": "original_numpy_gather_and_transfer"
+    },
+    "cpu_limit": 22,
+    "gpu_workers": 1
+  }
+}

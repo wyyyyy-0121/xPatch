@@ -1,5 +1,11 @@
 # RV30 运行性能与长实验启动门槛
 
+当前采用已验收的完整 DEMA 前向/反向融合和受限显存预载，执行追加锁为 `delivery/rv30_throughput_lock.json`。正式安装最大规模首轮由最初 60.55 秒、上一轮 16.17 秒降至 9.06 秒；完整评价预测由 30.91 秒降至 2.47 秒。候选持续运行的最后 15 轮平均约 6.06 秒/轮，该数值不含首次编译与初始化。四项完整任务的控制器总耗时为 39.77→17.76 秒。119 项工程检查、192 项逐位模型检查、六组训练续训、最大规模 30 轮和正式安装的双向恢复及回退通过。具体适用范围与风险见 `delivery/RUN_RISK.md`。
+
+当前 CPU 基线队列已完成。两 worker 的预载加前向融合方案只改善约 1.76%，未启用并发；完整反向融合通过减少计算及启动开销提速。实验全局仍最多 22 个逻辑线程，显存预载最多 1 GiB 并保留至少 1 GiB 空闲。原研究与执行锁保持完整，新追加锁延续原签名和预算。当前只放行 `development`；新实验仍须单独验收。上一份性能报告按原字节保存在 `delivery/amendments/performance_before_throughput.json`。
+
+以下记录为首次诊断和上一轮 CUDA graph 验收的历史说明；当前数值以本页新增说明、`delivery/performance.json` 和 `delivery/RUN_RISK.md` 为准。
+
 2026-11-03 对正在运行的搜索进行诊断。诊断只读取任务状态、参数、样本数和耗时，没有查看正式预测分数或据此调参。机器可读证据索引为 `delivery/performance.json`。
 
 后续已完成完整 CUDA graph 执行加速验收：192 项配置/信息集/批量检查、六组训练续训检查、安装后双向恢复、最大规模预测和 30 轮持续运行通过。最大规模训练一轮约快 3.74 倍，完整评价预测约快 4.36 倍。当前结果和中止风险见 `delivery/RUN_RISK.md`，执行修订见 `delivery/rv30_acceleration_lock.json`。以下初次诊断及原耗时情景保留为历史；对应原报告另存 `delivery/amendments/performance_before_acceleration.json`。

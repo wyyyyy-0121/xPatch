@@ -157,11 +157,11 @@ def _postprocessing_sources(freeze, source_view=None, excluded_additions=()):
     return {**actual, **additions}, amendment
 
 
-def effective_sources(freeze):
+def _acceleration_sources(freeze, source_view=None, excluded_additions=()):
     """Keep the original locks intact and verify the optional execution-only lock."""
     path = ROOT / "delivery/rv30_acceleration_lock.json"
     if not path.exists():
-        return _postprocessing_sources(freeze)
+        return _postprocessing_sources(freeze, source_view, excluded_additions)
     import hashlib
     import subprocess
     amendment = read_json(path)
@@ -178,7 +178,8 @@ def effective_sources(freeze):
             payload["research_definitions_changed"] or payload["model_search_space_changed"] or
             payload["thresholds_changed"] or not payload["bitwise_equivalence_required"]):
         raise ValueError("Acceleration lock cannot change research definitions or arbitrary source files")
-    view = {p: sha(ROOT / p) for p in freeze["payload"]["source_files"]}
+    installed = source_view if source_view is not None else {p: sha(ROOT / p) for p in freeze["payload"]["source_files"]}
+    view = installed.copy()
     for name, record in payload["changes"].items():
         if view[name] != record["after_sha256"]:
             raise ValueError("Unregistered acceleration source: " + name)
@@ -186,7 +187,8 @@ def effective_sources(freeze):
         if hashlib.sha256(previous).hexdigest() != record["before_sha256"]:
             raise ValueError("Acceleration predecessor source changed: " + name)
         view[name] = record["before_sha256"]
-    prior, postprocessing = _postprocessing_sources(freeze, view, payload["added_sources"])
+    prior, postprocessing = _postprocessing_sources(freeze, view,
+        (*payload["added_sources"], *excluded_additions))
     for name, record in payload["changes"].items():
         if prior[name] != record["before_sha256"]:
             raise ValueError("Acceleration does not extend the signed implementation")
@@ -202,8 +204,63 @@ def effective_sources(freeze):
     integrated = read_json(ROOT / payload["integrated_validation"])
     if not integrated["passed"] or not integrated["cross_implementation_resume_bitwise_equal"]:
         raise ValueError("Installed accelerated implementation did not pass recovery validation")
-    if integrated["source_files"] != {name: sha(ROOT / name) for name in ("finance/models.py", "finance/cuda_graph.py")}:
+    if integrated["source_files"] != {name: installed[name] if name in installed else sha(ROOT / name)
+            for name in ("finance/models.py", "finance/cuda_graph.py")}:
         raise ValueError("Installed acceleration validation belongs to different source files")
+    after = {name: record["after_sha256"] for name, record in payload["changes"].items()}
+    return {**prior, **after, **extra}, postprocessing
+
+
+def effective_sources(freeze):
+    """Extend execution evidence without overwriting any prior signed lock."""
+    path = ROOT / "delivery/rv30_throughput_lock.json"
+    if not path.exists():
+        return _acceleration_sources(freeze)
+    import hashlib
+    import subprocess
+    amendment = read_json(path)
+    payload = amendment["payload"]
+    if (stable_hash(payload) != amendment["signature"] or
+            payload["base_signature"] != freeze["signature"] or
+            payload["base_freeze_sha256"] != sha(FREEZE_PATH) or
+            payload["prior_acceleration_lock_sha256"] != sha(ROOT / "delivery/rv30_acceleration_lock.json")):
+        raise ValueError("Throughput amendment or predecessor identity changed")
+    if (set(payload["changes"]) != {"finance/models.py", "finance/provenance.py"} or
+            set(payload["added_sources"]) != {"finance/throughput.py"} or
+            set(payload["support_sources"]) != {"tests/test_rv30_throughput.py"} or
+            payload["research_definitions_changed"] or payload["model_search_space_changed"] or
+            payload["thresholds_changed"] or not payload["bitwise_equivalence_required"]):
+        raise ValueError("Throughput lock cannot change research definitions or arbitrary source files")
+    installed = {name: sha(ROOT / name) for name in freeze["payload"]["source_files"]}
+    view = installed.copy()
+    for name, record in payload["changes"].items():
+        if installed[name] != record["after_sha256"]:
+            raise ValueError("Unregistered throughput source: " + name)
+        previous = subprocess.check_output(["git", "show", f"{payload['prior_source_snapshot_commit']}:{name}"], cwd=ROOT)
+        if hashlib.sha256(previous).hexdigest() != record["before_sha256"]:
+            raise ValueError("Throughput predecessor source changed: " + name)
+        view[name] = record["before_sha256"]
+    prior, postprocessing = _acceleration_sources(freeze, view, payload["added_sources"])
+    if any(prior[name] != record["before_sha256"] for name, record in payload["changes"].items()):
+        raise ValueError("Throughput does not extend the signed implementation")
+    extra = {**payload["added_sources"], **payload["support_sources"]}
+    if not {payload["validation_summary"], payload["integrated_validation"]}.issubset(payload["validation_files"]):
+        raise ValueError("Throughput evidence must bind both validation summaries")
+    for name, expected in {**extra, **payload["validation_files"]}.items():
+        if sha(ROOT / name) != expected:
+            raise ValueError("Throughput evidence changed: " + name)
+    summary = read_json(ROOT / payload["validation_summary"])
+    if (not summary["passed"] or summary["all_config_cases"] != 192 or summary["seed_resume_cases"] != 6 or
+            [stage["to_epoch"] for stage in summary["stages"]] != [1, 5, 15, 30] or
+            not summary["maximum_30_epoch_checkpoint_bitwise_equal"] or
+            not summary["maximum_full_predictions_bitwise_equal"] or summary["outer_scores_read"]):
+        raise ValueError("Throughput configuration, recovery and sustained validation must pass")
+    integrated = read_json(ROOT / payload["integrated_validation"])
+    if (not integrated["passed"] or not integrated["cross_implementation_resume_bitwise_equal"] or
+            not integrated["resident_fallback_bitwise_equal"] or
+            integrated["source_files"] != {name: sha(ROOT / name)
+                for name in ("finance/models.py", "finance/cuda_graph.py", "finance/throughput.py")}):
+        raise ValueError("Installed throughput implementation did not pass recovery validation")
     after = {name: record["after_sha256"] for name, record in payload["changes"].items()}
     return {**prior, **after, **extra}, postprocessing
 
@@ -222,6 +279,6 @@ def verify_freeze(config):
         if sha(ROOT / path) != payload[key]:
             raise ValueError(f"Signed input changed: {path}")
     lock_paths = [POSTPROCESS_PATH, POSTPROCESS_PATH.with_name("rv30_statistics_lock.json"),
-        ROOT / "delivery/rv30_acceleration_lock.json"]
+        ROOT / "delivery/rv30_acceleration_lock.json", ROOT / "delivery/rv30_throughput_lock.json"]
     return {**freeze, "effective_source_files": source_files, "postprocessing_amendment": amendment,
         "postprocessing_lock_files": {str(path.relative_to(ROOT)): sha(path) for path in lock_paths if path.exists()}}
