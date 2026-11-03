@@ -1,0 +1,168 @@
+{
+  "created_utc": "2026-11-03T23:04:35.876768+00:00",
+  "passed": true,
+  "commands": [
+    {
+      "name": "help",
+      "command": [
+        "/home/ayaka/.venvs/xpatch-v2/bin/python",
+        "-m",
+        "finance",
+        "--help"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "expected_status": null,
+      "actual_status": null,
+      "passed": true,
+      "stdout": "artifacts/rv30/setup/prospective_20261104/examples/help.stdout",
+      "stderr": "artifacts/rv30/setup/prospective_20261104/examples/help.stderr"
+    },
+    {
+      "name": "historical",
+      "command": [
+        "/home/ayaka/.venvs/xpatch-v2/bin/python",
+        "-m",
+        "finance",
+        "infer",
+        "--as-of",
+        "2026-06-30T10:00:00-04:00",
+        "--output",
+        "/home/ayaka/xPatch/artifacts/rv30/setup/prospective_20261104/examples/historical.json"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "expected_status": "historical_replay_candidate",
+      "actual_status": "historical_replay_candidate",
+      "passed": true,
+      "stdout": "artifacts/rv30/setup/prospective_20261104/examples/historical.stdout",
+      "stderr": "artifacts/rv30/setup/prospective_20261104/examples/historical.stderr"
+    },
+    {
+      "name": "closed",
+      "command": [
+        "/home/ayaka/.venvs/xpatch-v2/bin/python",
+        "-m",
+        "finance",
+        "infer",
+        "--as-of",
+        "2026-06-30T17:00:00-04:00"
+      ],
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "expected_status": "outside_session_or_insufficient_history",
+      "actual_status": "outside_session_or_insufficient_history",
+      "passed": true,
+      "stdout": "artifacts/rv30/setup/prospective_20261104/examples/closed.stdout",
+      "stderr": "artifacts/rv30/setup/prospective_20261104/examples/closed.stderr"
+    },
+    {
+      "name": "before_model",
+      "command": [
+        "/home/ayaka/.venvs/xpatch-v2/bin/python",
+        "-m",
+        "finance",
+        "infer",
+        "--as-of",
+        "2022-05-02T10:00:00-04:00"
+      ],
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "expected_status": "before_frozen_model_availability",
+      "actual_status": "before_frozen_model_availability",
+      "passed": true,
+      "stdout": "artifacts/rv30/setup/prospective_20261104/examples/before_model.stdout",
+      "stderr": "artifacts/rv30/setup/prospective_20261104/examples/before_model.stderr"
+    },
+    {
+      "name": "live",
+      "command": [
+        "/home/ayaka/.venvs/xpatch-v2/bin/python",
+        "-m",
+        "finance",
+        "infer",
+        "--mode",
+        "live"
+      ],
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "expected_status": "live_unavailable",
+      "actual_status": "live_unavailable",
+      "passed": true,
+      "stdout": "artifacts/rv30/setup/prospective_20261104/examples/live.stdout",
+      "stderr": "artifacts/rv30/setup/prospective_20261104/examples/live.stderr"
+    },
+    {
+      "name": "early_forward_verify",
+      "command": [
+        "/home/ayaka/.venvs/xpatch-v2/bin/python",
+        "-m",
+        "finance",
+        "prospective",
+        "verify",
+        "--round",
+        "1"
+      ],
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "expected_status": "waiting_60_complete_sessions",
+      "actual_status": "waiting_60_complete_sessions",
+      "passed": true,
+      "stdout": "artifacts/rv30/setup/prospective_20261104/examples/early_forward_verify.stdout",
+      "stderr": "artifacts/rv30/setup/prospective_20261104/examples/early_forward_verify.stderr"
+    },
+    {
+      "name": "pending_acceptance_refused",
+      "command": [
+        "/home/ayaka/.venvs/xpatch-v2/bin/python",
+        "-m",
+        "finance",
+        "accept",
+        "--run-directory",
+        "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development"
+      ],
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "expected_status": null,
+      "actual_status": null,
+      "passed": true,
+      "stdout": "artifacts/rv30/setup/prospective_20261104/examples/pending_acceptance_refused.stdout",
+      "stderr": "artifacts/rv30/setup/prospective_20261104/examples/pending_acceptance_refused.stderr"
+    },
+    {
+      "name": "performance_resume_gate",
+      "command": [
+        "/home/ayaka/.venvs/xpatch-v2/bin/python",
+        "scripts/start_rv30_checked.py",
+        "--run-name",
+        "development",
+        "--check-only"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "expected_status": null,
+      "actual_status": null,
+      "passed": true,
+      "stdout": "artifacts/rv30/setup/prospective_20261104/examples/performance_resume_gate.stdout",
+      "stderr": "artifacts/rv30/setup/prospective_20261104/examples/performance_resume_gate.stderr"
+    },
+    {
+      "name": "performance_new_experiment_refused",
+      "command": [
+        "/home/ayaka/.venvs/xpatch-v2/bin/python",
+        "scripts/start_rv30_checked.py",
+        "--run-name",
+        "unregistered_new_experiment",
+        "--check-only"
+      ],
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "expected_status": null,
+      "actual_status": null,
+      "passed": true,
+      "stdout": "artifacts/rv30/setup/prospective_20261104/examples/performance_new_experiment_refused.stdout",
+      "stderr": "artifacts/rv30/setup/prospective_20261104/examples/performance_new_experiment_refused.stderr"
+    }
+  ],
+  "scope": "real_pending_candidate_CLI_not_final_acceptance"
+}

@@ -1,21 +1,21 @@
 {
   "signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
   "run_name": "development",
-  "pid": 208651,
-  "kernel_start_ticks": "19981842",
+  "pid": null,
+  "kernel_start_ticks": null,
   "started_utc": "2026-11-03T01:53:30.265555+00:00",
-  "last_checked_utc": "2026-11-03T22:29:27.708037+00:00",
-  "next_check_after_utc": "2026-11-03T23:29:27.708037+00:00",
+  "last_checked_utc": "2026-11-03T23:05:15.909434+00:00",
+  "next_check_after_utc": "2026-11-04T00:05:15.909434+00:00",
   "code_commit": "495e2fade9a804fb722b9941b3a4f4109678f015",
   "run_directory": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
   "log": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/finalize_replay_correction.log",
-  "state": "signed_finalization_replay_correction_running",
+  "state": "waiting_timely_SIP_permission",
   "max_cpu_threads_total": 22,
   "heartbeat_id": "rv30",
   "prior_driver_pid": 115809,
   "prior_log": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/pipeline.log",
   "resumed_utc": "2026-11-03T02:32:55.494834+00:00",
-  "command": "/home/ayaka/.venvs/xpatch-v2/bin/python -m finance finalize --run-directory artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
+  "command": null,
   "postprocessing_amendment": "delivery/amendments/postprocessing_correction.json",
   "postprocessing_signature": "4888f19dec994b2abfa8209db78c3280bd2e4facad8b2a04c1f1933978f8c77f",
   "postprocessing_correction_completed_utc": "2026-11-03T02:47:42.526382+00:00",
@@ -148,11 +148,25 @@
   "replay_correction_lock": "delivery/rv30_replay_lock.json",
   "replay_correction_signature": "0bcdde87ba028550244cbdcc7f8608fe2e885dda615eba258e8884662e5d750d",
   "post_repair_continuation": {
-    "state": "finalization_running",
+    "state": "finalization_exited",
     "supervisor_pid": 208539,
     "supervisor_kernel_start_ticks": "19981809",
     "supervisor_script": "artifacts/rv30/setup/replay_20261104/run_finalize.py",
     "supervisor_sha256": "1a746ac7b75264fa8803231ed5ca70bd729e4525b85f82f51a3959f0c08ccdb2",
-    "started_utc": "2026-11-03T22:29:27.708037+00:00"
-  }
+    "started_utc": "2026-11-03T22:29:27.708037+00:00",
+    "exit_code": 1,
+    "completed_utc": "2026-11-03T22:34:53.365247+00:00"
+  },
+  "last_finished_process": {
+    "pid": 208651,
+    "kernel_start_ticks": "19981842",
+    "command": "/home/ayaka/.venvs/xpatch-v2/bin/python -m finance finalize --run-directory artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
+    "log": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/finalize_replay_correction.log"
+  },
+  "prospective_plan_signature": "b0c353e6d7f0edfd76efcdb7612b26da997b890c44abf6b3d80662dd9c8dc727",
+  "prospective_plan": "delivery/prospective_lock.json",
+  "prospective_directory": "artifacts/rv30/prospective/b0c353e6d7f0edfd76efcdb7612b26da997b890c44abf6b3d80662dd9c8dc727",
+  "prospective_complete_sessions": 0,
+  "prospective_required_sessions": 60,
+  "current_code_commit": "bb54e56182cd288a8b3f15d4211503c60b02d1ce"
 }

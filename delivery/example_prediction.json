@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "issued_at": "2026-11-03T23:03:12.449097+00:00",
+  "model": "ridge",
+  "panel": "aapl",
+  "model_config_id": "ridge_002_79c7a3f7de",
+  "signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+  "mode": "historical",
+  "active_predictive_edge_established": false,
+  "prospective_qualified": false,
+  "eligible_signal": false,
+  "unit": "sum_of_squared_log_returns_over_30_minutes",
+  "horizon_minutes": 30,
+  "direction_or_profit_prediction": false,
+  "status": "historical_replay_candidate",
+  "as_of": "2026-06-30 14:00:00+00:00",
+  "data_cutoff_at": "2026-06-30 13:59:00+00:00",
+  "received_at": null,
+  "target_window_start": "2026-06-30 14:00:00+00:00",
+  "target_first_return_end": "2026-06-30 14:01:00+00:00",
+  "target_window_end": "2026-06-30 14:30:00+00:00",
+  "rv_mean": 2.403962906028266e-05,
+  "quantiles": {
+    "0.05": 8.818752668451788e-06,
+    "0.1": 1.0415225638555518e-05,
+    "0.5": 1.910845473919151e-05,
+    "0.9": 3.4738917647610987e-05,
+    "0.95": 4.388986821786394e-05
+  },
+  "interval_claim": "historical_empirical_no_coverage_guarantee"
+}

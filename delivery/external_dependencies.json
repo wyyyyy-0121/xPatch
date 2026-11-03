@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_utc": "2026-11-03T00:26:18.656191+00:00",
+  "updated_utc": "2026-11-03T23:05:15.902694+00:00",
   "items": [
     {
       "id": "realtime_sip",
@@ -21,7 +21,12 @@
         "offline_inference",
         "negative_result_delivery"
       ],
-      "action_taken": "No purchase, subscription change or alternate-feed fallback."
+      "action_taken": "No purchase, subscription change or alternate-feed fallback.",
+      "latest_evidence": "artifacts/rv30/prospective/b0c353e6d7f0edfd76efcdb7612b26da997b890c44abf6b3d80662dd9c8dc727/admission.json",
+      "latest_evidence_sha256": "69212e8adfe882048cd57ee35e293aa163d82dd15887c8f436712998e743f80d",
+      "latest_http_status": 403,
+      "checked_utc": "2026-11-03T23:02:39.097626+00:00",
+      "pending_user_action": "Resolve account entitlement to timely SIP data; the assistant skips purchases and subscription changes."
     },
     {
       "id": "conditional_orderflow",

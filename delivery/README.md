@@ -148,3 +148,5 @@ cd /home/ayaka/xPatch
 `delivery/manifest.json` 是唯一最终索引，引用代码提交、原研究签名、后处理纠错签名、模型、报告、推理样例和验收证据。其 `artifact_index` 连接每份任务凭证与凭证下的模型/预测逐文件哈希，覆盖失败试验。小修复使用 Git 提交与运行编号，不复制 `finance_v3/v4` 等目录。`finance_ls/`、`finance_v2/` 及其签名、权重和结果作为历史保留；旧十二分钟收益实验的阴性结论继续有效。
 
 完整交付逐项核对表见 `delivery/ACCEPTANCE_CHECKLIST.md`。该表区分已有工程证据与仍待正式实验产生的验收证据。
+
+当前阶段的本地核对可使用 `python scripts/audit_rv30_readiness.py --output <新的报告路径.json>`。它核验历史搜索、两轮开发/确认、精确冻结候选、代码本地提交、实际 CLI、累计预算、数据和完整工件链。`delivery/readiness.json` 保留首次核对，必须使用新输出路径，不能覆盖。就绪核对显式返回 `final_acceptance=false` 和 `goal_can_complete=false`；它不豁免权限和真实六十日前瞻。当前唯一 manifest 也保留等待前瞻状态，最终验收前不得称为完整交付。

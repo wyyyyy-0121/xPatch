@@ -1,0 +1,105 @@
+{
+  "passed": true,
+  "completed_utc": "2026-11-03T23:06:21.539784+00:00",
+  "scope": "historical_research_complete_and_prospective_tooling_ready_only",
+  "checks": {
+    "research_and_prospective_signatures_valid": true,
+    "signed_implementation_and_plan_locally_committed": true,
+    "all_source_and_audit_fingerprints_match": true,
+    "original_experiments_preserved": true,
+    "two_independent_development_rounds": true,
+    "two_independent_confirmation_rounds": true,
+    "confirmed_model_prerequisites_exact": true,
+    "registered_search_complete": true,
+    "training_search_12200_complete": true,
+    "all_200_formal_outer_models": true,
+    "original_42_replay_failures_preserved": true,
+    "total_budget_preserved_and_within_limits": true,
+    "artifact_index_covers_all_run_receipts": true,
+    "real_cli_examples_and_exit_codes": true,
+    "latest_engineering_suite_passed": true,
+    "confirmed_candidate_explicitly_unqualified_for_forward_use": true,
+    "actual_inference_has_units_timing_and_no_live_claim": true,
+    "external_permission_is_explicit": true,
+    "environment_recovery_scope_and_evidence_preserved": true
+  },
+  "details": {
+    "data": {
+      "AAPL": {
+        "regular_rows": 535620,
+        "expected_rows": 535620,
+        "coverage": 1.0
+      },
+      "SPY": {
+        "regular_rows": 535611,
+        "expected_rows": 535620,
+        "coverage": 0.9999831970426795
+      },
+      "QQQ": {
+        "regular_rows": 535620,
+        "expected_rows": 535620,
+        "coverage": 1.0
+      }
+    },
+    "development_verification": {
+      "1": {
+        "path": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/verify_1_replay_correction/summary.json",
+        "sha256": "6a682d8f15e96484f52a77004adf698ada37ebcc56c11d912ee6685156859e44"
+      },
+      "2": {
+        "path": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/verify_2/summary.json",
+        "sha256": "d4ef31b29255b032d8dd2563e4cb405fa0b009e89f8ea9445287adacc77f40e5"
+      }
+    },
+    "confirmation_verification": {
+      "1": {
+        "path": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/confirmation/verify_1/summary.json",
+        "sha256": "1cb7e5c9cce0dc10211d506b9768c42d86abc448b325e82dffa8479f9abea49d"
+      },
+      "2": {
+        "path": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/confirmation/verify_2/summary.json",
+        "sha256": "59e02cf45c730a422bbb5311a88e28bedf56bb18565f4d546f8f0242c0728ecb"
+      }
+    },
+    "receipt_counts": {
+      "outer/complete": 200,
+      "inner/complete": 12000,
+      "verify/complete": 566,
+      "verify/failed": 42,
+      "confirmation/complete": 4
+    },
+    "budget": {
+      "allocated_cpu_core_hours": 120.75325106336686,
+      "gpu_wall_hours": 20.77251472566293
+    },
+    "admission": {
+      "passed": false,
+      "status": "blocked_timely_SIP_permission",
+      "http_status": 403,
+      "checked_utc": "2026-11-03T23:02:39.097626+00:00",
+      "plan_signature": "b0c353e6d7f0edfd76efcdb7612b26da997b890c44abf6b3d80662dd9c8dc727",
+      "last_event_hash": "8814725cb57a7ee38afe198a19082ba011634c2c5b5fa3ae015f077e4d367542",
+      "action": "User handles subscription permissions; no purchase or feed switch performed"
+    },
+    "historical_document_snapshots": {
+      "delivery/README.md": {
+        "sha256": "12c44f5e75caa67e9de2b5a20d44dd81995dee5d43fdfe951ee23bc6b8e58e79",
+        "git_snapshot": "4400b47829990f508dc0ed83aba51249cddd0407"
+      },
+      "delivery/ACCEPTANCE_CHECKLIST.md": {
+        "sha256": "a552a266c6075f5540970844b5537dcbe350e490668f1a93fe590de033aa9c3c",
+        "git_snapshot": "4400b47829990f508dc0ed83aba51249cddd0407"
+      }
+    }
+  },
+  "signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+  "prospective_plan_signature": "b0c353e6d7f0edfd76efcdb7612b26da997b890c44abf6b3d80662dd9c8dc727",
+  "final_acceptance": false,
+  "goal_can_complete": false,
+  "remaining": [
+    "timely SIP permission",
+    "60 real complete qualified sessions",
+    "two full forward verification rounds",
+    "final delivery acceptance and commit"
+  ]
+}

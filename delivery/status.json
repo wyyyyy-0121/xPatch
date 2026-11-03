@@ -1,9 +1,20 @@
 {
   "goal_status": "active",
-  "stage": "development_verification_replay_correction_running",
-  "run_directory": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
+  "stage": "waiting_timely_SIP_permission",
+  "historical_search_complete": true,
+  "historical_development_verification_rounds": 2,
+  "historical_confirmation_verification_rounds": 2,
+  "historically_confirmed_candidates": [
+    "aapl/ridge",
+    "market/ridge"
+  ],
+  "prospective_complete_sessions": 0,
+  "prospective_required_sessions": 60,
   "final_acceptance": false,
-  "engineering_tests_passed": 134,
-  "original_failed_verification_preserved": true,
-  "corrected_full_xpatch_replays": 60
+  "engineering_readiness": "passed_19_evidence_checks_156_tests_9_real_CLI_behaviors",
+  "model": "delivery/model.json",
+  "prospective_plan": "delivery/prospective_lock.json",
+  "external_items": "delivery/external_dependencies.json",
+  "readiness": "delivery/readiness.json",
+  "manifest": "delivery/manifest.json"
 }

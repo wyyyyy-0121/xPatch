@@ -1,6 +1,6 @@
 {
   "signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
-  "development_status": "waiting_prospective_eligibility",
+  "development_status": "historically_confirmed_waiting_real_prospective",
   "passed_candidates": [
     "aapl/ridge",
     "market/ridge"
@@ -8,5 +8,17 @@
   "engineering_final_acceptance": false,
   "evaluation": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/evaluation.json",
   "historical_exposure": true,
-  "direction_or_profit_claim": false
+  "direction_or_profit_claim": false,
+  "historical_confirmation_passed_candidates": [
+    "aapl/ridge",
+    "market/ridge"
+  ],
+  "prospective_status": "waiting_timely_SIP_permission",
+  "prospective_complete_sessions": 0,
+  "prospective_required_sessions": 60,
+  "prospective_plan": "delivery/prospective_lock.json",
+  "engineering_readiness": true,
+  "active_predictive_edge_established": false,
+  "outcome": "waiting_prospective_acceptance",
+  "model": "delivery/model.json"
 }
