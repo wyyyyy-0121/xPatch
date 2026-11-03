@@ -1,6 +1,6 @@
 {
   "goal_status": "active",
-  "stage": "development_verification_precision_corrected_pending_retry",
+  "stage": "development_verification_replay_correction_running",
   "run_directory": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
   "final_acceptance": false,
   "engineering_tests_passed": 134,
