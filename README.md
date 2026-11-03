@@ -15,9 +15,13 @@
 
 This is an official implementation of [xPatch: Dual-Stream Time Series Forecasting with Exponential Seasonal-Trend Decomposition](https://arxiv.org/pdf/2412.17323).
 
-## AAPL minute forecasting v2
+## AAPL minute forecasting
 
-The current research entrypoint is [finance_v2](finance_v2/README.md). The [execution ledger](EXECUTION_PLAN.md) records the fixed stage order and evidence; the [protocol](PROTOCOL.md) fixes the information sets, ten quarterly walk-forward folds, calibration, statistical gates, and resource budget. The [literature review](research/AAPL_MINUTE_REVIEW.md) distinguishes finance journal evidence from model benchmarks and author technical reports.
+The active delivery project is the [RV30 research and inference tool](delivery/README.md), with its [final acceptance goal](GOAL.md) and [current status](delivery/status.json). It predicts thirty-minute realized variance from minute origins; it does not claim price direction or trading profitability. New code uses the stable `finance/` entry point. The existing v1/v2 experiments below remain sealed historical evidence.
+
+### Sealed twelve-minute return experiment (v2)
+
+The sealed research entrypoint is [finance_v2](finance_v2/README.md). The [execution ledger](EXECUTION_PLAN.md) records its fixed stage order and evidence; the [protocol](PROTOCOL.md) fixes its information sets, ten quarterly walk-forward folds, calibration, statistical gates, and resource budget. The [literature review](research/AAPL_MINUTE_REVIEW.md) distinguishes finance journal evidence from model benchmarks and author technical reports.
 
 Verified Alpaca SIP/raw history covers 2021-01-04 through 2026-06-30: 1,378 sessions and 535,620 regular-session minute bars, with 100% per-session calendar coverage. See the [data-source audit](data_acquisition/V2_SOURCE_AUDIT.md). The comparison includes zero returns, Ridge, LightGBM, original xPatch48/240, Kronos-small, and Chronos-2, with immutable pretrained [checkpoint identities](configs/aapl_v2_model_lock.json).
 

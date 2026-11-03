@@ -1,24 +1,9 @@
 {
-  "updated_utc": "2026-11-03T00:57:44.941711+00:00",
   "goal_status": "active",
-  "branch": "codex/aapl-delivery",
-  "stages": {
-    "history_seal": "passed",
-    "data_access_and_history_audit": "passed_for_retrospective_research",
-    "literature_and_protocol": "draft_ready_for_engineering_smoke",
-    "engineering": "foundation_verified_model_hpo_cli_pending",
-    "outer_validation": "not_started",
-    "final_acceptance": "not_started"
-  },
-  "evidence": [
-    "delivery/history.json",
-    "delivery/data.json",
-    "data_acquisition/DELIVERY_SOURCE_AUDIT.md",
-    "research/RV30_REVIEW.md",
-    "RESEARCH_PROTOCOL.md",
-    "configs/rv30.json",
-    "delivery/engineering_checks.json"
-  ],
-  "external_items": "delivery/external_dependencies.json",
-  "next_action": "Implement fit-only transformations and tabular features, fixed model and HPO adapters, complete the CLI and pre-2023 resource smoke, then freeze and sign before outer scoring."
+  "protocol": "frozen",
+  "signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+  "engineering": "passed_pre_outer_tests_and_smoke",
+  "outer_validation": "not_started",
+  "final_acceptance": "not_started",
+  "external_items": "delivery/external_dependencies.json"
 }

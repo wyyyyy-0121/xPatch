@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "draft_pending_pre_outer_smoke",
+  "status": "frozen",
   "task": "rv30",
   "data_manifest": "delivery/data.json",
   "protocol": "RESEARCH_PROTOCOL.md",
@@ -290,7 +290,8 @@
       "batch_size": 64,
       "cross_learning": false,
       "full_finetuning": false,
-      "prediction_length": 31
+      "prediction_length": 31,
+      "point_output": "pinned_API_median_log_location_then_disjoint_smearing"
     },
     "stochastic_models": [
       "lightgbm",
@@ -314,7 +315,9 @@
       0.9,
       0.95
     ],
-    "interval_claim": "empirical_no_distribution_free_guarantee"
+    "interval_claim": "empirical_no_distribution_free_guarantee",
+    "ensemble_intervals": "empirical_log_residual_quantiles_around_mean_of_calibrated_seed_variance_means",
+    "residual_weighting": "equal_origin_rows_within_disjoint_tail"
   },
   "statistics": {
     "primary": "equal_day_mean_qlike",
@@ -356,7 +359,9 @@
       "2025H2",
       "2026H1"
     ],
-    "prospective_minimum_complete_sessions": 60
+    "prospective_minimum_complete_sessions": 60,
+    "mincer_zarnowitz_scope": "daily_mean_of_overlapping_intraday_RV_forecasts_HAC5_auxiliary",
+    "bootstrap_calendar": "ordered_sessions_with_at_least_one_qualified_origin"
   },
   "runtime": {
     "max_cpu_threads_total": 22,
@@ -372,10 +377,19 @@
     "minimum_available_memory_gib": 3,
     "max_artifact_gib": 60,
     "llm_check_interval_seconds": 1800,
-    "task_timeout_seconds": null,
-    "total_cpu_core_hours": null,
-    "total_gpu_hours": null,
-    "budget_freeze_policy": "pre_2023_smoke_only_before_outer_scores"
+    "task_timeout_seconds": {
+      "last_rv": 300,
+      "har": 300,
+      "ridge": 300,
+      "lightgbm": 1800,
+      "xpatch": 10800,
+      "chronos2": 1800
+    },
+    "total_cpu_core_hours": 2000,
+    "total_gpu_hours": 240,
+    "budget_freeze_policy": "pre_2023_smoke_only_before_outer_scores",
+    "budget_scope": "active_allocated_job_core_hours_and_gpu_wall_hours_across_all_stages_and_resumes_of_one_signature",
+    "memory_budget_policy": "admission_threshold_with_system_available_memory_floor"
   },
   "delivery": {
     "package": "finance",

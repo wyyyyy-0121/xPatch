@@ -40,6 +40,7 @@ class RVData:
     regular_audits: dict = field(default_factory=dict)
     _rolls: dict = field(default_factory=dict)
     _daily: np.ndarray | None = None
+    _origins: dict = field(default_factory=dict)
 
     @classmethod
     def from_frames(cls, frames, start, end):
@@ -116,13 +117,22 @@ class RVData:
     def origins(self, dates=None, stride=1, context=512, history_sessions=22, require_target=True):
         if stride < 1 or context < 1 or history_sessions < 0:
             raise ValueError("Invalid origin qualification settings")
+        key = (context, history_sessions, require_target)
+        if key in self._origins:
+            origins = self._origins[key]
+            if dates is not None:
+                origins = origins[np.isin(self.dates[origins], dates)]
+            if stride > 1:
+                local = self.timestamps[origins].tz_convert("America/New_York")
+                origins = origins[(np.asarray(local.hour * 60 + local.minute) - 585) % stride == 0]
+            return origins
         local = self.timestamps.tz_convert("America/New_York")
         clock = np.asarray(local.hour * 60 + local.minute)
         first = 9 * 60 + 45
         # Origin u indexes a future, not yet observed return. Last observed is u-1.
         close_ns = np.array([self.close_by_date[day].value for day in self.days])
         before_close = self.timestamps.asi8 + 30 * 60 * 10**9 <= close_ns[self.day_index]
-        eligible = (clock >= first) & before_close & ((clock - first) % stride == 0)
+        eligible = (clock >= first) & before_close
         idx = np.arange(len(self.timestamps))
         previous = idx - 1
         safe_previous = np.maximum(previous, 0)
@@ -132,15 +142,14 @@ class RVData:
         eligible &= self.timestamps[safe_previous] == self.timestamps - pd.Timedelta(minutes=1)
         if history_sessions:
             eligible &= np.isfinite(self.previous_sessions_rv(history_sessions)).all(axis=1)
-        if dates is not None:
-            eligible &= np.isin(self.dates, dates)
         if require_target:
             future = idx + 30
             safe_future = np.minimum(future, len(idx) - 1)
             eligible &= (future < len(idx)) & (self.dates[safe_future] == self.dates)
             eligible &= self.timestamps[safe_future] == self.timestamps + pd.Timedelta(minutes=30)
             eligible &= np.isfinite(self.rv(30)[safe_future, 0])
-        return np.flatnonzero(eligible)
+        self._origins[key] = np.flatnonzero(eligible)
+        return self.origins(dates, stride, context, history_sessions, require_target)
 
     def targets(self, origins):
         origins = np.asarray(origins, dtype=np.int64)

@@ -40,6 +40,7 @@ def configure(threads, cpu_ids=None, nice_increment=10):
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
     os.environ["OMP_MAX_ACTIVE_LEVELS"] = "1"
     os.environ["MALLOC_ARENA_MAX"] = "2"
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
     current_nice = os.getpriority(os.PRIO_PROCESS, 0)
     if nice_increment and current_nice < nice_increment:
         os.nice(nice_increment - current_nice)
