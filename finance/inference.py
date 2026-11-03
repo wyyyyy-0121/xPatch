@@ -17,9 +17,11 @@ from .splits import partition
 
 
 def freeze_baseline(config, run_directory):
+    from .confirmation import confirmation_evidence
     from .provenance import verify_freeze
     freeze = verify_freeze(config)
     directory = Path(run_directory)
+    prerequisites = confirmation_evidence(config, directory, freeze["signature"])
     evaluation = read_json(directory / "evaluation.json")
     if evaluation["passed_candidates"]:
         confirmation = read_json(directory / "confirmation/evaluation.json")
@@ -46,6 +48,7 @@ def freeze_baseline(config, run_directory):
         "source_directory": request["directory"], "source_result_sha256": sha(model_directory / "result.json"),
         "trained_through": split.fit_dates[-1], "calibration_through": split.calibration_dates[-1],
         "input_data_last_session": str(data.days[-1]), "selection_policy": "last_development_fold_inner_selected_aapl_HAR",
+        "prerequisites": prerequisites,
         "direction_or_profit_claim": False, "default_mode": "historical_replay"}
     write_json(ROOT / "delivery/model.json", manifest)
     return manifest

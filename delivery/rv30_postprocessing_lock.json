@@ -1,0 +1,76 @@
+{
+  "signature": "81590ebbb929a459884d5669ad133839b7dfe8b15cfa3f8e71c658433cd3d972",
+  "payload": {
+    "schema_version": 1,
+    "created_utc": "2026-11-03T02:46:58.646747+00:00",
+    "classification": "postprocessing_order_and_acceptance_coverage_correction",
+    "base_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+    "base_freeze_sha256": "dcc00953da75049efa35b361b5dfcbee9922cd61bdbe2befeeb130aa36d3ad13",
+    "base_code_commit": "b73f8993f18f739e81acaeb0092c485f5e9ab28a",
+    "research_definitions_changed": false,
+    "model_search_space_changed": false,
+    "thresholds_changed": false,
+    "human_formal_outer_scores_read_before_amendment": false,
+    "changes": {
+      "finance/acceptance.py": {
+        "before_sha256": "418ffc90c884b267e212f8139008dff66ad8d67332ef97d95f4b6918a7ed7e8f",
+        "after_sha256": "43b28491a064cf88c35d84543e9dcd13ce8f3343c0f7160e368a2863a7e9752d"
+      },
+      "finance/cli.py": {
+        "before_sha256": "c70ffac7ece7089f9636ea66687a71e1e60ee416af7008b85813b75a9dba048a",
+        "after_sha256": "9c8327f2ad788832a1959d1914960340d5f014636274185d91aa5dbd4cb8b921"
+      },
+      "finance/confirmation.py": {
+        "before_sha256": "77fd8584269e58189fe49fb5c576ac39d5b69144dd6fc943c8ea8fd9de8e9f60",
+        "after_sha256": "0d39c3016f427b9f11eb9b1e2725fc607d6630524cbd679e32bf2907d434f2dc"
+      },
+      "finance/delivery.py": {
+        "before_sha256": "4ff9152258046891e5bb82b57c7cd61b2a89f4d8cb37f6fa7e8151060e3453e9",
+        "after_sha256": "6f28356c02fde6efc06eba99df0b439d3495465c7c95574f34bd81043af79bfd"
+      },
+      "finance/inference.py": {
+        "before_sha256": "80200245297cb530bbe8ee0c381a79cfd3adb6a3090e236a2b3de947528c1215",
+        "after_sha256": "79af006754fd213469b84ec577f8be8e0701ec495ffeb86ce25d8b8d26254988"
+      },
+      "finance/provenance.py": {
+        "before_sha256": "9d83c6181c818775f8e223f5951a5de40e1cf6bc91fc4c62c8e7b898722f7206",
+        "after_sha256": "fc7cbc44bf175686e837a5550d0318d2edf41f3eebeb451ff4b8e22fd181f1be"
+      },
+      "finance/verify.py": {
+        "before_sha256": "a98c8d10a292d484db9e497522c5766ce51baf74ea4aa0973f6061d2a70e1568",
+        "after_sha256": "699a196bc4c48813467ce5cf36064bd602e4c4f643bf31dd3772a3e9a9886cff"
+      }
+    },
+    "added_sources": {
+      "tests/test_finance_rv_postprocessing.py": "c0a4262aebcf3c3aa7a6d3f958166ad2ac83a57898912cf5f0068a110da36dce"
+    },
+    "validation_files": {
+      "artifacts/rv30/setup/postprocessing_engineering_final_20261103.log": "4a56873c9d5b7486d8fdc1f6799ad71f87b7491f362824571b369174dbcbeda1",
+      "artifacts/rv30/setup/postprocessing_saved_replay_20261103/summary.json": "b7e7838d1e36df3c860ab134adea5835e125c46cebb5db200f8c249eac702df8",
+      "artifacts/rv30/setup/postprocessing_saved_replay_20261103.log": "c306f32365caf50978428c05d4001aabe58526f41e980a348b7e2f9f2ea13f9b",
+      "delivery/amendments/postprocessing_correction.json": "e2452281e632534a10d33547d23228c97cffc4e31ae965c3432a6b9229bd58db",
+      "artifacts/rv30/setup/postprocessing_saved_replay_20261103/aapl_last_rv/result.json": "a668f336316e535ddf42aad0619e4ca88cc66ff11b995a844670289bbe0cdfaa",
+      "artifacts/rv30/setup/postprocessing_saved_replay_20261103/aapl_har/result.json": "92378a242c84808ff064d0998fa4d12f8b19c42c39b389750f34a0aef5cfac12",
+      "artifacts/rv30/setup/postprocessing_saved_replay_20261103/aapl_ridge/result.json": "cc49bd343af25b5989ddbddd5976271ef5d102663335f02223480921208b6fa9",
+      "artifacts/rv30/setup/postprocessing_saved_replay_20261103/aapl_lightgbm/result.json": "fe9f713fb95d0a3ce851149cd31428c080077fcc3869fa4209180ab658e63824",
+      "artifacts/rv30/setup/postprocessing_saved_replay_20261103/market_last_rv/result.json": "0892e40ceeb4fa36487839fc133515ae35e1161a8c0fdf5670901ae13e0d2a1e",
+      "artifacts/rv30/setup/postprocessing_saved_replay_20261103/market_har/result.json": "33427b147a7e22aeae7bab3818babec140fb1cdd32a4e2942e4862a7c8786f43",
+      "artifacts/rv30/setup/postprocessing_saved_replay_20261103/market_ridge/result.json": "0683dafd953cb9802049216527861ef44e8282307906f9b020d5995815d881b4",
+      "artifacts/rv30/setup/postprocessing_saved_replay_20261103/market_lightgbm/result.json": "33857133aba09e6d82f3a9705ce6f0df79484acb117b2d2506df56f4625a5b4f"
+    },
+    "engineering_tests_passed": 70,
+    "pre2023_saved_cpu_replays_passed": 8,
+    "ordering": [
+      "development_evaluation",
+      "development_verify_1",
+      "development_verify_2",
+      "conditional_historical_confirmation",
+      "conditional_confirmation_verify_1",
+      "conditional_confirmation_verify_2",
+      "negative_outcome_reference_baseline",
+      "delivery_model_verify_1",
+      "delivery_model_verify_2",
+      "inference_example_and_acceptance"
+    ]
+  }
+}

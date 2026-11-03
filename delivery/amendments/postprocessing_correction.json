@@ -1,0 +1,29 @@
+{
+  "recorded_utc": "2026-11-03T02:29:15.101227+00:00",
+  "base_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+  "base_code_commit": "b73f8993f18f739e81acaeb0092c485f5e9ab28a",
+  "classification": "postprocessing_order_and_acceptance_coverage_correction",
+  "finding": "Automatic workflow invoked historical confirmation before independent development verification rounds",
+  "research_definitions_changed": false,
+  "model_search_space_changed": false,
+  "thresholds_changed": false,
+  "human_outer_forecast_scores_read": false,
+  "action": "Controlled SIGINT to driver; preserve completed receipts and unfinished checkpoint, then resume identical signed search with train subcommand",
+  "driver_pid": 115809,
+  "frozen_source_snapshot_commit": "b73f8993f18f739e81acaeb0092c485f5e9ab28a",
+  "prior_run_record": {
+    "signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+    "run_name": "development",
+    "pid": 115809,
+    "kernel_start_ticks": "12566098",
+    "started_utc": "2026-11-03T01:53:30.265555+00:00",
+    "last_checked_utc": "2026-11-03T02:24:59.519070+00:00",
+    "next_check_after_utc": "2026-11-03T02:54:59.519070+00:00",
+    "code_commit": "b73f8993f18f739e81acaeb0092c485f5e9ab28a",
+    "run_directory": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
+    "log": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/pipeline.log",
+    "state": "running_verified",
+    "max_cpu_threads_total": 22,
+    "heartbeat_id": "rv30"
+  }
+}

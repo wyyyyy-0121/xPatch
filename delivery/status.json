@@ -1,9 +1,19 @@
 {
   "goal_status": "active",
-  "protocol": "frozen",
+  "stage": "frozen_nested_search_running",
   "signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
-  "engineering": "passed_pre_outer_tests_and_smoke",
-  "outer_validation": "not_started",
-  "final_acceptance": "not_started",
-  "external_items": "delivery/external_dependencies.json"
+  "code_commit": "b73f8993f18f739e81acaeb0092c485f5e9ab28a",
+  "run_record": "delivery/run.json",
+  "run_directory": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
+  "engineering_tests_passed": 70,
+  "pre_outer_forecast_jobs_passed": 16,
+  "pre_outer_independent_replays_passed": 16,
+  "final_acceptance": false,
+  "external_items": "delivery/external_dependencies.json",
+  "heartbeat": "rv30",
+  "next_check_after_utc": "2026-11-03T03:02:55.494834+00:00",
+  "postprocessing_signature": "81590ebbb929a459884d5669ad133839b7dfe8b15cfa3f8e71c658433cd3d972",
+  "postprocessing_correction": "signed_and_validated",
+  "additional_pre2023_saved_cpu_replays_passed": 8,
+  "next_command": "finance finalize --run-directory artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development"
 }

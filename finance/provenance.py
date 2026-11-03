@@ -10,6 +10,11 @@ from .search import configurations
 
 
 FREEZE_PATH = ROOT / "delivery/rv30_freeze.json"
+POSTPROCESS_PATH = ROOT / "delivery/rv30_postprocessing_lock.json"
+# Postprocessing corrections cannot change model fitting, information, search,
+# resources, calibration, metrics, or statistical gate definitions.
+POSTPROCESS_ALLOWED = frozenset({"finance/provenance.py", "finance/delivery.py", "finance/verify.py",
+    "finance/confirmation.py", "finance/inference.py", "finance/acceptance.py", "finance/cli.py"})
 DEPENDENCIES = ("numpy", "pandas", "scipy", "scikit-learn", "lightgbm", "torch", "chronos-forecasting",
     "transformers", "safetensors", "exchange-calendars", "pytest")
 
@@ -90,14 +95,47 @@ def freeze(config, smoke_directory, tests_log):
     return result
 
 
+def effective_sources(freeze):
+    base = freeze["payload"]["source_files"]
+    actual = {path: sha(ROOT / path) for path in base}
+    changed = {path for path in base if actual[path] != base[path]}
+    if not changed and not POSTPROCESS_PATH.exists():
+        return base.copy(), None
+    if not changed.issubset(POSTPROCESS_ALLOWED):
+        raise ValueError(f"Frozen research implementation changed: {sorted(changed - POSTPROCESS_ALLOWED)}")
+    if not POSTPROCESS_PATH.exists():
+        raise ValueError("Postprocessing changes require a separately signed amendment")
+    amendment = read_json(POSTPROCESS_PATH)
+    payload = amendment["payload"]
+    if stable_hash(payload) != amendment["signature"] or payload["base_signature"] != freeze["signature"]:
+        raise ValueError("Postprocessing amendment identity changed")
+    if payload["base_freeze_sha256"] != sha(FREEZE_PATH) or set(payload["changes"]) != changed:
+        raise ValueError("Postprocessing amendment differs from actual source changes")
+    for path, record in payload["changes"].items():
+        if record != {"before_sha256": base[path], "after_sha256": actual[path]}:
+            raise ValueError(f"Unregistered postprocessing change: {path}")
+    if payload["research_definitions_changed"] or payload["model_search_space_changed"] or payload["thresholds_changed"]:
+        raise ValueError("A postprocessing amendment cannot revise research definitions")
+    additions = payload.get("added_sources", {})
+    discovered = {str(path.relative_to(ROOT)) for pattern, parent in (("*.py", "finance"), ("test_finance_rv_*.py", "tests"))
+        for path in (ROOT / parent).glob(pattern)} - set(base)
+    if set(additions) != discovered:
+        raise ValueError("Added implementation or validation sources are not fully registered")
+    for path, expected in additions.items():
+        if not path.startswith("tests/test_finance_rv_") or not path.endswith(".py") or path in base or sha(ROOT / path) != expected:
+            raise ValueError("Unregistered added validation source")
+    for path, expected in payload["validation_files"].items():
+        if sha(ROOT / path) != expected:
+            raise ValueError(f"Postprocessing validation changed: {path}")
+    return {**actual, **additions}, amendment
+
+
 def verify_freeze(config):
     freeze = read_json(FREEZE_PATH)
     payload = freeze["payload"]
     if stable_hash(payload) != freeze["signature"] or config != payload["config"] or config["status"] != "frozen":
         raise ValueError("Protocol/config freeze identity changed")
-    for path, expected in payload["source_files"].items():
-        if sha(ROOT / path) != expected:
-            raise ValueError(f"Signed implementation changed: {path}")
+    source_files, amendment = effective_sources(freeze)
     if dependencies() != payload["dependencies"]:
         raise ValueError("Numerical dependencies differ from the signed environment")
     for path, key in ((config["data_manifest"], "data_manifest_sha256"), ("configs/rv30_search.json", "search_sha256"),
@@ -105,4 +143,4 @@ def verify_freeze(config):
             (payload["cache_directory"] + "/data.json", "cache_metadata_sha256")):
         if sha(ROOT / path) != payload[key]:
             raise ValueError(f"Signed input changed: {path}")
-    return freeze
+    return {**freeze, "effective_source_files": source_files, "postprocessing_amendment": amendment}

@@ -86,9 +86,32 @@ def search_coverage(directory, config, setup):
     return {"passed": not errors, "groups": evidence, "failed_trials": failures, "errors": errors}
 
 
+def artifact_index(directory, signature):
+    """Root manifest -> every job receipt -> every hashed model/prediction file."""
+    jobs = {}
+    for path in sorted(Path(directory).rglob("result.json")):
+        result = receipt(path.parent)
+        if result["signature"] != signature or result["directory"] != str(path.parent.relative_to(ROOT)):
+            raise ValueError("Artifact index found another run identity")
+        request = read_json(path.parent / "request.json")
+        if result["request_hash"] != stable_hash(request):
+            raise ValueError("Artifact index found an altered job request")
+        jobs[str(path.relative_to(ROOT))] = {"sha256": sha(path), "request_hash": result["request_hash"],
+            "status": result["status"], "phase": result["phase"], "files": result["files"]}
+    metadata = [p for p in Path(directory).rglob("*.json") if p.name in
+        ("setup.json", "selection.json", "experiment.json", "summary.json", "run.json", "scheduler.json")]
+    return {"schema_version": 1, "signature": signature, "jobs": jobs, "job_count": len(jobs),
+        "metadata": {str(path.relative_to(ROOT)): sha(path) for path in sorted(metadata)}}
+
+
 def accept(config, run_directory):
+    from .confirmation import confirmation_evidence
+    from .inference import infer
+    from .verify import require_verifications
     directory = Path(run_directory)
     checks, errors = {}, []
+    manifest = None
+    outcome = None
     try:
         freeze = verify_freeze(config)
         checks["signed_source_and_environment"] = True
@@ -110,66 +133,76 @@ def accept(config, run_directory):
         checks["all_twelve_model_panel_results"] = rebuilt["complete_model_panel_results"] == 12 and not rebuilt["errors"]
         checks["run_matches_signed_setup"] = (setup["signature"] == freeze["signature"] and setup["config"] == config and
             stable_hash(setup["search"]) == stable_hash(read_json(ROOT / "configs/rv30_search.json")))
-        for number in (1, 2):
-            summary = read_json(directory / f"verify_{number}/summary.json")
-            conditional = read_json(directory / "confirmation/evaluation.json")
-            expected_jobs = 200 + len(conditional.get("job_directories", []))
-            good = summary["passed"] and summary["signature"] == freeze["signature"] and summary["jobs"] == expected_jobs
-            for path in summary["job_directories"]:
-                evidence = receipt(ROOT / path)
-                good &= evidence is not None and evidence["status"] == "complete" and evidence["verification"]["passed"]
-            checks[f"independent_verify_{number}"] = bool(good)
+        development_verifications = require_verifications(config, directory)
+        checks["two_complete_development_verifications"] = len(development_verifications) == 2
+        conditional_evidence = confirmation_evidence(config, directory, freeze["signature"])
+        checks["conditional_confirmation_recomputed_and_verified"] = True
         confirmation = read_json(directory / "confirmation/evaluation.json")
-        if rebuilt["passed_candidates"]:
-            checks["conditional_historical_confirmation"] = not confirmation.get("errors")
-            passed = confirmation["passed_candidates"]
-            if passed:
-                # A manually supplied passed flag is not evidence of on-time forecasts.
-                # Conditional prospective capture/evaluation requires its own frozen
-                # issuance ledger and verifier before this stage can be admitted.
-                checks["qualified_prospective_60_sessions"] = False
-                outcome = "waiting_prospective_acceptance"
-            else:
-                outcome = "completed_no_predictive_edge"
+        if confirmation["passed_candidates"]:
+            # A passed flag or a backfilled prediction cannot qualify a prospective run.
+            checks["qualified_prospective_60_sessions"] = False
+            outcome = "waiting_prospective_acceptance"
         else:
-            checks["conditional_stages_skipped_by_gate"] = confirmation["status"] == "skipped_no_development_gate_pass"
             outcome = "completed_no_predictive_edge"
+        if not rebuilt["passed_candidates"]:
+            checks["conditional_stages_skipped_by_gate"] = confirmation["status"] == "skipped_no_development_gate_pass"
         model = read_json(ROOT / "delivery/model.json")
-        checks["frozen_model_artifacts"] = sha(ROOT / model["source_directory"] / "result.json") == model["source_result_sha256"]
-        receipt(ROOT / model["source_directory"])
-        from .inference import infer
-        regenerated_example = infer(config)
-        write_json(ROOT / "delivery/example_prediction.json", regenerated_example)
-        example = read_json(ROOT / "delivery/example_prediction.json")
-        checks["runnable_inference_example"] = example["rv_mean"] is not None and example["rv_mean"] > 0 and not example["direction_or_profit_prediction"]
+        checks["frozen_model_artifacts"] = (model["signature"] == freeze["signature"] and
+            sha(ROOT / model["source_directory"] / "result.json") == model["source_result_sha256"] and
+            model["prerequisites"] == conditional_evidence and model["role"] == "reference_har_baseline" and
+            model["outcome"] == outcome and not model["active_predictive_edge_established"] and not model["prospective_qualified"])
+        delivery_verifications = require_verifications(config, directory, "delivery")
+        checks["two_complete_delivery_model_verifications"] = len(delivery_verifications) == 2
+        example = infer(config)
+        write_json(ROOT / "delivery/example_prediction.json", example)
+        checks["runnable_inference_example"] = (example["rv_mean"] is not None and example["rv_mean"] > 0 and
+            not example["direction_or_profit_prediction"] and not example["eligible_signal"])
         checks["report_and_documentation"] = all((ROOT / path).is_file() for path in ("delivery/REPORT.md", "delivery/README.md", "delivery/results.json"))
         git_commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
-        source_commit_matches = True
+        committed_files = dict(freeze["effective_source_files"])
+        committed_files["delivery/rv30_freeze.json"] = sha(ROOT / "delivery/rv30_freeze.json")
+        amendment = freeze["postprocessing_amendment"]
+        if amendment:
+            committed_files["delivery/rv30_postprocessing_lock.json"] = sha(ROOT / "delivery/rv30_postprocessing_lock.json")
         import hashlib
-        for path, expected in freeze["payload"]["source_files"].items():
+        matches = []
+        for path, expected in committed_files.items():
             blob = subprocess.run(["git", "show", f"{git_commit}:{path}"], cwd=ROOT, capture_output=True)
-            source_commit_matches &= blob.returncode == 0 and hashlib.sha256(blob.stdout).hexdigest() == expected
-        checks["signed_code_locally_committed"] = bool(source_commit_matches)
+            matches.append(blob.returncode == 0 and hashlib.sha256(blob.stdout).hexdigest() == expected)
+        checks["signed_code_locally_committed"] = all(matches)
+        index = artifact_index(directory, freeze["signature"])
+        write_json(directory / "artifact_index.json", index)
+        checks["complete_job_artifact_index"] = bool(index["job_count"])
         if all(checks.values()):
+            result_summary = read_json(ROOT / "delivery/results.json")
+            result_summary.update(engineering_final_acceptance=True, outcome=outcome)
+            write_json(ROOT / "delivery/results.json", result_summary)
             manifest = {"schema_version": 1, "signature": freeze["signature"], "outcome": outcome, "code_commit": git_commit,
+                "postprocessing_signature": amendment["signature"] if amendment else None,
+                "training_source_snapshot_commit": amendment["payload"]["base_code_commit"] if amendment else git_commit,
                 "engineering_accepted": True, "active_predictive_edge_established": False,
                 "created_utc": datetime.now(timezone.utc).isoformat(), "model": "delivery/model.json",
                 "report": "delivery/REPORT.md", "readme": "delivery/README.md", "results": "delivery/results.json",
                 "run_directory": str(directory.relative_to(ROOT)), "search_coverage": str((directory / "search_coverage.json").relative_to(ROOT)),
-                "external_dependencies": "delivery/external_dependencies.json"}
-            files = [ROOT / path for path in ("delivery/model.json", "delivery/REPORT.md", "delivery/README.md", "delivery/results.json", "delivery/rv30_freeze.json")]
-            files += [directory / path for path in ("evaluation.json", "daily_losses.csv", "search_coverage.json", "verify_1/summary.json", "verify_2/summary.json", "confirmation/evaluation.json")]
+                "artifact_index": str((directory / "artifact_index.json").relative_to(ROOT)),
+                "acceptance": str((directory / "acceptance.json").relative_to(ROOT)),
+                "example_prediction": "delivery/example_prediction.json", "external_dependencies": "delivery/external_dependencies.json"}
+            files = [ROOT / path for path in ("GOAL.md", "RESEARCH_PROTOCOL.md", "delivery/model.json", "delivery/REPORT.md",
+                "delivery/README.md", "delivery/results.json", "delivery/rv30_freeze.json", "delivery/rv30_dependencies.json",
+                "delivery/data.json", "delivery/history.json", "delivery/external_dependencies.json", "delivery/example_prediction.json",
+                "configs/rv30.json", "configs/rv30_search.json", "configs/rv30_model_lock.json")]
+            if amendment:
+                files.append(ROOT / "delivery/rv30_postprocessing_lock.json")
+            files += [directory / path for path in ("evaluation.json", "daily_losses.csv", "search_coverage.json", "artifact_index.json", "confirmation/evaluation.json")]
+            for proofs in (development_verifications, conditional_evidence["verifications"], delivery_verifications):
+                files.extend(ROOT / proof["path"] for proof in proofs.values())
             manifest["files"] = {str(path.relative_to(ROOT)): sha(path) for path in files}
-            write_json(ROOT / "delivery/manifest.json", manifest)
-            result_summary = read_json(ROOT / "delivery/results.json")
-            result_summary["engineering_final_acceptance"] = True
-            result_summary["outcome"] = outcome
-            write_json(ROOT / "delivery/results.json", result_summary)
-            manifest["files"]["delivery/results.json"] = sha(ROOT / "delivery/results.json")
-            write_json(ROOT / "delivery/manifest.json", manifest)
-    except (ValueError, KeyError, FileNotFoundError, AssertionError) as error:
+    except (ValueError, KeyError, OSError, AssertionError, TypeError, IndexError, StopIteration) as error:
         errors.append(str(error))
     result = {"passed": bool(checks) and all(checks.values()) and not errors, "checks": checks, "errors": errors,
-        "goal_can_complete": bool(checks) and all(checks.values()) and not errors}
+        "outcome": outcome, "goal_can_complete": bool(checks) and all(checks.values()) and not errors}
     write_json(directory / "acceptance.json", result)
+    if result["passed"] and manifest is not None:
+        manifest["files"][str((directory / "acceptance.json").relative_to(ROOT))] = sha(directory / "acceptance.json")
+        write_json(ROOT / "delivery/manifest.json", manifest)
     return result

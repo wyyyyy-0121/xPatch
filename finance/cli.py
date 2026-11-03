@@ -22,11 +22,12 @@ def main():
     for command in ("train", "deliver"):
         training = subparsers.add_parser(command, help="Run/resume all frozen searches" if command == "train" else "Run the frozen experiment and its conditional delivery stages")
         training.add_argument("--run-name", default="development")
-    for command in ("evaluate", "confirm", "verify", "freeze-model", "report", "accept"):
+    for command in ("evaluate", "confirm", "verify", "freeze-model", "report", "accept", "finalize"):
         action = subparsers.add_parser(command)
         action.add_argument("--run-directory", required=True)
         if command == "verify":
             action.add_argument("--round", type=int, choices=(1, 2), required=True)
+            action.add_argument("--scope", choices=("development", "confirmation", "delivery"), default="development")
     inference = subparsers.add_parser("infer", help="Historical RV replay or explicit live-unavailable status")
     inference.add_argument("--model-manifest", default="delivery/model.json")
     inference.add_argument("--as-of")
@@ -36,7 +37,7 @@ def main():
     args = parser.parse_args()
     config = read_json(ROOT / args.config)
     # Keep all 22 IDs available for spawning disjoint workers; main BLAS remains 1.
-    configure(4 if args.command in ("smoke", "infer", "deliver") else 1, nice_increment=config["runtime"]["nice_increment"])
+    configure(4 if args.command in ("smoke", "infer", "deliver", "finalize") else 1, nice_increment=config["runtime"]["nice_increment"])
     with exclusive_run(ROOT / "artifacts/rv30/driver.lock"):
         if args.command == "prepare":
             from .cache import prepare_data
@@ -87,7 +88,12 @@ def main():
                 result = confirm(config, directory)
             elif args.command == "verify":
                 from .verify import verify_run
-                result = verify_run(config, directory, args.round)
+                result = verify_run(config, directory, args.round, args.scope)
+            elif args.command == "finalize":
+                from .delivery import finish
+                from .provenance import verify_freeze
+                verify_freeze(config)
+                result = finish(config, directory)
             elif args.command == "freeze-model":
                 from .inference import freeze_baseline
                 result = freeze_baseline(config, directory)
