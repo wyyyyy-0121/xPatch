@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-03T12:46:19.598503+00:00",
+  "base_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+  "scope": "performance_diagnosis_existing_search_not_new_experiment_qualification",
+  "throughput_measurement_passed": true,
+  "qualified_existing_runs": [
+    "development"
+  ],
+  "new_experiment_ready": false,
+  "benchmark_directory": "artifacts/rv30/setup/performance_20261103/isolated",
+  "required_before_new_experiment": [
+    "benchmark the largest planned training sample count using pre2023 data with explicit benchmark-only replication if needed",
+    "measure representative full 15/30 epoch or halving continuation, checkpoint recovery, and full prediction workload",
+    "record matching source/data/dependency/hardware fingerprints, memory and GPU peaks, remaining-budget and duration estimates before launch"
+  ],
+  "observations": {
+    "gpu_sample_count": 16,
+    "gpu_mean_utilization_percent": 46.0,
+    "gpu_utilization_range_percent": [
+      38,
+      52
+    ],
+    "gpu_mean_memory_MiB": 3542.81,
+    "process_cpu_cores_40s": 0.84,
+    "swap_used_bytes": 0,
+    "training_samples_benchmark": 29105,
+    "calibration_samples_benchmark": 6740,
+    "evaluation_samples_benchmark": 700,
+    "completed_cases": 10,
+    "completed_gpu_job_hours_by_model": {
+      "xpatch_dema": 9.016,
+      "chronos2_None": 0.685,
+      "xpatch_ema": 0.859
+    },
+    "kernel_launches_fixed_batch": {
+      "ema": 113,
+      "dema": 5233
+    },
+    "thread_comparison_fit_epoch_seconds": {
+      "07_market_dema_l512_t4": 11.039314085996011,
+      "08_market_dema_l512_t18": 11.056720224005403,
+      "09_market_dema_l512_t4": 10.740793186007068
+    }
+  },
+  "search_duration_scenarios": {
+    "as_of_utc": "2026-11-03T12:46:19.598579+00:00",
+    "scope": "remaining_development_search_only_excludes_independent_verification_and_conditional_stages",
+    "remaining_initial_xpatch_hours": 7.67,
+    "remaining_chronos_hours_including_estimated_outer": 0.98,
+    "scenarios": [
+      {
+        "retained_config_cost": "cheaper_retained_configs",
+        "remaining_search_hours": 16.0
+      },
+      {
+        "retained_config_cost": "middle_cost_retained_configs",
+        "remaining_search_hours": 26.6
+      },
+      {
+        "retained_config_cost": "expensive_retained_configs",
+        "remaining_search_hours": 186.1
+      }
+    ],
+    "method": "Median measured initial wall seconds per fit session, per configuration and information panel; scale to registered split lengths. For later stages assume full remaining epoch ceilings (10,15,30 and outer30); retain cheapest, middle or most expensive configurations by measured runtime, without inspecting any score or rank.",
+    "limitations": [
+      "Scenario estimates, not statistical confidence intervals or promised completion times.",
+      "Selection costs and early stopping are unknown; full-epoch scenarios can overestimate actual training.",
+      "Calibration, saving and prediction costs are approximated by initial job totals; late-fold extrapolation has not been benchmarked at maximum sample count.",
+      "Independent replay, aggregate statistical verification and conditional confirmation require additional time."
+    ]
+  },
+  "runtime_change_applied": false,
+  "source_or_search_change_applied": false,
+  "outer_scores_read": false,
+  "evidence_files": {
+    "artifacts/rv30/setup/performance_20261103/completed_job_timing.json": "6b09d2b61c1fe23455af9d3c7d9b0d5f3e5287eaed2ad728a057cd70df377fae",
+    "artifacts/rv30/setup/performance_20261103/gpu_summary.json": "263cfb34be5d440c53630b272a95d2fa622167c25d3edf5a8c97bb69fc9cf6e9",
+    "artifacts/rv30/setup/performance_20261103/gpu_samples.csv": "a39d0eeb21d785b5dd2af3a6406584963ad666a98a8eb4efce6c921b18ab8e6d",
+    "artifacts/rv30/setup/performance_20261103/process_samples.json": "a14c69ba3964bf56f80454ebcd54ee353e85589850d444cfbf4dc437b2196417",
+    "artifacts/rv30/setup/performance_20261103/isolated/setup.json": "63228cb5d4a46c42c5c225a32fff95c07f5cdc4e795484e53262a13d9a59bbdc",
+    "artifacts/rv30/setup/performance_20261103/isolated/summary.json": "4b37923fc09c52a0850071771da29a4ad8f3d4a1aa410aefda1ce998e655cfc7",
+    "artifacts/rv30/setup/performance_20261103/isolated/operator_profile.json": "ff4669a8289041ad06b61974ffd2a1c4f5c01148535ed7dd999c3eb37c5b4f18",
+    "scripts/benchmark_rv30_runtime.py": "054e83c9fa27b51de2dd7c0be99ee470d93e45dc2caf8141e5fbdee9e923e2b5",
+    "scripts/start_rv30_checked.py": "6de84899499d320940166f639e3abf77abe307f7925003cf7cdb53afafc530aa",
+    "artifacts/rv30/setup/performance_20261103/launch_gate_checks.json": "cbb91ab194f55d18648e8c99ed3c94a82408385349ac3fd328bc2cce1c2d79c1"
+  },
+  "launch_gate_behavior_checks": "artifacts/rv30/setup/performance_20261103/launch_gate_checks.json",
+  "launch_gate_behavior_checks_passed": true
+}

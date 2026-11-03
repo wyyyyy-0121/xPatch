@@ -35,7 +35,7 @@ AAPL、SPY、QQQ 使用相同 SIP/raw 分钟柱与交易所日历。缺口保留
 
 ## 固定工作流程
 
-先审计与准备输入，再完成首次外折前的工程烟测与签名；只有冻结后才能启动正式搜索。当前计算机可使用以下命令：
+先审计与准备输入，再完成首次外折前的工程烟测、性能测试与签名；正式搜索需要匹配的性能证据和冻结。正确性烟测不能代替完整规模吞吐测试，新增实验的启动门槛见 `delivery/PERFORMANCE.md`。当前计算机可使用以下命令：
 
 ```bash
 cd /home/ayaka/xPatch
@@ -44,16 +44,16 @@ cd /home/ayaka/xPatch
 /home/ayaka/.venvs/xpatch-v2/bin/python -m finance --help
 ```
 
-正式运行与恢复均使用同一命令、同一运行名：
+正式训练与恢复均使用性能检查入口和同一运行名；入口先核验 `delivery/performance.json`，证据不符则返回非零状态，不启动训练：
 
 ```bash
 cd /home/ayaka/xPatch
-/home/ayaka/.venvs/xpatch-v2/bin/python -m finance deliver --run-name development
+/home/ayaka/.venvs/xpatch-v2/bin/python scripts/start_rv30_checked.py --run-name development
 ```
 
-此命令依次执行固定搜索、十季度外层预测和统计、开发结果两轮独立回放、条件历史确认、确认任务两轮回放及交付验收。没有候选通过时，冻结 HAR 参考基线，并对最终基线再完整回放两轮。任一阶段复核失败都停止其依赖步骤。已完成且签名和逐文件指纹一致的任务会复用；中断的 xPatch 会从相同请求的 optimizer、轮数与随机状态恢复。失败或超时试验保留为失败，不能换参数重试来增加搜索额度。另一个入口正在运行时会拒绝重复启动。
+此命令执行固定搜索和十季度外层预测。已完成且签名和逐文件指纹一致的任务会复用；中断的 xPatch 会从相同请求的 optimizer、轮数与随机状态恢复。失败或超时试验保留为失败，不能换参数重试来增加搜索额度。另一个入口正在运行时会拒绝重复启动。仅检查性能资格可加 `--check-only`，不会创建训练进程；当前测量只允许已有 `development` 续跑，新实验在最大规模和持续运行测试完成前被拒绝。
 
-搜索与后处理也可以分开执行：`python -m finance train --run-name development` 仅训练；搜索全部结束后，`python -m finance finalize --run-directory artifacts/rv30/<签名>/development` 按上述顺序完成后续。当前运行采用这种方式，以保留原训练签名，并对后处理的顺序与验收覆盖纠错。原始研究冻结文件保持原样，纠错见 `delivery/amendments/postprocessing_correction.json`，独立纠错签名见 `delivery/rv30_postprocessing_lock.json`；它不能豁免数据、特征、模型拟合、搜索或门槛的修改。
+搜索全部结束后，`python -m finance finalize --run-directory artifacts/rv30/<签名>/development` 依次执行统计、开发结果两轮独立回放、条件历史确认、确认任务两轮回放及交付验收。当前运行的自动等待器身份见 `delivery/run.json.continuation`；它会完成衔接，存活时不另启最终化进程。没有候选通过时，冻结 HAR 参考基线，并对最终基线再完整回放两轮。任一阶段复核失败都停止其依赖步骤。当前运行将训练和后处理分开，以保留原训练签名，并对后处理的顺序与验收覆盖纠错。原始研究冻结文件保持原样，纠错见 `delivery/amendments/postprocessing_correction.json`，独立纠错签名见 `delivery/rv30_postprocessing_lock.json`；它不能豁免数据、特征、模型拟合、搜索或门槛的修改。
 
 输出在 `artifacts/rv30/<协议签名>/development/`。每个任务保存请求、资源、参数、拟合状态、校准、模型、预测及指纹；各模型组保存搜索阶段和内层选择。`progress.json`、`scheduler.json` 用于查看进度；`evaluation.json` 和 `daily_losses.csv` 在全部模型组结束后生成。正式搜索期间不根据已生成的外层分数改变空间。
 
