@@ -66,9 +66,19 @@ cd /home/ayaka/xPatch
 /home/ayaka/.venvs/xpatch-v2/bin/python scripts/start_rv30_checked.py --run-name development
 ```
 
-此命令执行固定搜索和十季度外层预测。已完成且签名和逐文件指纹一致的任务会复用；中断的 xPatch 会从相同请求的 optimizer、轮数与随机状态恢复。失败或超时试验保留为失败，不能换参数重试来增加搜索额度。另一个入口正在运行时会拒绝重复启动。仅检查性能资格可加 `--check-only`，不会创建训练进程；当前测量只允许已有 `development` 续跑，新实验在最大规模和持续运行测试完成前被拒绝。
+此命令执行固定搜索和十季度外层预测。已完成且签名和逐文件指纹一致的任务会复用；中断的 xPatch 会从相同请求的 optimizer、轮数与随机状态恢复。失败或超时试验保留为失败，不能换参数重试来增加搜索额度。另一个入口正在运行时会拒绝重复启动。仅检查性能资格可加 `--check-only`，不会创建训练进程。当前测量只允许已有 `development` 续跑；本轮 xPatch 最大规模和持续运行已验收，新实验仍需其具体模型与工作负载的性能证据，以及完整的新计算计划，不能沿用本轮资格自动放行。
 
-搜索全部结束后，`python -m finance finalize --run-directory artifacts/rv30/<签名>/development` 依次执行统计、开发结果两轮独立回放、条件历史确认、确认任务两轮回放及交付验收。当前运行的自动等待器身份见 `delivery/run.json.continuation`；它会完成衔接，存活时不另启最终化进程。没有候选通过时，冻结 HAR 参考基线，并对最终基线再完整回放两轮。任一阶段复核失败都停止其依赖步骤。当前运行将训练和后处理分开，以保留原训练签名，并对后处理的顺序与验收覆盖纠错。原始研究冻结文件保持原样，纠错见 `delivery/amendments/postprocessing_correction.json`，独立纠错签名见 `delivery/rv30_postprocessing_lock.json`；它不能豁免数据、特征、模型拟合、搜索或门槛的修改。
+当前执行修订包括完整前向/损失/反向 CUDA graph、DEMA 前向及反向融合和受限显存预载，分别由 `delivery/rv30_acceleration_lock.json`、`delivery/rv30_throughput_lock.json` 签名。两份锁引用各自验证证据、前驱锁和 Git 源快照，不覆盖原研究冻结。最新 119 项工程检查、192 项配置/信息集/批量逐位检查、六组种子续训、最大规模 30 轮及正式源码双向恢复通过。具体计时与中止风险见 `delivery/RUN_RISK.md`；最大配置的提速倍数不等于整个搜索的提速倍数。显存预载最多 1 GiB，并要求留出至少 1 GiB 空闲；不满足时走原数据路径。当前保持单 GPU worker。
+
+搜索全部结束后，以下命令依次执行统计、开发结果两轮独立回放、条件历史确认、确认任务两轮回放及交付验收。当前运行的自动等待器身份见 `delivery/run.json.continuation`；它会完成衔接，存活时不另启最终化进程。只有确认等待器退出且尚未衔接时才手动执行：
+
+```bash
+cd /home/ayaka/xPatch
+/home/ayaka/.venvs/xpatch-v2/bin/python -m finance finalize \
+  --run-directory artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development
+```
+
+没有候选通过时，冻结 HAR 参考基线，并对最终基线再完整回放两轮。任一阶段复核失败都停止其依赖步骤。当前运行将训练和后处理分开，以保留原训练签名，并对后处理的顺序与验收覆盖纠错。原始研究冻结文件保持原样，纠错见 `delivery/amendments/postprocessing_correction.json`，独立纠错签名见 `delivery/rv30_postprocessing_lock.json`；它不能豁免数据、特征、模型拟合、搜索或门槛的修改。
 
 输出在 `artifacts/rv30/<协议签名>/development/`。每个任务保存请求、资源、参数、拟合状态、校准、模型、预测及指纹；各模型组保存搜索阶段和内层选择。`progress.json`、`scheduler.json` 用于查看进度；`evaluation.json` 和 `daily_losses.csv` 在全部模型组结束后生成。正式搜索期间不根据已生成的外层分数改变空间。
 
@@ -95,12 +105,12 @@ JSON 包含模型与协议身份、实际生成时间、起点、信息截止、
 
 ## 验收与追溯
 
-以下命令中的 `<签名>` 替换为 `delivery/rv30_freeze.json` 的 signature：
+当前研究的完整验收命令如下；运行目录的签名必须与 `delivery/rv30_freeze.json` 一致：
 
 ```bash
 cd /home/ayaka/xPatch
 /home/ayaka/.venvs/xpatch-v2/bin/python -m finance accept \
-  --run-directory artifacts/rv30/<签名>/development
+  --run-directory artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development
 ```
 
 验收器检查历史封存、源代码/依赖/数据身份、完整搜索覆盖、日等权指标与门槛、各阶段两轮独立复核、冻结工件、推理示例和文档。复核按确切模型、种子、来源指纹、阶段和轮次逐项核对，数量相同但漏模型或重复任务也会失败；起点、时间戳、日期与校准样本必须等于预定网格。任何未完成项返回非零；结果在运行目录的 `acceptance.json`。监督模型完整回放校准与评价预测；Chronos 每个任务回放固定首尾批次，所有标签和主分数仍从原始 AAPL CSV 独立重算。独立复核入口为 `python -m finance verify --run-directory artifacts/rv30/<签名>/development --scope development --round 1`；`--scope` 另支持 `confirmation` 和 `delivery`，第二轮需先有该范围的第一轮成功证据。

@@ -31,7 +31,7 @@ Development validation is complete: all 260 runs passed two artifact and predict
 
 This fork adds **xPatch-LS**: a 240-minute trend stream and a 48-minute residual stream for the next 12 minute log returns. See the [experiment guide](finance_ls/README.md) for the architecture, chronological validation, frozen held-out evaluation, baselines, ablations, and independent artifact verification. Run from the repository root:
 
-This v1 experiment is complete: the primary long/short proposal did not establish stable improvement over original xPatch under its protocol. Retain its [results](finance_ls/RESULTS.md) as a historical record; use the v2 entrypoint for the new data and comparison.
+This v1 experiment is complete: the primary long/short proposal did not establish stable improvement over original xPatch under its protocol. Its [results](finance_ls/RESULTS.md) and the sealed v2 comparison remain historical records. Use the [RV30 delivery entry point](delivery/README.md) for the active project.
 
 ```bash
 python -m pip install -r requirements-finance.txt
