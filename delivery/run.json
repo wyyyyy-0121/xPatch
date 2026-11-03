@@ -4,8 +4,8 @@
   "pid": null,
   "kernel_start_ticks": null,
   "started_utc": "2026-11-03T01:53:30.265555+00:00",
-  "last_checked_utc": "2026-11-03T23:36:02.151741+00:00",
-  "next_check_after_utc": null,
+  "last_checked_utc": "2026-11-03T23:41:53.099080+00:00",
+  "next_check_after_utc": "2026-11-04T00:41:53.099080+00:00",
   "code_commit": "495e2fade9a804fb722b9941b3a4f4109678f015",
   "run_directory": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
   "log": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/finalize_replay_correction.log",
@@ -169,5 +169,6 @@
   "prospective_complete_sessions": 0,
   "prospective_required_sessions": 60,
   "current_code_commit": "eab905380ffc332156e90b3bb54cb166c82f7a1e",
-  "monitoring": "paused_during_external_permission_wait"
+  "monitoring": "active_hourly_minimal_state_checks",
+  "permission_wait_does_not_pause_monitor": true
 }

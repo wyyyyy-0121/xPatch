@@ -19,7 +19,10 @@
   "manifest": "delivery/manifest.json",
   "completion_readiness": "artifacts/rv30/setup/completion_20261104/handoff.json",
   "completion_lock": "delivery/rv30_completion_lock.json",
-  "monitoring": "paused_during_external_permission_wait",
+  "monitoring": "active_hourly_minimal_state_checks",
   "monitor_interval_minutes_when_running": 60,
-  "goal_can_complete": false
+  "goal_can_complete": false,
+  "monitor_interval_minutes": 60,
+  "permission_wait_does_not_pause_monitor": true,
+  "monitor_automation_id": "rv30"
 }

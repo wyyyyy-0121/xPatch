@@ -35,7 +35,7 @@
     "final_delivery_acceptance_and_commit"
   ],
   "files": {
-    "GOAL.md": "904e10d6babffba5a8569261bb4182974b14a529cc0457c9cbab83aa3ddd9da8",
+    "GOAL.md": "36cd573f2afc2c72699ed8f84d1110f93d96aa3c00e80c7fcedcd6b3a648d820",
     "README.md": "549dd8b27cf202515b33d35e4fe7aa7360357d369b988db212f7e91cf887930d",
     "RESEARCH_PROTOCOL.md": "579700cde759e61ab413eca95548140cf61ce5d84da7d0d1a368ffb7e5ffc3cd",
     "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/acceptance.json": "8d696026eeeab8398833445e3108e97284fb9caaeba26af8b3e64aa82ca0759f",
@@ -65,7 +65,7 @@
     "configs/rv30_search.json": "45c04bc8761b49121d1d215c1a9d6f8176507c043b15f52da2bd6d94f3d40bb7",
     "delivery/ACCEPTANCE_CHECKLIST.md": "84485a038eefeeaf2c34b5bd0c51a63c9e5e8dbf3b9ca8944f6a73ff9c11ba1c",
     "delivery/PROSPECTIVE_PLAN.md": "8d41e188605d9698557b3d03478512e009fb04a351dae12df8e8f782ebaf8933",
-    "delivery/README.md": "fd222edf909a2b6ae7a25dfc0b3ac2b8f4e49b05459b63f81e9d205a1b952a07",
+    "delivery/README.md": "68fb82ee06d101fbe602e287e790ca54e27695af1876f80211ea43046fb87c7f",
     "delivery/REPORT.md": "e55d4b78863256e86972d4d095e59dac23856f8467599ec8de80d1ebf3a7fa52",
     "delivery/amendments/forward_completion.json": "4e689256b9bf87f967594a5dafa7b00c751edff1d81c3162454a2e465b21d16b",
     "delivery/cli_examples.json": "0dad533adddd734f871237bfd01269589345469590cad70a6ff4989f44c537ab",
@@ -91,11 +91,14 @@
     "delivery/rv30_replay_lock.json": "081f254999194b4c6421f6869d53a2771f5b0744be918e811010dc071df78262",
     "delivery/rv30_statistics_lock.json": "0af74d7d51e079542955fc79393ca448632db10503cbaf6c7f8c357a143ed059",
     "delivery/rv30_throughput_lock.json": "193e288f007eb99f76f2177af983252617e8d395ee7536e9c568afe2247bfbe7",
-    "delivery/status.json": "2942afc261384ddf6ab6010fe96fc33a2ee7132bf0342025a5985756c4745c22",
+    "delivery/status.json": "bcf71a07cf90983645369d26178226a2355671942f170f600fbdbd343c6b497d",
     "scripts/audit_rv30_readiness.py": "b701574b4e703dbbcc8b189c3ef688e7efd04e063a088b759801db4452440568",
     "scripts/run_rv30_examples.py": "a6991ce5cc5b516687f05841fe9f0e9f348fa52e4f4615e41943ea3232217679"
   },
   "completion_signature": "c292ecdf29600a902c78a5c671f6ac33ea8b19439dc05d5d80444fd577676deb",
   "completion_readiness": "artifacts/rv30/setup/completion_20261104/handoff.json",
-  "monitoring": "paused_during_external_permission_wait"
+  "monitoring": "active_hourly_minimal_state_checks",
+  "monitor_interval_minutes": 60,
+  "permission_wait_does_not_pause_monitor": true,
+  "updated_utc": "2026-11-03T23:41:53.099080+00:00"
 }
