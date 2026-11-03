@@ -1,0 +1,27 @@
+{
+  "scope": "Interim foundation checks only; model/HPO/CLI and final acceptance are incomplete",
+  "created_utc": "2026-11-03T00:57:44.941711+00:00",
+  "passed": true,
+  "tests_passed": 26,
+  "tests_log": "artifacts/rv30/setup/foundation_20261103T005744Z.log",
+  "tests_log_sha256": "95ff7cb0c52d0c9f9f6148abed30112a80fca7d1036cdb1c5ea6861946c97be8",
+  "sources": {
+    "finance/__init__.py": "5cf90fa43209715642e274102800a482f6c2ecb5578f7e7275f0573bacabe308",
+    "finance/runtime.py": "3ff1d61694fd479f893c376843a16b519c9cfb87b48d71696a73bc83f5b208c5",
+    "finance/io.py": "1a6acaeae45b151f49a96fca22bb665075444ae3eb6461230f17404ee276eb8e",
+    "finance/data.py": "d810044c5ceb5fae0498b417ea480b4d7212fe5410645d4c40052674a358b683",
+    "finance/splits.py": "9121ae487f0ba546c99c813151efee73b6f3c78d013ca6850a47cc1b727fb3e9",
+    "tests/test_finance_runtime.py": "70811c293e81079f34a1694c0f67d6da2173349dbb2c0abdfdbc706157aa750a",
+    "tests/test_finance_rv_data.py": "9b31a1c1807fd6068806a485fb6b26d5e69006c676091bf5e962e3c54bdd265f",
+    "tests/test_finance_rv_splits.py": "b5b2c04d628c12bd2c3bf4e0ad16e05802d4e5d902f884fc30a68d57b2f90c62",
+    "tests/test_delivery_acquisition.py": "a0fcc4b73cca957772be45c26533334d5d8905e57be7ee0e38ee60760b263897"
+  },
+  "real_data_grid": "artifacts/rv30/setup/data_grid.json",
+  "real_data_grid_sha256": "0d58893239ef96299816d7cd1bd47748025df0b7026e42cbb27a379d723998bf",
+  "development_origins": 207235,
+  "development_eligible_sessions": 602,
+  "development_planned_sessions": 624,
+  "models_fitted": 0,
+  "outer_forecast_scores_read": false,
+  "final_acceptance_passed": false
+}

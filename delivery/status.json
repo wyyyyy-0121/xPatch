@@ -1,12 +1,12 @@
 {
-  "updated_utc": "2026-11-03T00:43:08.120196+00:00",
+  "updated_utc": "2026-11-03T00:57:44.941711+00:00",
   "goal_status": "active",
   "branch": "codex/aapl-delivery",
   "stages": {
     "history_seal": "passed",
     "data_access_and_history_audit": "passed_for_retrospective_research",
     "literature_and_protocol": "draft_ready_for_engineering_smoke",
-    "engineering": "not_started",
+    "engineering": "foundation_verified_model_hpo_cli_pending",
     "outer_validation": "not_started",
     "final_acceptance": "not_started"
   },
@@ -16,8 +16,9 @@
     "data_acquisition/DELIVERY_SOURCE_AUDIT.md",
     "research/RV30_REVIEW.md",
     "RESEARCH_PROTOCOL.md",
-    "configs/rv30.json"
+    "configs/rv30.json",
+    "delivery/engineering_checks.json"
   ],
   "external_items": "delivery/external_dependencies.json",
-  "next_action": "Build finance runtime, leakage-safe data/splits and model/HPO adapters; test and smoke on pre-2023 dates, then sign before outer evaluation."
+  "next_action": "Implement fit-only transformations and tabular features, fixed model and HPO adapters, complete the CLI and pre-2023 resource smoke, then freeze and sign before outer scoring."
 }
