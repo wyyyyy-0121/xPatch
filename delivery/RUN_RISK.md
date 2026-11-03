@@ -44,4 +44,4 @@ CPU 基线任务已经结束，暂停前 CPU 队列为零，余下工作集中�
 
 剩余 xPatch 的便宜/中等/昂贵保留配置成本情景见 `delivery/performance.json`。它只使用状态和历史原生计时，按代表性 DEMA 首轮约 6.5 倍提速估算，EMA 保持原估计；这不是每个配置的保证或完成时限。Chronos、完整预测和两轮回放、统计、条件确认与交付另计。真正的前瞻阶段若触发，仍需至少 60 个合格交易日。
 
-仅放行原 `development` 搜索恢复；新实验仍受 `new_experiment_ready=false` 阻止。恢复统一经过 `scripts/start_rv30_checked.py`，正式长运行恢复后每 30 分钟检查，完成搜索后由原等待器核验 120 组、预算和已提交签名链，再顺序衔接最终化。
+仅放行原 `development` 搜索恢复；新实验仍受 `new_experiment_ready=false` 阻止。恢复统一经过 `scripts/start_rv30_checked.py`，正式长运行恢复后每 60 分钟检查，完成搜索后由原等待器核验 120 组、预算和已提交签名链，再顺序衔接最终化。
