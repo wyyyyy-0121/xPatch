@@ -11,10 +11,15 @@
   "prospective_complete_sessions": 0,
   "prospective_required_sessions": 60,
   "final_acceptance": false,
-  "engineering_readiness": "passed_19_evidence_checks_156_tests_9_real_CLI_behaviors",
+  "engineering_readiness": "passed_193_tests_7_current_CLI_checks_and_19_historical_readiness_checks",
   "model": "delivery/model.json",
   "prospective_plan": "delivery/prospective_lock.json",
   "external_items": "delivery/external_dependencies.json",
   "readiness": "delivery/readiness.json",
-  "manifest": "delivery/manifest.json"
+  "manifest": "delivery/manifest.json",
+  "completion_readiness": "artifacts/rv30/setup/completion_20261104/handoff.json",
+  "completion_lock": "delivery/rv30_completion_lock.json",
+  "monitoring": "paused_during_external_permission_wait",
+  "monitor_interval_minutes_when_running": 60,
+  "goal_can_complete": false
 }
