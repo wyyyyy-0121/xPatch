@@ -11,12 +11,12 @@
   "final_acceptance": false,
   "external_items": "delivery/external_dependencies.json",
   "heartbeat": "rv30",
-  "next_check_after_utc": "2026-11-03T17:04:13.256419+00:00",
+  "next_check_after_utc": "2026-11-03T17:34:35.895101+00:00",
   "postprocessing_signature": "4888f19dec994b2abfa8209db78c3280bd2e4facad8b2a04c1f1933978f8c77f",
   "postprocessing_correction": "signed_and_validated",
   "additional_pre2023_saved_cpu_replays_passed": 8,
   "next_command": "finance finalize --run-directory artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
-  "last_checked_utc": "2026-11-03T16:34:13.256419+00:00",
+  "last_checked_utc": "2026-11-03T17:04:35.895101+00:00",
   "independent_aggregate_statistics": "signed_ready_for_both_rounds",
   "performance_report": "delivery/performance.json",
   "performance_diagnosis": "exact_fused_DEMA_adjoint_and_bounded_resident_batches_validated",
@@ -27,6 +27,6 @@
   "runtime_acceleration_lock": "delivery/rv30_throughput_lock.json",
   "resume_startup_verified": true,
   "current_run_risk": "delivery/RUN_RISK.md",
-  "last_known_gpu_hours": 14.470859997661472,
-  "last_known_cpu_core_hours": 82.7987079960111
+  "last_known_gpu_hours": 14.977361318671813,
+  "last_known_cpu_core_hours": 84.8247132776591
 }

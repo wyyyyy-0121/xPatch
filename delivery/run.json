@@ -4,8 +4,8 @@
   "pid": 184818,
   "kernel_start_ticks": "17841641",
   "started_utc": "2026-11-03T01:53:30.265555+00:00",
-  "last_checked_utc": "2026-11-03T16:34:13.256419+00:00",
-  "next_check_after_utc": "2026-11-03T17:04:13.256419+00:00",
+  "last_checked_utc": "2026-11-03T17:04:35.895101+00:00",
+  "next_check_after_utc": "2026-11-03T17:34:35.895101+00:00",
   "code_commit": "822d9e3239002e78112aa5154f240dca1b119e90",
   "run_directory": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development",
   "log": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/train_throughput_resume.log",
@@ -135,5 +135,6 @@
   "throughput_evidence": "artifacts/rv30/setup/throughput_20261103",
   "throughput_code_commit": "822d9e3239002e78112aa5154f240dca1b119e90",
   "throughput_resumed_utc": "2026-11-03T16:32:45.724873+00:00",
-  "throughput_amendment": "delivery/amendments/fused_throughput.json"
+  "throughput_amendment": "delivery/amendments/fused_throughput.json",
+  "latest_scheduled_observation": "artifacts/rv30/setup/throughput_20261103/first_scheduled_observation.json"
 }
