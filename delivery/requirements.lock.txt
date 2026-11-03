@@ -1,7 +1,8 @@
 # Exact installed distribution snapshot from delivery/rv30_dependencies.json.
 # Python 3.13.13; Linux/WSL x86_64; preserve the current CUDA-capable environment.
 # Lock source SHA256: 35d5942cad5ba51e9d1f5d2fe1f92ce92477622b7815ffb1bfe8a309c72b6c7b
-# Generated from the existing signed environment; a fresh installation is not yet validated.
+# Offline restoration in a fresh local venv is validated in environment_restore.json.
+# Online reacquisition and restored-environment GPU execution remain unvalidated.
 Jinja2==3.1.6
 MarkupSafe==3.0.4
 PyYAML==6.0.3

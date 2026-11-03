@@ -17,11 +17,26 @@ python3.13 -m venv /home/ayaka/.venvs/xpatch-replay
 /home/ayaka/.venvs/xpatch-replay/bin/python -m pip check
 ```
 
-`requirements.lock.txt` 从已签名的依赖 JSON 导出，包含 68 个分发包；`--no-deps` 使用完整快照，避免解析器另装未登记的依赖。Python 补丁版本、包名与版本的完整集合都参与环境核验。当前研究继续使用现有环境；上述另一环境的下载、安装和 GPU 兼容性尚未实测，包源可用性也不由快照保证。正式回放前需通过以下核对，不能通过重新冻结来绕过环境不匹配：
+`requirements.lock.txt` 从已签名的依赖 JSON 导出，包含 68 个分发包；`--no-deps` 使用完整快照，避免解析器另装未登记的依赖。Python 补丁版本、包名与版本的完整集合都参与环境核验。在线重新下载因连接重置和大包传输不稳定而未完成验证。已在本机独立新环境 `/home/ayaka/.venvs/xpatch-replay` 验证离线安装、精确依赖/签名、8 个预 2023 CPU 模型回放以及 PyTorch CPU 运算和 Chronos API 导入，见 `delivery/environment_restore.json`；新环境 GPU 执行和异机恢复尚未测试。当前正式研究继续使用原环境。正式回放前需通过以下核对，不能通过重新冻结来绕过环境不匹配：
 
 ```bash
 /home/ayaka/.venvs/xpatch-replay/bin/python -c 'from finance.io import ROOT,read_json; from finance.provenance import verify_freeze; v=verify_freeze(read_json(ROOT/"configs/rv30.json")); print(v["signature"])'
 ```
+
+可核验的离线恢复包约 5.4 GiB，位于 `/home/ayaka/.cache/xpatch-rv30/wheels/locked`；完整文件名、来源及 SHA256 在 `delivery/environment_wheels.json`。它包含 26 个与 PyPI 发布哈希匹配的原始 wheel，以及 42 个由当前锁定环境文件重建的本地快照，不能把后者称作原始发布包。备份该目录并恢复到目标机器后，使用清单中的唯一 wheel 集合和哈希安装：
+
+```bash
+/home/ayaka/.venvs/xpatch-replay/bin/python -I -m pip --isolated install \
+  --no-index --no-deps --only-binary=:all: --require-hashes \
+  --find-links /home/ayaka/.cache/xpatch-rv30/wheels/locked \
+  -r delivery/requirements.offline.txt
+env CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+  taskset -c 0-1 /home/ayaka/.venvs/xpatch-replay/bin/python -I \
+  scripts/verify_rv30_environment.py \
+  --output-directory artifacts/rv30/setup/environment_recheck
+```
+
+验证输出目录须为新目录；脚本核查所有包实际位于该独立环境，并只回放预 2023 的上一窗口 RV、HAR、Ridge、LightGBM 两个信息集，不能代替正式开发或确认的两轮复核。安装目录含其他同版本 wheel 时，pip 可能选择另一文件并因哈希不符停止；必须使用 `locked` 中精确的 68 个文件。恢复包生成、受检范围和限制见 `delivery/ENVIRONMENT_RESTORE.md`。
 
 预训练权重沿用 `configs/rv30_model_lock.json` 中的精确模型目录、文件与 SHA256，需从原本地工件备份恢复，或取得该锁对应的同一份权重后逐文件核对。模型训练与回放不会自动改用最新权重。完整权重和行情数据未加入 Git，仅克隆代码不足以复现实验。
 
