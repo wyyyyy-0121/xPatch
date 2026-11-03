@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "updated_utc": "2026-11-03T00:26:18.656191+00:00",
+  "items": [
+    {
+      "id": "realtime_sip",
+      "status": "skipped_permission_denied",
+      "evidence": "data_acquisition/runs/delivery_probe_20261103/probe.json",
+      "http_statuses": [
+        403,
+        403
+      ],
+      "provider_message": "subscription does not permit querying recent SIP data",
+      "blocks": [
+        "timely_live_inference",
+        "qualifying_prospective_observation"
+      ],
+      "does_not_block": [
+        "historical_data_audit",
+        "retrospective_training",
+        "offline_inference",
+        "negative_result_delivery"
+      ],
+      "action_taken": "No purchase, subscription change or alternate-feed fallback."
+    },
+    {
+      "id": "conditional_orderflow",
+      "status": "not_eligible_no_complete_dataset",
+      "evidence": "data_acquisition/runs/delivery_probe_20261103/probe.json",
+      "action_taken": "Preserve access evidence; do not claim DeepLOB or complete OFI replication."
+    },
+    {
+      "id": "github_push",
+      "status": "skipped_not_authorized",
+      "action_taken": "Local commits only."
+    }
+  ]
+}

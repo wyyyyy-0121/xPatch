@@ -1,0 +1,38 @@
+{
+  "created_utc": "2026-11-03T00:43:08.120196+00:00",
+  "scope": "Targeted original-paper and 2024-2026 finance-journal metadata/abstract review; not exhaustive",
+  "local_root": "artifacts/rv30/literature",
+  "files": {
+    "dm_published.json": "1dead3c1eb0581e3014847b1c95310336b30889655f431b43122c486f80626e7",
+    "followup_index.json": "d2ddd0651bcfb703ec21b1b07101242a326e777387d9c7cf54831b57196adb60",
+    "good_bad.json": "5ed6798228902d8beec244e63f3af9cac3567e15792cf330d2436e342e6af536",
+    "good_bad_crossref.json": "80fbfd56567f7b5bdf8641593b736b9301f311503eb6484a522c1143820f5274",
+    "har.json": "97fca75160ff32b9b1cecd41ef530a3a883f9ee433ba693549a7cfbf2f367bc0",
+    "har_crossref.json": "4fc43c967d639654b5dbdfa806a92f836bbbe8c8367e65a78236fa8b024dd768",
+    "index.json": "819e5d5f5e50feb13d28892911d461569857b2724d4270b9edff870e911da05d",
+    "patton_author.html": "0a754aa760de0ebd4a1d5b6923f1b3dca0c568f57c1c946b353f0d0a8cea9a48",
+    "patton_fulltext_source.json": "fc7d35615c6bb92c6145d1cab6675b058923bd146140553edbd7211573f40f86",
+    "patton_navigation.html": "65c06eaa5ed3ed14940f49594ed527b7f48716b93aa9183d367f4b516d1598a7",
+    "patton_qlike.pdf": "bfcc630f931a01e5c678c77d0f98240aa538af0bc5d1153f657d45c12b0ab64a",
+    "patton_qlike.txt": "d9c3317bf477ddafa748de951524fc89e37d8cdefbb2d7cd2e44c108a63e8fec",
+    "patton_research.html": "8258040a285fccbf9d27691b231d54532f0c95518b91f01282ed656f85ceb698",
+    "periodicity_published.json": "5dde558fcd75b961bfe0e15b21827f2ee7b6175cec9f91512998ba329f5344cb",
+    "primary_index.json": "84067ab4260890f7d5133a17e32e6f35f47af41de5ab4ef2ded10cdcaaac081a",
+    "qlike.json": "bd8fd0b1ed97d0cb9b2ce4832f9a524fa15904c283db9762f622d05244b50be8",
+    "qlike_crossref.json": "e970e9ae7b2ac84fada9bd0d12d542e21e5008a7fb690f9bcc0cc9b7c8940c37",
+    "qlike_published.json": "2d68a42088c464a27da16854fd12eef8ec511e9bf93d5bfebd336ef9abf1ba24",
+    "realized.json": "940bc2e4d6ddac23a5d94ce1e69d4871330174a61cac35015a911775fccced27",
+    "realized_crossref.json": "27d7798c27363b9ac08cc7f7c26cb579d6fa5721b76b3e5fdbf4dacaddcb48e9",
+    "recent_index.json": "de06a400b6edabbc4b76e96bddbe0b9a8854a8d2ee4cdb3ea7d39058ec4e2855",
+    "recent_jf.json": "278e83783cfe1de65f98c9b9a3f53eb2eef316d44a06c12153d329ba7e63c5f7",
+    "recent_jfe.json": "f02c13540788acdcb8bb4a5f0d1f580e891dac0fd37e43ba78b2c15da2075d29",
+    "rfs_retry.json": "7c1ddf0161b6a3c1e1203f2d4ea944ac5a3737ce97a220f54199e10dff77ab54"
+  },
+  "fulltext_read": [
+    "Patton 2011 abstract, loss definitions, assumptions and robust-ranking discussion"
+  ],
+  "fulltext_access_limited": [
+    "Corsi HAR publisher PDF"
+  ],
+  "preregistration_status": "draft; no formal RV outer predictions or scores generated"
+}

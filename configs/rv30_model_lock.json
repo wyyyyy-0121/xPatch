@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "scope": "Reuse read-only verified Chronos-2 files at pinned revision; no v2 files changed",
+  "models": {
+    "chronos2": {
+      "repository": "amazon/chronos-2",
+      "revision": "29ec3766d36d6f73f0696f85560a422f50e8498c",
+      "license": "apache-2.0",
+      "directory": "artifacts/aapl_v2/weights/chronos2",
+      "files": {
+        "README.md": {
+          "sha256": "c7b29bc88f5bc3ebc6e7213b6353be80090d671fefa4aa74ed20498838c16558",
+          "bytes": 7773,
+          "lfs_hash_verified": false
+        },
+        "config.json": {
+          "sha256": "ef1143bfdc9c0376d9a056eefca46cb4b1ec3d0ffacd541ff56feb40fb708031",
+          "bytes": 1067,
+          "lfs_hash_verified": false
+        },
+        "model.safetensors": {
+          "sha256": "ddcda3c7508bf2528087723e98a20707cc04b7f370ae275a9fd88078ddba4f42",
+          "bytes": 477930472,
+          "lfs_hash_verified": true
+        }
+      }
+    }
+  },
+  "chronos_distribution": "chronos-forecasting==2.3.2",
+  "historical_pretraining_contamination": "not independently established; retrospective results only"
+}

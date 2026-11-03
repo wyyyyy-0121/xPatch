@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-03T00:26:18.656191+00:00",
+  "passed_for_retrospective_research": true,
+  "feed": "sip",
+  "adjustment": "raw",
+  "timeframe": "1Min",
+  "timestamp_label": "bar_start",
+  "timezone": "America/New_York",
+  "calendar": "XNYS common US equity session grid",
+  "start": "2021-01-04",
+  "end": "2026-06-30",
+  "assets": {
+    "AAPL": {
+      "csv": "data_acquisition/runs/alpaca_development_20261102/AAPL_sip_1min_raw.csv",
+      "csv_sha256": "dafb2d2ac05ae7652fea0334caea209457db6418368efdcad8b7d648cdfb5830",
+      "receipt": "data_acquisition/runs/alpaca_development_20261102/receipt.json",
+      "receipt_sha256": "0baef3973f66b7c146ae10541095693e23b98e05c2f135d8fd6e039359e0434e",
+      "verification": {
+        "passed": true,
+        "receipt_sha256": "0baef3973f66b7c146ae10541095693e23b98e05c2f135d8fd6e039359e0434e",
+        "csv_sha256": "dafb2d2ac05ae7652fea0334caea209457db6418368efdcad8b7d648cdfb5830",
+        "pages_verified": 134,
+        "ranges_verified": 67,
+        "rows_verified": 1061536,
+        "fields_verified": [
+          "timestamp",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "trade_count",
+          "vwap"
+        ],
+        "raw_to_csv_all_fields_verified": true,
+        "formal_eligible": false,
+        "point_in_time_available": "not established"
+      },
+      "sample_verification": {
+        "passed": true,
+        "receipt_sha256": "4d8d722bbe1b0b83288eb6e73e375973a7c674ea6d9e302e48aef84251f66ed1",
+        "csv_sha256": "1e9c39cc40942e343f37319c7046b54c23158d6a9fcb703f65d4ebefc651f080",
+        "pages_verified": 20,
+        "ranges_verified": 20,
+        "rows_verified": 15188,
+        "fields_verified": [
+          "timestamp",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "trade_count",
+          "vwap"
+        ],
+        "raw_to_csv_all_fields_verified": true,
+        "formal_eligible": false,
+        "point_in_time_available": "not established"
+      },
+      "audit": "data_acquisition/runs/alpaca_development_20261102/history_audit.json",
+      "audit_sha256": "f0350ce28a487e4d033a57dbb55efb441c3743464bb0d5bdfc21bf3a0c8735e0",
+      "regular_rows": 535620,
+      "expected_rows": 535620,
+      "sessions": 1378,
+      "coverage": 1.0,
+      "minimum_daily_coverage": 1.0,
+      "audit20": "data_acquisition/runs/alpaca_audit20_20261102T0800Z/quality_audit.json",
+      "audit20_sha256": "36fe417880893f49bea14523641cb4e11fc46ae1cc2b7d0fb4354d7cce1c3133",
+      "volume_independently_verified": false
+    },
+    "SPY": {
+      "csv": "data_acquisition/runs/delivery_SPY_history_20261103/SPY_sip_1min_raw.csv",
+      "csv_sha256": "f4035231c5ac2eb3b5b4db6684afe49f002b4f1b81ca5d7a6727a540db597430",
+      "receipt": "data_acquisition/runs/delivery_SPY_history_20261103/receipt.json",
+      "receipt_sha256": "05fcc5978f7bed3689da924d90517e792f522dfee15f7ab7b436a211d866f9cf",
+      "verification": {
+        "passed": true,
+        "symbol": "SPY",
+        "pages": 135,
+        "ranges": 67,
+        "rows": 1139219,
+        "csv_sha256": "f4035231c5ac2eb3b5b4db6684afe49f002b4f1b81ca5d7a6727a540db597430",
+        "all_fields_verified": [
+          "timestamp",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "trade_count",
+          "vwap"
+        ],
+        "point_in_time_available": false
+      },
+      "sample_verification": {
+        "passed": true,
+        "symbol": "SPY",
+        "pages": 20,
+        "ranges": 20,
+        "rows": 15665,
+        "csv_sha256": "d6b7274f23d70a718f1f8a8c983b6a688d4637e3d3e95d856827a4c0d5598522",
+        "all_fields_verified": [
+          "timestamp",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "trade_count",
+          "vwap"
+        ],
+        "point_in_time_available": false
+      },
+      "audit": "data_acquisition/runs/delivery_SPY_history_20261103/audit.json",
+      "audit_sha256": "b80165b542878c5460123c1918da3982cf768e878bf34b752650bdda4976d2e8",
+      "audit20": "data_acquisition/runs/delivery_SPY_audit20_20261103/audit.json",
+      "audit20_sha256": "9fd75f9f6b24e2544c3d37e939f90f97b0a0f4a85077a0fd310bd0aa7e62578f",
+      "regular_rows": 535611,
+      "expected_rows": 535620,
+      "sessions": 1378,
+      "coverage": 0.9999831970426795,
+      "minimum_daily_coverage": 0.9871794871794872,
+      "volume_independently_verified": false,
+      "prices_independently_cross_checked": false
+    },
+    "QQQ": {
+      "csv": "data_acquisition/runs/delivery_QQQ_history_20261103/QQQ_sip_1min_raw.csv",
+      "csv_sha256": "76c5ab2879a22cd92ec77b04914a3607ea92bdbc400a20a9652bc90704075ae2",
+      "receipt": "data_acquisition/runs/delivery_QQQ_history_20261103/receipt.json",
+      "receipt_sha256": "d0de823ee4ae8b097281964bc69dceb8d600c23ef5252717e3d6890ecfceed99",
+      "verification": {
+        "passed": true,
+        "symbol": "QQQ",
+        "pages": 135,
+        "ranges": 67,
+        "rows": 1174886,
+        "csv_sha256": "76c5ab2879a22cd92ec77b04914a3607ea92bdbc400a20a9652bc90704075ae2",
+        "all_fields_verified": [
+          "timestamp",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "trade_count",
+          "vwap"
+        ],
+        "point_in_time_available": false
+      },
+      "sample_verification": {
+        "passed": true,
+        "symbol": "QQQ",
+        "pages": 20,
+        "ranges": 20,
+        "rows": 16889,
+        "csv_sha256": "e2d46d4cb88d63438fdf74b1aac0169dfe36eff8c41f72534ee0135645041456",
+        "all_fields_verified": [
+          "timestamp",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "trade_count",
+          "vwap"
+        ],
+        "point_in_time_available": false
+      },
+      "audit": "data_acquisition/runs/delivery_QQQ_history_20261103/audit.json",
+      "audit_sha256": "60b9815fcf65584d46542d830e92907931ae4298dc6187693f122202a5b7f732",
+      "audit20": "data_acquisition/runs/delivery_QQQ_audit20_20261103/audit.json",
+      "audit20_sha256": "a5c90c2f846989ff70fec75f59c4b0ccf70f1e1ff8942b15cd5fe2cd83e59eda",
+      "regular_rows": 535620,
+      "expected_rows": 535620,
+      "sessions": 1378,
+      "coverage": 1.0,
+      "minimum_daily_coverage": 1.0,
+      "volume_independently_verified": false,
+      "prices_independently_cross_checked": false
+    }
+  },
+  "probe": "data_acquisition/runs/delivery_probe_20261103/probe.json",
+  "probe_sha256": "0ba932b564f000505c5bc5ba886a3d8c9a525f13ca6af57d98c78ff7735bd8c7",
+  "recent_sip_access_passed": false,
+  "timely_live_delivery_certified": false,
+  "point_in_time_historical_data": false,
+  "historical_independent_holdout": false,
+  "order_flow": {
+    "historical_trade_quote_access_sample_passed": true,
+    "complete_dataset_acquired_and_audited": false,
+    "multi_level_depth_available": false,
+    "conditional_line_eligible": false,
+    "reason": "Only best-bid/ask and trade access samples are verified; no complete order-flow dataset or multi-level book was acquired. Conditional line is not admitted by access samples."
+  },
+  "limitations": [
+    "Final historical bars do not reconstruct publication time or revision latency.",
+    "2025H2-2026H1 and older dates have project exposure; these are retrospective comparisons.",
+    "AAPL overlapping prices were checked in v2; SPY/QQQ prices and all volumes lack an independent supplier cross-check.",
+    "Raw corporate-action scale is retained; exclude all overnight jumps in intraday return/RV construction.",
+    "An available SIP history does not imply a paid subscription or real-time SIP permission."
+  ]
+}
