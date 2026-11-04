@@ -1,0 +1,19 @@
+{
+  "checked_utc": "2026-11-04T07:41:15.298377+00:00",
+  "passed": true,
+  "scope": "paper_export_source_and_typesetting_checks_not_new_model_or_statistical_validation",
+  "numeric_and_provenance_checks": 327,
+  "development_rows": 12,
+  "confirmation_rows": 4,
+  "references_per_language": 12,
+  "latex_tables": 5,
+  "latex_figures": 2,
+  "local_compile_pages": 6,
+  "local_compile_overfull_boxes": 0,
+  "local_compile_check": {
+    "path": "artifacts/rv30/paper_sources_20261104/source_compile_check.json",
+    "sha256": "bcf81ba24b4d15c8403495887a2b81891e47d44d4556116744320bd89f85336b"
+  },
+  "new_training_or_test_statistics": false,
+  "final_research_acceptance": false
+}

@@ -1,0 +1,39 @@
+\twocolumn[
+\begin{center}
+{\Large\bfseries Intraday Realized-Variance Forecasting for AAPL: A Reproducible
+Comparison of Regularized Regression, Trees, and Time-Series Models}\par
+\vspace{5pt}
+{\normalsize Author information to be added}\par
+{\small Working manuscript -- 4 November 2026}\par
+\end{center}
+\begin{center}\begin{minipage}{0.96\textwidth}\small
+\textbf{Abstract.} We compare regularized regression, gradient-boosted trees, and
+time-series models for forecasting AAPL's realized variance over the
+next 30 minutes. Using SIP minute OHLCV data from January 2021 through
+June 2026, we evaluate an AAPL-only information set and a market
+information set that also includes SPY and QQQ history. The design
+combines ten quarterly expanding-window evaluations, three inner
+temporal validation folds, separate calibration windows, and
+whole-session purge gaps. The primary score is session-weighted QLIKE on
+the variance scale. Candidate qualification additionally requires
+dependence-aware inference, Holm adjustment across ten comparisons, and
+quarterly, annual-segment, and seed stability. The development sample
+contains 602 eligible sessions and 207,235 forecast origins per model.
+Ridge reduces QLIKE relative to the corresponding HAR baseline by 7.74\%
+and 7.41\% in the two information sets and meets all specified
+development gates. A subsequent historical confirmation sample of 251
+sessions yields improvements of 6.29\% and 7.97\%. The evaluated xPatch
+and fixed-weight Chronos-2 configurations do not meet the joint gates.
+AAPL-only LightGBM improves aggregate QLIKE but fails the annual and
+seed stability requirements. These findings support retaining carefully
+tuned regularized baselines for this particular task. The evidence
+remains limited to one target asset, previously exposed historical
+periods, and incompletely established pretraining contamination
+boundaries. It does not establish timely prospective performance or
+trading profitability.
+\par\vspace{4pt}
+\textbf{Keywords:} realized variance; intraday forecasting; HAR; Ridge; xPatch; temporal
+validation
+\end{minipage}\end{center}
+\vspace{5pt}
+]

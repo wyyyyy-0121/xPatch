@@ -1,0 +1,89 @@
+{
+  "completed_utc": "2026-11-04T07:41:35.860518+00:00",
+  "scope": "temporary_files_created_for_this_paper_typesetting_only",
+  "removed_files": 4084,
+  "removed_file_bytes": 176258222,
+  "paths": [
+    {
+      "path": "/home/ayaka/xPatch/artifacts/rv30/paper_sources_20261104/render",
+      "category": "paper_render_previews",
+      "files": 9,
+      "file_bytes": 3027375
+    },
+    {
+      "path": "/home/ayaka/xPatch/artifacts/rv30/paper_sources_20261104/render_final",
+      "category": "paper_render_previews",
+      "files": 9,
+      "file_bytes": 3516586
+    },
+    {
+      "path": "/tmp/xpatch-paper-plot-packages",
+      "category": "isolated_plot_runtime",
+      "files": 4057,
+      "file_bytes": 168236331
+    },
+    {
+      "path": "/tmp/xpatch-paper-mplconfig",
+      "category": "isolated_plot_runtime",
+      "files": 1,
+      "file_bytes": 1250501
+    },
+    {
+      "path": "/tmp/xpatch-paper-plot-install.log",
+      "category": "temporary_install_logs",
+      "files": 1,
+      "file_bytes": 1284
+    },
+    {
+      "path": "/tmp/xpatch-paper-plot-install-retry.log",
+      "category": "temporary_install_logs",
+      "files": 1,
+      "file_bytes": 3769
+    },
+    {
+      "path": "/home/ayaka/xPatch/research/paper/latex/main.log",
+      "category": "latex_build_outputs",
+      "files": 1,
+      "file_bytes": 27034
+    },
+    {
+      "path": "/home/ayaka/xPatch/research/paper/latex/main.aux",
+      "category": "latex_build_outputs",
+      "files": 1,
+      "file_bytes": 7809
+    },
+    {
+      "path": "/home/ayaka/xPatch/research/paper/latex/main.pdf",
+      "category": "latex_build_outputs",
+      "files": 1,
+      "file_bytes": 169643
+    },
+    {
+      "path": "/home/ayaka/xPatch/research/paper/latex/main.out",
+      "category": "latex_build_outputs",
+      "files": 1,
+      "file_bytes": 4102
+    },
+    {
+      "path": "/home/ayaka/xPatch/research/paper/latex/compile-2.log",
+      "category": "latex_build_outputs",
+      "files": 1,
+      "file_bytes": 6762
+    },
+    {
+      "path": "/home/ayaka/xPatch/research/paper/latex/compile-1.log",
+      "category": "latex_build_outputs",
+      "files": 1,
+      "file_bytes": 7026
+    }
+  ],
+  "failures": [],
+  "retained": [
+    "LaTeX sources and required vector images",
+    "Markdown and result tables",
+    "source downloads and failed retrieval evidence",
+    "research data, trained models and experiment artifacts",
+    "active observer and hourly monitor"
+  ],
+  "passed": true
+}

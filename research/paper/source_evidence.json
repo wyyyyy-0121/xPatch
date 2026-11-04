@@ -1,0 +1,161 @@
+{
+  "verification_date": "2026-11-04",
+  "scope": "bibliographic_identity_and_actual_reading_scope_not_a_completed_systematic_review",
+  "reading_registry": {
+    "path": "research/paper/SOURCES.md",
+    "sha256": "7fd85cdb622603c5acfd976b8c1dc47df7fdb9fa67af2eece56388cb57e32a32"
+  },
+  "retrieval_indices": [
+    {
+      "path": "artifacts/rv30/paper_sources_20261104/sources.json",
+      "sha256": "619b8c85a16eedd3fb7c436274c17c8cb719d294e70557a94e72f12673e07ccd"
+    },
+    {
+      "path": "artifacts/rv30/paper_sources_20261104/followup_sources.json",
+      "sha256": "ac1e74056356d7a38045b6a7693865df630fcb41d37ebcdd9118ce36ff963145"
+    },
+    {
+      "path": "artifacts/rv30/paper_sources_20261104/lightgbm_sources.json",
+      "sha256": "ddb069a86e25bc9990435e687b009c924dc2e9506d212827f6641de4720790cf"
+    }
+  ],
+  "retrieval_records": {
+    "ridge_crossref": {
+      "url": "https://api.crossref.org/works/10.1080%2F00401706.1970.10488634",
+      "http_status": 200,
+      "path": "artifacts/rv30/paper_sources_20261104/ridge_crossref.json",
+      "sha256": "8020c8941bb0e7f00129ca8125b2ccbd6b6c86b4afc2629e542da677ea79109d",
+      "content_status": "downloaded_source_read_only_to_the_scope_recorded_in_SOURCES.md"
+    },
+    "holm_crossref": {
+      "url": "https://api.crossref.org/works/10.2307%2F4615733",
+      "error": "HTTP Error 404: Not Found",
+      "passed": false,
+      "content_status": "retrieval_failed"
+    },
+    "newey_west_crossref": {
+      "url": "https://api.crossref.org/works/10.2307%2F1913610",
+      "error": "HTTP Error 429: Too Many Requests",
+      "passed": false,
+      "content_status": "retrieval_failed"
+    },
+    "chronos2_arxiv": {
+      "url": "https://arxiv.org/abs/2510.15821",
+      "http_status": 200,
+      "path": "artifacts/rv30/paper_sources_20261104/chronos2_arxiv.html",
+      "sha256": "9c98c32722b14cfa3c4405369f9ed928472595af89455c7d533e2ddefa99bb2f",
+      "content_status": "downloaded_source_read_only_to_the_scope_recorded_in_SOURCES.md"
+    },
+    "chronos2_fulltext": {
+      "url": "https://arxiv.org/html/2510.15821v1",
+      "http_status": 200,
+      "path": "artifacts/rv30/paper_sources_20261104/chronos2_fulltext.html",
+      "sha256": "fa1039e62f40c7d2dc2b8c9cc2f86ee7489080af521f262709ac830e9755e15f",
+      "content_status": "downloaded_source_read_only_to_the_scope_recorded_in_SOURCES.md"
+    },
+    "lightgbm_official": {
+      "url": "https://papers.nips.cc/paper/2017/hash/6449f44a102fde848669bdd9eb6b76fa-Abstract.html",
+      "error": "Remote end closed connection without response",
+      "passed": false,
+      "content_status": "retrieval_failed"
+    },
+    "lightgbm_pdf": {
+      "url": "https://papers.nips.cc/paper_files/paper/2017/file/6449f44a102fde848669bdd9eb6b76fa-Paper.pdf",
+      "error": "<urlopen error timed out>",
+      "passed": false,
+      "content_status": "retrieval_failed"
+    },
+    "holm_journal_record": {
+      "url": "https://www.jstor.org/stable/4615733",
+      "http_status": 200,
+      "path": "artifacts/rv30/paper_sources_20261104/holm_journal_record.html",
+      "sha256": "32ed63159c77e21ee19ca1b9aa3213ccf0218eb59539560b132a8e68ef0e18ea",
+      "content_status": "access_challenge_not_article_or_bibliographic_record",
+      "usable_as_article_source": false
+    },
+    "newey_west_journal_record": {
+      "url": "https://www.jstor.org/stable/1913610",
+      "http_status": 200,
+      "path": "artifacts/rv30/paper_sources_20261104/newey_west_journal_record.html",
+      "sha256": "32ed63159c77e21ee19ca1b9aa3213ccf0218eb59539560b132a8e68ef0e18ea",
+      "content_status": "access_challenge_not_article_or_bibliographic_record",
+      "usable_as_article_source": false
+    },
+    "newey_west_crossref_retry": {
+      "url": "https://api.crossref.org/works/10.2307%2F1913610",
+      "http_status": 200,
+      "path": "artifacts/rv30/paper_sources_20261104/newey_west_crossref_retry.json",
+      "sha256": "b206d47f142b5d1b8e8c0642f740028d38198c7a61e8edd921bbef9aa9e9a61d",
+      "content_status": "downloaded_source_read_only_to_the_scope_recorded_in_SOURCES.md"
+    },
+    "lightgbm_proceedings": {
+      "url": "https://proceedings.neurips.cc/paper/2017/hash/6449f44a102fde848669bdd9eb6b76fa-Abstract.html",
+      "error": "<urlopen error timed out>",
+      "passed": false,
+      "content_status": "retrieval_failed"
+    },
+    "lightgbm_author_pdf": {
+      "url": "https://www.microsoft.com/en-us/research/wp-content/uploads/2017/11/lightgbm.pdf",
+      "http_status": 200,
+      "path": "artifacts/rv30/paper_sources_20261104/lightgbm_author_pdf.pdf",
+      "sha256": "12cb4b8d64ad4e22066c7449360e7ad05f2a1804414d9cd9ad37f32ae694be07",
+      "content_status": "downloaded_source_read_only_to_the_scope_recorded_in_SOURCES.md"
+    },
+    "lightgbm_readme": {
+      "url": "https://raw.githubusercontent.com/microsoft/LightGBM/master/README.md",
+      "error": "<urlopen error [Errno 104] Connection reset by peer>",
+      "content_status": "retrieval_failed"
+    }
+  },
+  "prior_source_files": [
+    {
+      "path": "artifacts/rv30/literature/realized_crossref.json",
+      "sha256": "27d7798c27363b9ac08cc7f7c26cb579d6fa5721b76b3e5fdbf4dacaddcb48e9"
+    },
+    {
+      "path": "artifacts/rv30/literature/har_crossref.json",
+      "sha256": "4fc43c967d639654b5dbdfa806a92f836bbbe8c8367e65a78236fa8b024dd768"
+    },
+    {
+      "path": "artifacts/rv30/literature/periodicity_published.json",
+      "sha256": "5dde558fcd75b961bfe0e15b21827f2ee7b6175cec9f91512998ba329f5344cb"
+    },
+    {
+      "path": "artifacts/rv30/literature/qlike_published.json",
+      "sha256": "2d68a42088c464a27da16854fd12eef8ec511e9bf93d5bfebd336ef9abf1ba24"
+    },
+    {
+      "path": "artifacts/rv30/literature/patton_qlike.pdf",
+      "sha256": "bfcc630f931a01e5c678c77d0f98240aa538af0bc5d1153f657d45c12b0ab64a"
+    },
+    {
+      "path": "artifacts/rv30/literature/patton_qlike.txt",
+      "sha256": "d9c3317bf477ddafa748de951524fc89e37d8cdefbb2d7cd2e44c108a63e8fec"
+    },
+    {
+      "path": "artifacts/rv30/literature/good_bad_crossref.json",
+      "sha256": "80fbfd56567f7b5bdf8641593b736b9301f311503eb6484a522c1143820f5274"
+    },
+    {
+      "path": "artifacts/rv30/literature/dm_published.json",
+      "sha256": "1dead3c1eb0581e3014847b1c95310336b30889655f431b43122c486f80626e7"
+    }
+  ],
+  "extracted_text": [
+    {
+      "path": "artifacts/rv30/paper_sources_20261104/chronos2_fulltext.txt",
+      "sha256": "8b2683f28230c86b2aae84ca65fa0f590e2998f9f69168c45912cd8bb2179f79"
+    },
+    {
+      "path": "artifacts/rv30/paper_sources_20261104/lightgbm_author_pdf.txt",
+      "sha256": "1df3ead04dd19872e63aa0b9c50169f38c20d897ab11be09d51e50cfadc127b1"
+    }
+  ],
+  "unresolved": {
+    "classic_full_texts": "See SOURCES.md; metadata verification is not full-text review.",
+    "newey_west": "Original pagination and original full text not retrieved; Crossref confirms opening page only.",
+    "holm": "Conventional citation remains pending original verification; challenge pages are not article retrieval.",
+    "pretrained_contamination": "Not resolved by reading the Chronos-2 report."
+  },
+  "protocol_and_model_changes": false
+}

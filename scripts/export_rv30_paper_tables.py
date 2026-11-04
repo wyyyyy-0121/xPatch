@@ -85,7 +85,8 @@ def extract(evaluation, phase):
                 'total_quarters':len(c['quarter_differences']) if c else '',
                 'passed_all_registered_gates':c['passed'] if c else 'reference',
                 'failed_gate_checks':';'.join(k for k,v in c['gate_checks'].items() if not v) if c else '',
-                'coverage_80':d['coverage_80'], 'coverage_90':d['coverage_90'],
+                'coverage_80':d['coverage_80'], 'width_80':d['width_80'],
+                'coverage_90':d['coverage_90'], 'width_90':d['width_90'],
                 'sessions':d['sessions'], 'origins':d['origins'],
             })
             for quarter, q in d['quarter'].items():

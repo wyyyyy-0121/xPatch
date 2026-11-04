@@ -1,0 +1,7 @@
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+article_body.md
+main.pdf

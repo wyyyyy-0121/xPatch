@@ -1,0 +1,34 @@
+% !TeX program = pdflatex
+\documentclass[10pt,a4paper,twocolumn]{article}
+\usepackage[margin=18mm,columnsep=6mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{mathptmx}
+\usepackage{amsmath,amssymb,graphicx,booktabs,array,microtype}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage[breaklinks=true,colorlinks=true,allcolors=blue]{hyperref}
+\usepackage{url}
+\DeclareUnicodeCharacter{2212}{\ensuremath{-}}
+\DeclareUnicodeCharacter{2075}{\textsuperscript{5}}
+\usepackage{titlesec}
+\titlespacing*{\section}{0pt}{7pt plus 2pt minus 1pt}{4pt plus 1pt minus 1pt}
+\titlespacing*{\subsection}{0pt}{6pt plus 2pt minus 1pt}{3pt plus 1pt minus 1pt}
+\setlength{\parindent}{1em}
+\setlength{\parskip}{0pt}
+\setlength{\textfloatsep}{9pt plus 2pt minus 2pt}
+\setlength{\dbltextfloatsep}{10pt plus 2pt minus 2pt}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\setlength{\tabcolsep}{4pt}
+\setcounter{secnumdepth}{0}
+\setcounter{topnumber}{4}
+\setcounter{dbltopnumber}{4}
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\dbltopfraction}{0.95}
+\renewcommand{\textfraction}{0.05}
+\emergencystretch=1em
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\hypersetup{pdftitle={Intraday Realized-Variance Forecasting for AAPL},pdfauthor={Author information pending}}
+\begin{document}
+\input{titleblock.tex}
+\input{body.tex}
+\end{document}

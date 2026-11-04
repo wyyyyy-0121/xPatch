@@ -1,5 +1,5 @@
 {
-  "created_utc": "2026-11-04T07:04:59.576472+00:00",
+  "created_utc": "2026-11-04T07:19:49.991215+00:00",
   "research_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
   "scope": "extraction_of_saved_verified_results_not_new_statistical_validation",
   "historical_exposure": true,
@@ -18,7 +18,7 @@
   "inner_jobs": 12000,
   "runtime_snapshot": {
     "stage": "waiting_regular_session_delayed_replay",
-    "updated_utc": "2026-11-04T07:04:47.211161+00:00",
+    "updated_utc": "2026-11-04T07:19:47.423192+00:00",
     "delayed_replay_complete_sessions": 0,
     "prospective_complete_sessions": 0,
     "last_error": null
@@ -71,11 +71,11 @@
   },
   "exporter": {
     "path": "scripts/export_rv30_paper_tables.py",
-    "sha256": "6066f4e81a45ed532340a633ca6b52a90c021b9b2be3e6f1b0dc77a27bf9e782"
+    "sha256": "2d8b9bab3ba81f9b0d84feeac6f374c8c6eaa34685a995fdc5693c1e5d464dc2"
   },
   "tables": {
-    "development.csv": "366c7e1c783d642717b9dd1db0e9d74dbd7cc521800874a536482e1637d39306",
-    "confirmation.csv": "9e7de9d0a6b0d35029102e64d5ac1f46dc5f3ed8b7333a44702a486b921fe72b",
+    "development.csv": "fb4ccd1b4ab5eca89cf8c5a0e5664462601d8f9c82bd00e3bc6d7920d2771580",
+    "confirmation.csv": "70b04cb8f64e0f744988cfa33ba529d42a7c7433c698667922e17c639cd5a272",
     "quarterly.csv": "73ef809ba5eff170c5aaa94cff5b09fb64d1a8eb516adb0ed6f56e4ad1f52a79"
   }
 }

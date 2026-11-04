@@ -1,0 +1,23 @@
+{
+  "source": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/evaluation.json",
+  "source_sha256": "4b70aec00ea620ca28bb2db95dcb09f5a5eb6a4a077d344ba4ea7a8343b22bb4",
+  "script": "scripts/plot_rv30_paper.py",
+  "script_sha256": "47a22eae8f067c6d939951adbef812e4709e699ce4efd0a9c2be1563d5dc9535",
+  "matplotlib_version": "3.11.2",
+  "numpy_version": "2.5.4",
+  "scope": "static_visualization_of_existing_results_no_new_scores_or_tests",
+  "historical_exposure": true,
+  "quarter_count": 10,
+  "information_sets": [
+    "aapl",
+    "market"
+  ],
+  "files": {
+    "research/paper/figures/development_loss_differences.png": "ed7f69e6dd5226fe85c22a02a8c3f27d82e30bdcc121effc3b85d6f8224ab26f",
+    "research/paper/figures/development_loss_differences.pdf": "73ea2e1f2f081be490b801c04cf4c4a120453162937635139b58315179cc8e1d",
+    "research/paper/figures/development_loss_differences.svg": "5e8530269f072c65f4f12af24717667dd91cdcd983bdfbea56c83369760bb69c",
+    "research/paper/figures/quarterly_loss_differences.png": "c424bea699235497da5cb76f9739f84f885b9cdc87388bb57f7c3859ce122390",
+    "research/paper/figures/quarterly_loss_differences.pdf": "1c33cb2ed6ffb743ca07bb9e045b2ca767778df351f3db550890cf0d3001c5bc",
+    "research/paper/figures/quarterly_loss_differences.svg": "afb154d777fbd22a9a80a3db2d6e8daecf75d1cf0a80689728757e25f89ff2dd"
+  }
+}
