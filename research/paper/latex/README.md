@@ -20,7 +20,7 @@ Two passes resolve table and figure references. The project uses standard packag
 | File | Content |
 |---|---|
 | `main.tex` | Two-column page layout, package settings, PDF metadata, and document entry point |
-| `titleblock.tex` | Title, author placeholder, abstract, and keywords spanning both columns |
+| `titleblock.tex` | Title, shared author setting, abstract, and keywords spanning both columns |
 | `body.tex` | English article, equations, tables, captions, and the working reference list |
 | `images/development_loss_differences.pdf` | Vector figure for development comparisons |
 | `images/quarterly_loss_differences.pdf` | Vector figure for all ten development quarters |
@@ -29,7 +29,7 @@ Two passes resolve table and figure references. The project uses standard packag
 
 The style is a general two-column research-article layout. It is not an official IEEE, ACM, or journal template. Once a venue is selected, its official class and author instructions should replace the general layout. Figure and table references and the bibliography must then be checked again.
 
-Author details remain placeholders. Some references still require original-source checking; the status is recorded in `../SOURCES.md`. The article distinguishes historical results from the uncompleted delayed and timely observation studies. Formatting does not change those evidence limits.
+The author name is **Wang Yang**. Edit `\newcommand{\paperauthor}{Wang Yang}` in `main.tex` to change it once for both the visible byline and PDF author metadata. The article contains no affiliation, email, coauthor, or venue fields to fill in. Some references still require original-source checking; the status is recorded in `../SOURCES.md`. The article distinguishes historical results from the uncompleted delayed and timely observation studies. Formatting does not change those evidence limits.
 
 The longer editable Markdown draft is `../MANUSCRIPT_EN.md`. To regenerate the `.tex` files from that draft, use the optional repository script `scripts/build_rv30_paper.py` with Pandoc installed. **Regeneration overwrites `body.tex` and `titleblock.tex`**, so preserve direct LaTeX edits first. Ordinary editing and compilation can use this directory alone.
 

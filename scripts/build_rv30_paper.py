@@ -46,7 +46,7 @@ def main():
             '-t', 'latex'], input=value, text=True, capture_output=True, check=True).stdout.strip()
 
     titleblock = '\\twocolumn[\n\\begin{center}\n{\\Large\\bfseries ' + latex_fragment(title) + '}\\par\n'
-    titleblock += '\\vspace{5pt}\n{\\normalsize Author information to be added}\\par\n'
+    titleblock += '\\vspace{5pt}\n{\\normalsize \\paperauthor}\\par\n'
     titleblock += '{\\small Working manuscript -- 4 November 2026}\\par\n\\end{center}\n'
     titleblock += '\\begin{center}\\begin{minipage}{0.96\\textwidth}\\small\n'
     titleblock += '\\textbf{Abstract.} ' + latex_fragment(abstract) + '\n\\par\\vspace{4pt}\n'

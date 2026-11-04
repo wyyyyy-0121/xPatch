@@ -1,8 +1,8 @@
 {
   "source": "research/paper/MANUSCRIPT_EN.md",
-  "source_sha256": "35e8cbb15615adf4a32e0ab4eaf0d1efb9b13f599ce8361e2a031350c4dd2fa5",
+  "source_sha256": "14e6a218a5ae78ac4e471f7ca05cc812e681ee577bf8c2160962e169d3ca37ef",
   "builder": "scripts/build_rv30_paper.py",
-  "builder_sha256": "4bae5f5353dc047fa16a1f9a4bf584f5004b241a993129f2569cfd1e25558b47",
+  "builder_sha256": "dd99fd357d4bfd1bb91969c93ab5161d54be40e55188a4ce5e0bb7053995ff8a",
   "purpose": "two_column_review_manuscript_not_final_submission_or_model_acceptance",
   "typesetting_versions": {
     "pandoc": "pandoc 3.7.0.2"
@@ -10,13 +10,15 @@
   "figures": 2,
   "delivered_as": "latex_sources_only",
   "files": {
-    "research/paper/latex/main.tex": "52da1619b6d39f629abfb820ae5544e4f41f34cc0f40ea87da41e663db0582a7",
+    "research/paper/latex/main.tex": "2d94a479ba6b4eaf9abcf44397762005baa4d19708c812c4347b59cb6a265b5d",
     "research/paper/latex/body.tex": "ae036c9c346d882c7ccbea8755b213da92cf66648e67a670ccac6579244ed9dd",
-    "research/paper/latex/titleblock.tex": "0d11026c7521d8fa2e09137950f4a8de05814b7579c1843c13d482b7175cbc41",
+    "research/paper/latex/titleblock.tex": "e2f38970f92f76ac10a79188228e02856e5e7dc6f87f613bfa3c23015a1ff7a0",
     "research/paper/latex/tables.lua": "3c5fbf870710e9520544b36da0e51052f4cd38a5528550ad6fae39fa38c10d5b",
-    "research/paper/latex/README.md": "83b91ce7bf0bded4abbc5e80a3da7af47037ff59be21b23bfff717da2c486885",
+    "research/paper/latex/README.md": "8d8205accb8bd1a1dd0fc7d95f5fa64d21be53727cdde4f59e15eadf995d7017",
     "research/paper/latex/.gitignore": "158834a89274dbbbbe61e6280a6e123dc758df39771eb06bef7411759af05d5a",
     "research/paper/latex/images/development_loss_differences.pdf": "73ea2e1f2f081be490b801c04cf4c4a120453162937635139b58315179cc8e1d",
     "research/paper/latex/images/quarterly_loss_differences.pdf": "1c33cb2ed6ffb743ca07bb9e045b2ca767778df351f3db550890cf0d3001c5bc"
-  }
+  },
+  "author": "Wang Yang",
+  "author_setting": "paperauthor in main.tex; shared by byline and PDF metadata"
 }

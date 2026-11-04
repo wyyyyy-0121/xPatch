@@ -1,6 +1,6 @@
 # Intraday Realized-Variance Forecasting for AAPL: A Reproducible Comparison of Regularized Regression, Trees, and Time-Series Models
 
-Working manuscript, 4 November 2026. Author information and submission venue remain to be specified. This draft reports completed historical experiments. The delayed observation service has not yet produced an evaluation sample. Numerical sources are indexed in `evidence.json`; reference verification and reading scope are recorded in `SOURCES.md` and `source_evidence.json`.
+Working manuscript, 4 November 2026. Author: Wang Yang. This draft reports completed historical experiments. The delayed observation service has not yet produced an evaluation sample. Numerical sources are indexed in `evidence.json`; reference verification and reading scope are recorded in `SOURCES.md` and `source_evidence.json`.
 
 ## Abstract
 
@@ -243,4 +243,4 @@ The local study index is `delivery/manifest.json`. It links the protocol, config
 
 ## Editorial notes for the submission version
 
-The reference list is a working bibliography. For [11], the retrieved Crossref record confirms the opening page but not the final page; the original pagination remains to be checked. The publisher page for [12] returned an access-challenge page, so its conventional citation has not yet been verified against the original. Some other classic references have metadata verification without full-text reading. `SOURCES.md` distinguishes these cases from the original passages actually read. Author details, venue format, a public reproducibility package, and the supporting literature review must be completed before submission. These editorial notes should be resolved or moved out of the submitted article; unresolved scientific limitations must remain in the article.
+The reference list is a working bibliography. For [11], the retrieved Crossref record confirms the opening page but not the final page; the original pagination remains to be checked. The publisher page for [12] returned an access-challenge page, so its conventional citation has not yet been verified against the original. Some other classic references have metadata verification without full-text reading. `SOURCES.md` distinguishes these cases from the original passages actually read. The supporting literature review and availability of a public reproducibility package require further work before submission. These editorial notes should be resolved or moved out of the submitted article; unresolved scientific limitations must remain in the article.
