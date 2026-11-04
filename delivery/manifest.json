@@ -118,20 +118,21 @@
     "artifacts/rv30/setup/delayed_sip_20261104/start_service.py": "657027dd2ebfb47012fafe5d34f47f8987b4f6bb8b362d4711732cd1c4bec198",
     "artifacts/rv30/setup/delayed_sip_20261104/check_cli.py": "155628eec90725d23c28b9e0e2f210d76a9ed31f8edac0b6aeaa6bdc36acd526",
     "artifacts/rv30/setup/delayed_sip_20261104/handoff.py": "8544047873771f8d97b9b54102ced65840ad9c005d79be7d63b6523ee19363b2",
-    "research/paper/PAPER_PLAN.md": "42f2f1dc1ca3de36231c7a9f9c6c99102e64cde08588b2ce735a1bf9cc28cbf2",
+    "research/paper/PAPER_PLAN.md": "3acd215c4fbeaf5ca633e3fd9dfb77e60dfd9d8c6ea8c1b18552b307dafc8277",
     "research/paper/RESULTS.md": "7bfbb545150bbbbace3ea3619d0170ff1e23bff421d35afdaf55fe4f3cecca0d",
     "research/paper/development.csv": "366c7e1c783d642717b9dd1db0e9d74dbd7cc521800874a536482e1637d39306",
     "research/paper/confirmation.csv": "9e7de9d0a6b0d35029102e64d5ac1f46dc5f3ed8b7333a44702a486b921fe72b",
     "research/paper/quarterly.csv": "73ef809ba5eff170c5aaa94cff5b09fb64d1a8eb516adb0ed6f56e4ad1f52a79",
     "research/paper/evidence.json": "31476deb3649f3fd72e29becc8670f0e1efd99ef3b138f65876340c7c17b9dae",
-    "scripts/export_rv30_paper_tables.py": "6066f4e81a45ed532340a633ca6b52a90c021b9b2be3e6f1b0dc77a27bf9e782"
+    "scripts/export_rv30_paper_tables.py": "6066f4e81a45ed532340a633ca6b52a90c021b9b2be3e6f1b0dc77a27bf9e782",
+    "research/paper/MANUSCRIPT_ZH.md": "6abcacf5bc8fbce5c270007220d4ef0581650849a979c2e5542c8cb179ef26cf"
   },
   "completion_signature": "c292ecdf29600a902c78a5c671f6ac33ea8b19439dc05d5d80444fd577676deb",
   "completion_readiness": "artifacts/rv30/setup/completion_20261104/handoff.json",
   "monitoring": "active_hourly_minimal_state_checks",
   "monitor_interval_minutes": 60,
   "permission_wait_does_not_pause_monitor": true,
-  "updated_utc": "2026-11-04T07:04:59.595356+00:00",
+  "updated_utc": "2026-11-04T07:11:27.800545+00:00",
   "mode": "delayed_shadow_replay",
   "delayed_replay_plan": "delivery/delayed_sip_lock.json",
   "delayed_replay_plan_signature": "1edb466883e3ddcf7fa132ca7fa9f069e45ea17de88b17760dc3b22112ab3c3a",
@@ -150,7 +151,8 @@
     "plan": "research/paper/PAPER_PLAN.md",
     "tables": "research/paper/RESULTS.md",
     "evidence": "research/paper/evidence.json",
-    "status": "historical_research_draft_materials_not_submitted_or_final",
-    "new_scores_or_refitting": false
+    "status": "chinese_working_manuscript_pending_literature_completion_and_target_format",
+    "new_scores_or_refitting": false,
+    "manuscript": "research/paper/MANUSCRIPT_ZH.md"
   }
 }
