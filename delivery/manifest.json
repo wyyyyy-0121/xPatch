@@ -118,7 +118,7 @@
     "artifacts/rv30/setup/delayed_sip_20261104/start_service.py": "657027dd2ebfb47012fafe5d34f47f8987b4f6bb8b362d4711732cd1c4bec198",
     "artifacts/rv30/setup/delayed_sip_20261104/check_cli.py": "155628eec90725d23c28b9e0e2f210d76a9ed31f8edac0b6aeaa6bdc36acd526",
     "artifacts/rv30/setup/delayed_sip_20261104/handoff.py": "8544047873771f8d97b9b54102ced65840ad9c005d79be7d63b6523ee19363b2",
-    "research/paper/PAPER_PLAN.md": "0a5351673ae4e69e2068bc18c13a2a41da4170b461d7e58ea915f41fc2abfdb3",
+    "research/paper/PAPER_PLAN.md": "b962e6069f8f0017251d70c3ea3904abd2ca5dd34558eb62124ba2e4ad10a984",
     "research/paper/RESULTS.md": "7bfbb545150bbbbace3ea3619d0170ff1e23bff421d35afdaf55fe4f3cecca0d",
     "research/paper/development.csv": "fb4ccd1b4ab5eca89cf8c5a0e5664462601d8f9c82bd00e3bc6d7920d2771580",
     "research/paper/confirmation.csv": "70b04cb8f64e0f744988cfa33ba529d42a7c7433c698667922e17c639cd5a272",
@@ -126,7 +126,7 @@
     "research/paper/evidence.json": "70e47af19f2d054a94f90122e6bacf873e3b34a40f7e0aa79e4f7ce5ad6203b9",
     "scripts/export_rv30_paper_tables.py": "2d8b9bab3ba81f9b0d84feeac6f374c8c6eaa34685a995fdc5693c1e5d464dc2",
     "research/paper/MANUSCRIPT_ZH.md": "70f67b3e91081d0f88526bc6867ac7e282afbf148dbd09d6e9d00f623d46d5a1",
-    "research/paper/SUBMISSION_PLAN.md": "58f41f51951d2dce79befca01bf793d606a02587c0c3d94604f4a58602ca0d80",
+    "research/paper/SUBMISSION_PLAN.md": "293c723f45d5ac0ef70206fd932437577d9a79adb0f88fb815220c25e925ceb5",
     "research/paper/validation.json": "309d2e74e13ad27eba1a256afd6f1166a3bf9b3b34fd67dabc4e2102a368ea9a",
     "research/paper/MANUSCRIPT_EN.md": "7f694b5ccd33e0fb4d850760a6c94658ebd7a658c6e7d49d7cdccd13f5f54dfe",
     "research/paper/source_evidence.json": "8fb4917a5dfa933eb45485f537775bf01bcfa5a062c9a69b870b0e3631b8cf7c",
@@ -153,14 +153,16 @@
     "research/paper/author.json": "a0b6b2dcbc0c1dab8abdf125cc5f6fe24e77c8d13ea46512743812bb77479adf",
     "research/paper/AAPL_RV30_Wang_Yang.docx": "bbf86578187ebb86d5eae68dd09bdd43cd8f3fa57adae2e95266b1c0dd27a8a2",
     "research/paper/word_export.json": "a22533c2dbd4329b9322f1b17e0301bb49164270faa0d96ea2f466860babbc46",
-    "scripts/export_rv30_paper_word.py": "988ac2578f0c3573b22c74eace1d631d4433b1cc54101f2a95c56162946b3f6e"
+    "scripts/export_rv30_paper_word.py": "988ac2578f0c3573b22c74eace1d631d4433b1cc54101f2a95c56162946b3f6e",
+    "research/paper/JOURNAL_READING.md": "185c997c3a544619f12f2f92e331aac7bc456382b3312a270b24ba0bff3f9fd8",
+    "research/paper/framework_evidence.json": "92611af01e7e98f6ceece7ff83aef86f1940ea4d423ce369db1d90b120dc03f1"
   },
   "completion_signature": "c292ecdf29600a902c78a5c671f6ac33ea8b19439dc05d5d80444fd577676deb",
   "completion_readiness": "artifacts/rv30/setup/completion_20261104/handoff.json",
   "monitoring": "active_hourly_minimal_state_checks",
   "monitor_interval_minutes": 60,
   "permission_wait_does_not_pause_monitor": true,
-  "updated_utc": "2026-11-04T10:47:34.636177+00:00",
+  "updated_utc": "2026-11-04T11:15:06.320801+00:00",
   "mode": "delayed_shadow_replay",
   "delayed_replay_plan": "delivery/delayed_sip_lock.json",
   "delayed_replay_plan_signature": "1edb466883e3ddcf7fa132ca7fa9f069e45ea17de88b17760dc3b22112ab3c3a",
@@ -179,7 +181,7 @@
     "plan": "research/paper/PAPER_PLAN.md",
     "tables": "research/paper/RESULTS.md",
     "evidence": "research/paper/evidence.json",
-    "status": "english_journal_or_conference_working_manuscript_with_two_column_latex_sources",
+    "status": "existing_working_manuscript_pending_literature_grounded_restructure",
     "new_scores_or_refitting": false,
     "manuscript": "research/paper/MANUSCRIPT_ZH.md",
     "english_manuscript": "research/paper/MANUSCRIPT_EN.md",
@@ -200,6 +202,11 @@
     "author_details": "research/paper/author.json",
     "word_document": "research/paper/AAPL_RV30_Wang_Yang.docx",
     "word_export_validation": "research/paper/word_export.json",
-    "author_email_intentionally_blank": true
+    "author_email_intentionally_blank": true,
+    "journal_reading_notes": "research/paper/JOURNAL_READING.md",
+    "framework_evidence": "research/paper/framework_evidence.json",
+    "framework_stage": "framework_before_manuscript_rewrite",
+    "framework_manuscript_rewritten": false,
+    "controlled_simulations_status": "design_only_not_run"
   }
 }

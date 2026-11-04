@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-04T11:15:06.319018+00:00",
+  "purpose": "primary_journal_reading_for_paper_framework_before_manuscript_rewrite",
+  "research_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+  "systematic_review": false,
+  "latest_model_survey": false,
+  "new_scores_computed": false,
+  "new_training_or_simulations_run": false,
+  "manuscript_rewritten": false,
+  "sources": [
+    {
+      "id": "jmlr_amlb",
+      "title": "AMLB: an AutoML Benchmark",
+      "authors": [
+        "Pieter Gijsbers",
+        "Marcos L. P. Bueno",
+        "Stefan Coors",
+        "Erin LeDell",
+        "Sébastien Poirier",
+        "Janek Thomas",
+        "Bernd Bischl",
+        "Joaquin Vanschoren"
+      ],
+      "venue": "Journal of Machine Learning Research",
+      "venue_type": "journal",
+      "year": 2024,
+      "volume": 25,
+      "issue_or_article": "101",
+      "pages": "1-65",
+      "official_article_url": "https://www.jmlr.org/papers/v25/22-0493.html",
+      "official_pdf_url": "https://www.jmlr.org/papers/volume25/22-0493/22-0493.pdf",
+      "primary_text_obtained": true,
+      "reading_mode": "selected_sections_not_cover_to_cover",
+      "sections_read": [
+        "Abstract and Introduction",
+        "Section 5.1: dataset selection, metrics and missing experimental outcomes",
+        "Section 6 opening; Section 6.1 statistical comparison setup; Section 6.4 failures",
+        "Section 7 opening"
+      ],
+      "pdf_page_anchors": {
+        "benchmark_design": 13,
+        "results": 20,
+        "failures": 28,
+        "conclusion": 30
+      },
+      "proofs_independently_verified": false,
+      "results_reproduced": false,
+      "files": [
+        {
+          "path": "artifacts/rv30/paper_framework_20261104/jmlr_amlb.pdf",
+          "bytes": 1161956,
+          "sha256": "0f2f789215e1993f0c07ce94cf2626194cacc61f9670e2ad3dad85e56573f703"
+        },
+        {
+          "path": "artifacts/rv30/paper_framework_20261104/jmlr_amlb.txt",
+          "bytes": 372457,
+          "sha256": "2ed3c10817b61e522f018f1fe273eaab93591a78b0d9e77577a155d0597b104e"
+        }
+      ]
+    },
+    {
+      "id": "nmi_evaluation",
+      "title": "Evaluation of post-hoc interpretability methods in time-series classification",
+      "authors": [
+        "Hugues Turbé",
+        "Mina Bjelogrlic",
+        "Christian Lovis",
+        "Gianmarco Mengaldo"
+      ],
+      "venue": "Nature Machine Intelligence",
+      "venue_type": "journal",
+      "year": 2023,
+      "volume": 5,
+      "issue_or_article": "3",
+      "pages": "250-260",
+      "official_article_url": "https://www.nature.com/articles/s42256-023-00620-w",
+      "official_pdf_url": "https://www.nature.com/articles/s42256-023-00620-w.pdf",
+      "primary_text_obtained": true,
+      "reading_mode": "selected_sections_not_cover_to_cover",
+      "sections_read": [
+        "HTML Abstract, Main, Results, Discussion",
+        "Methods: selected synthetic dataset description",
+        "PDF page 2 visual layout inspection"
+      ],
+      "pdf_page_anchors": {
+        "visual_layout": 2,
+        "results_begin": 3
+      },
+      "proofs_independently_verified": false,
+      "results_reproduced": false,
+      "files": [
+        {
+          "path": "artifacts/rv30/paper_framework_20261104/nmi_evaluation.pdf",
+          "bytes": 4537266,
+          "sha256": "177d6c16fbd4bce317a8706c38dcd4561e4435696d3fbb09391a109d84b2b1e5"
+        },
+        {
+          "path": "artifacts/rv30/paper_framework_20261104/nmi_evaluation.txt",
+          "bytes": 71915,
+          "sha256": "004ad724656cd68b37b84989653dc6b740fd077b07c444b37ca4943231ae261d"
+        },
+        {
+          "path": "artifacts/rv30/paper_framework_20261104/nmi_evaluation.html",
+          "bytes": 412814,
+          "sha256": "0f77820633952e1301a46a37ef052d2255ebb14824c5d3909888f4a42c164261"
+        },
+        {
+          "path": "artifacts/rv30/paper_framework_20261104/nmi_evaluation_pdf.txt",
+          "bytes": 103369,
+          "sha256": "3c6e85f0a77d9a53290edb5d2597be3eb7c9350dec882f84bf5cad40fb9adfe0"
+        }
+      ],
+      "doi": "10.1038/s42256-023-00620-w",
+      "layout_verification": {
+        "two_columns_visually_confirmed": true,
+        "pdf_page": 2,
+        "printed_page": 251,
+        "image": {
+          "path": "artifacts/rv30/paper_framework_20261104/nmi_page_2.png",
+          "bytes": 493434,
+          "sha256": "4b2b3ba831a04ad0395165be547f743cb7faa2ad2f1aa19439cccdcac8da0f15"
+        },
+        "fetch_log": "artifacts/rv30/paper_framework_20261104/layout_fetch.json",
+        "pdfinfo_pages_including_extended_content": 24
+      }
+    },
+    {
+      "id": "jmlr_scoring",
+      "title": "Probabilistic Forecasting with Generative Networks via Scoring Rule Minimization",
+      "authors": [
+        "Lorenzo Pacchiardi",
+        "Rilwan A. Adewoyin",
+        "Peter Dueben",
+        "Ritabrata Dutta"
+      ],
+      "venue": "Journal of Machine Learning Research",
+      "venue_type": "journal",
+      "year": 2024,
+      "volume": 25,
+      "issue_or_article": "45",
+      "pages": "1-64",
+      "official_article_url": "https://www.jmlr.org/papers/v25/23-0038.html",
+      "official_pdf_url": "https://www.jmlr.org/papers/volume25/23-0038/23-0038.pdf",
+      "primary_text_obtained": true,
+      "reading_mode": "selected_sections_not_cover_to_cover",
+      "sections_read": [
+        "Abstract and Introduction",
+        "Section 5 experimental design; selected Section 5.1 Lorenz setup and comparison",
+        "Section 5.2 WeatherBench task setup and selected results discussion",
+        "Section 6 conclusion and limitations"
+      ],
+      "pdf_page_anchors": {
+        "simulation_design": 12,
+        "lorenz_models": 13,
+        "conclusion": 17
+      },
+      "proofs_independently_verified": false,
+      "results_reproduced": false,
+      "files": [
+        {
+          "path": "artifacts/rv30/paper_framework_20261104/jmlr_scoring.pdf",
+          "bytes": 2234052,
+          "sha256": "1eb1f83c825f3352d69e3909a618daa3c351f9f28adeee19e5b2a99b4a535067"
+        },
+        {
+          "path": "artifacts/rv30/paper_framework_20261104/jmlr_scoring.txt",
+          "bytes": 239017,
+          "sha256": "71d631c4dbff95d3a5cc1db0279b8e56dfce985f98aa1bd2d598f00f4a6f3fdc"
+        }
+      ]
+    },
+    {
+      "id": "jmlr_conformal",
+      "title": "Conformal Inference for Online Prediction with Arbitrary Distribution Shifts",
+      "authors": [
+        "Isaac Gibbs",
+        "Emmanuel J. Candès"
+      ],
+      "venue": "Journal of Machine Learning Research",
+      "venue_type": "journal",
+      "year": 2024,
+      "volume": 25,
+      "issue_or_article": "162",
+      "pages": "1-36",
+      "official_article_url": "https://www.jmlr.org/papers/v25/22-1218.html",
+      "official_pdf_url": "https://www.jmlr.org/papers/volume25/22-1218/22-1218.pdf",
+      "primary_text_obtained": true,
+      "reading_mode": "selected_sections_not_cover_to_cover",
+      "sections_read": [
+        "Abstract, Introduction, beginning of method",
+        "Section 4.1 stationary, smooth and jump simulation design",
+        "Section 4.2.1 stock volatility setup and selected local coverage discussion"
+      ],
+      "pdf_page_anchors": {
+        "empirical_results": 12,
+        "simulation_design": 13,
+        "stock_task": 16
+      },
+      "proofs_independently_verified": false,
+      "results_reproduced": false,
+      "files": [
+        {
+          "path": "artifacts/rv30/paper_framework_20261104/jmlr_conformal.pdf",
+          "bytes": 3795116,
+          "sha256": "d75505c3c8fbb5cc3f30dff3bd356ee127364d4f079ee4213ecf999aefdce146"
+        },
+        {
+          "path": "artifacts/rv30/paper_framework_20261104/jmlr_conformal.txt",
+          "bytes": 128087,
+          "sha256": "4dfc72ea8d1ff9595846622577841292d7ddd4aae96561937d9a2eeaee65eb6c"
+        }
+      ]
+    }
+  ],
+  "publication_identity_evidence": [
+    {
+      "path": "artifacts/rv30/paper_framework_20261104/jmlr_25.html",
+      "bytes": 179154,
+      "sha256": "14e15d49191a433461163b0044cdeb959c1c3864243c31eb816fde041790eaff"
+    },
+    {
+      "path": "artifacts/rv30/paper_framework_20261104/nmi_evaluation.html",
+      "bytes": 412814,
+      "sha256": "0f77820633952e1301a46a37ef052d2255ebb14824c5d3909888f4a42c164261"
+    }
+  ],
+  "retrieval_logs": [
+    "artifacts/rv30/paper_framework_20261104/discovery.json",
+    "artifacts/rv30/paper_framework_20261104/article_fetch_1.json",
+    "artifacts/rv30/paper_framework_20261104/article_pdf_fetch.json",
+    "artifacts/rv30/paper_framework_20261104/layout_fetch.json"
+  ],
+  "not_counted_as_read_primary_papers": [
+    {
+      "title": "Deep Time Series Forecasting With Shape and Temporal Criteria",
+      "venue": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "doi": "10.1109/TPAMI.2022.3152862",
+      "obtained": "Crossref metadata only"
+    },
+    {
+      "title": "Lessons from a challenge on forecasting epileptic seizures from non-cerebral signals",
+      "venue": "Nature Machine Intelligence",
+      "doi": "10.1038/s42256-024-00799-6",
+      "obtained": "publisher page without full article body"
+    }
+  ],
+  "historical_numeric_sources": [
+    {
+      "path": "research/paper/development.csv",
+      "bytes": 4732,
+      "sha256": "fb4ccd1b4ab5eca89cf8c5a0e5664462601d8f9c82bd00e3bc6d7920d2771580"
+    },
+    {
+      "path": "research/paper/confirmation.csv",
+      "bytes": 1319,
+      "sha256": "70b04cb8f64e0f744988cfa33ba529d42a7c7433c698667922e17c639cd5a272"
+    },
+    {
+      "path": "research/paper/quarterly.csv",
+      "bytes": 11230,
+      "sha256": "73ef809ba5eff170c5aaa94cff5b09fb64d1a8eb516adb0ed6f56e4ad1f52a79"
+    },
+    {
+      "path": "research/paper/evidence.json",
+      "bytes": 3901,
+      "sha256": "70e47af19f2d054a94f90122e6bacf873e3b34a40f7e0aa79e4f7ce5ad6203b9"
+    },
+    {
+      "path": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/evaluation.json",
+      "bytes": 129588,
+      "sha256": "4b70aec00ea620ca28bb2db95dcb09f5a5eb6a4a077d344ba4ea7a8343b22bb4"
+    },
+    {
+      "path": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/confirmation/evaluation.json",
+      "bytes": 24280,
+      "sha256": "fc24f9990c0f2b1c51a4024f97f28c42650d6908b1581432fbe3addf9b4e12aa"
+    }
+  ],
+  "simulation_status": "design_outline_only_parameters_and_budget_not_yet_frozen",
+  "scope_constraints": [
+    "No claim of new architecture, theory or general market superiority",
+    "New research questions are retrospective narrative organization; original gates remain fixed",
+    "Synthetic evidence does not establish timely prospective performance",
+    "Existing observer and hourly monitor are not modified",
+    "Direct model and financial-method source reading gaps remain recorded in SOURCES.md"
+  ]
+}
