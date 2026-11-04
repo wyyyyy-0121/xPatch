@@ -43,7 +43,7 @@
     },
     {
       "id": "free_delayed_sip",
-      "status": "historical_access_confirmed_intraday_admission_pending",
+      "status": "running_locally_waiting_regular_session_admission",
       "evidence": "artifacts/rv30/setup/delayed_sip_20261104/free_access_probe/probe.json",
       "http_status": 200,
       "assets": [
@@ -57,7 +57,10 @@
       "current_workflow": "finance.delayed_service run",
       "pending_user_action": null,
       "intraday_freshness_qualified": false,
-      "action_taken": "Start only tested optimized replay; wait locally for its regular-session admission."
+      "action_taken": "Start only tested optimized replay; wait locally for its regular-session admission.",
+      "service_startup": "artifacts/rv30/setup/delayed_sip_20261104/startup.json",
+      "performance": "artifacts/rv30/setup/delayed_sip_20261104/throughput.json",
+      "max_cpu_threads": 4
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "goal_status": "active",
-  "stage": "waiting_timely_SIP_permission",
+  "stage": "waiting_regular_session_delayed_replay",
   "historical_search_complete": true,
   "historical_development_verification_rounds": 2,
   "historical_confirmation_verification_rounds": 2,
@@ -24,5 +24,21 @@
   "goal_can_complete": false,
   "monitor_interval_minutes": 60,
   "permission_wait_does_not_pause_monitor": true,
-  "monitor_automation_id": "rv30"
+  "monitor_automation_id": "rv30",
+  "mode": "delayed_shadow_replay",
+  "updated_utc": "2026-11-04T06:08:46.292602+00:00",
+  "plan_signature": "1edb466883e3ddcf7fa132ca7fa9f069e45ea17de88b17760dc3b22112ab3c3a",
+  "pid": 236933,
+  "kernel_start_ticks": "22725330",
+  "cpu_ids": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "last_error": null,
+  "delayed_replay_complete_sessions": 0,
+  "prospective_qualified": false,
+  "delayed_replay_plan": "delivery/delayed_sip_lock.json",
+  "delayed_replay_directory": "artifacts/rv30/delayed_replay/1edb466883e3ddcf7fa132ca7fa9f069e45ea17de88b17760dc3b22112ab3c3a"
 }
