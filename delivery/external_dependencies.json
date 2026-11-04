@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "updated_utc": "2026-11-03T23:05:15.902694+00:00",
+  "updated_utc": "2026-11-04T06:04:43.815531+00:00",
   "items": [
     {
       "id": "realtime_sip",
-      "status": "skipped_permission_denied",
+      "status": "unavailable_for_optional_timely_mode_not_a_free_replay_blocker",
       "evidence": "data_acquisition/runs/delivery_probe_20261103/probe.json",
       "http_statuses": [
         403,
@@ -19,14 +19,16 @@
         "historical_data_audit",
         "retrospective_training",
         "offline_inference",
-        "negative_result_delivery"
+        "negative_result_delivery",
+        "free_delayed_shadow_replay"
       ],
       "action_taken": "No purchase, subscription change or alternate-feed fallback.",
       "latest_evidence": "artifacts/rv30/prospective/b0c353e6d7f0edfd76efcdb7612b26da997b890c44abf6b3d80662dd9c8dc727/admission.json",
       "latest_evidence_sha256": "69212e8adfe882048cd57ee35e293aa163d82dd15887c8f436712998e743f80d",
       "latest_http_status": 403,
       "checked_utc": "2026-11-03T23:02:39.097626+00:00",
-      "pending_user_action": "Resolve account entitlement to timely SIP data; the assistant skips purchases and subscription changes."
+      "pending_user_action": null,
+      "future_action": "User may choose timely SIP later after free model and pipeline validation; no upgrade required now."
     },
     {
       "id": "conditional_orderflow",
@@ -38,6 +40,24 @@
       "id": "github_push",
       "status": "skipped_not_authorized",
       "action_taken": "Local commits only."
+    },
+    {
+      "id": "free_delayed_sip",
+      "status": "historical_access_confirmed_intraday_admission_pending",
+      "evidence": "artifacts/rv30/setup/delayed_sip_20261104/free_access_probe/probe.json",
+      "http_status": 200,
+      "assets": [
+        "AAPL",
+        "SPY",
+        "QQQ"
+      ],
+      "feed": "sip",
+      "adjustment": "raw",
+      "publication_delay_minutes": 15,
+      "current_workflow": "finance.delayed_service run",
+      "pending_user_action": null,
+      "intraday_freshness_qualified": false,
+      "action_taken": "Start only tested optimized replay; wait locally for its regular-session admission."
     }
   ]
 }

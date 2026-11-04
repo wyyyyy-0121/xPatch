@@ -370,11 +370,11 @@ def _prospective_sources(freeze, source_view=None, excluded_additions=()):
     return {**prior, **after, **extra}, amendment
 
 
-def effective_sources(freeze):
+def _completion_sources(freeze, source_view=None, excluded_additions=()):
     """Complete the forward acceptance path without changing the frozen plan."""
     path = ROOT / "delivery/rv30_completion_lock.json"
     if not path.exists():
-        return _prospective_sources(freeze)
+        return _prospective_sources(freeze, source_view, excluded_additions)
     import hashlib
     import subprocess
     lock = read_json(path)
@@ -390,14 +390,14 @@ def effective_sources(freeze):
             payload["research_definitions_changed"] or payload["thresholds_changed"] or payload["model_fitting_changed"] or
             not payload["original_prospective_plan_preserved"]):
         raise ValueError("Completion cannot revise the registered research, models or forward plan")
-    installed = {name: sha(ROOT/name) for name in freeze["payload"]["source_files"]}
+    installed = source_view if source_view is not None else {name: sha(ROOT/name) for name in freeze["payload"]["source_files"]}
     view = installed.copy()
     for name, record in payload["changes"].items():
         previous = subprocess.check_output(["git", "show", f"{payload['prior_source_snapshot_commit']}:{name}"], cwd=ROOT)
         if installed[name] != record["after_sha256"] or hashlib.sha256(previous).hexdigest() != record["before_sha256"]:
             raise ValueError("Unregistered completion source: " + name)
         view[name] = record["before_sha256"]
-    prior, amendment = _prospective_sources(freeze, view, tuple(payload["added_sources"]))
+    prior, amendment = _prospective_sources(freeze, view, (*payload["added_sources"], *excluded_additions))
     if any(prior[name] != record["before_sha256"] for name, record in payload["changes"].items()):
         raise ValueError("Completion does not extend the registered prospective implementation")
     if payload["validation_summary"] not in payload["validation_files"]:
@@ -409,6 +409,51 @@ def effective_sources(freeze):
     validation = read_json(ROOT/payload["validation_summary"])
     if not validation["passed"] or not validation["early_acceptance_refused"] or not validation["positive_and_negative_selection_tested"]:
         raise ValueError("Forward acceptance must reject early claims and cover both outcomes")
+    after = {name: record["after_sha256"] for name, record in payload["changes"].items()}
+    return {**prior, **after, **extra}, amendment
+
+
+def effective_sources(freeze):
+    """Append a free delayed-publication mode; all original research locks survive."""
+    path = ROOT / "delivery/rv30_delayed_execution_lock.json"
+    if not path.exists():
+        return _completion_sources(freeze)
+    import hashlib
+    import subprocess
+    lock = read_json(path); payload = lock["payload"]
+    if (stable_hash(payload) != lock["signature"] or payload["base_signature"] != freeze["signature"] or
+            payload["base_freeze_sha256"] != sha(FREEZE_PATH) or
+            payload["prior_completion_lock_sha256"] != sha(ROOT / "delivery/rv30_completion_lock.json") or
+            payload["original_plan_sha256"] != sha(ROOT / "delivery/prospective_lock.json")):
+        raise ValueError("Delayed execution amendment or predecessor changed")
+    if (set(payload["changes"]) != {"finance/provenance.py"} or
+            set(payload["added_sources"]) != {"finance/delayed.py", "finance/delayed_validation.py", "finance/delayed_service.py"} or
+            set(payload["support_sources"]) != {"tests/test_rv30_delayed.py", "tests/test_rv30_delayed_lock.py",
+                "configs/rv30_delayed_sip.json", "delivery/DELAYED_REPLAY.md"} or
+            any(payload[key] for key in ("research_definitions_changed", "model_fitting_changed", "thresholds_changed",
+                "market_origin_or_target_changed", "timely_forward_validation")) or
+            payload["publication_delay_minutes"] != 15 or not payload["original_prospective_plan_preserved"]):
+        raise ValueError("Delayed replay cannot revise the original model, market clock or research")
+    installed = {name: sha(ROOT/name) for name in freeze["payload"]["source_files"]}
+    view = installed.copy()
+    for name, record in payload["changes"].items():
+        before = subprocess.check_output(["git", "show", f"{payload['prior_source_snapshot_commit']}:{name}"], cwd=ROOT)
+        if installed[name] != record["after_sha256"] or hashlib.sha256(before).hexdigest() != record["before_sha256"]:
+            raise ValueError("Unregistered delayed replay source: " + name)
+        view[name] = record["before_sha256"]
+    prior, amendment = _completion_sources(freeze, view, tuple(payload["added_sources"]))
+    if any(prior[name] != record["before_sha256"] for name, record in payload["changes"].items()):
+        raise ValueError("Delayed execution does not extend the registered completion implementation")
+    if payload["validation_summary"] not in payload["validation_files"]:
+        raise ValueError("Delayed replay validation must be bound")
+    extra = {**payload["added_sources"], **payload["support_sources"]}
+    for name, digest in {**extra, **payload["validation_files"]}.items():
+        if sha(ROOT/name) != digest:
+            raise ValueError("Delayed replay source or evidence changed: " + name)
+    validation = read_json(ROOT / payload["validation_summary"])
+    if not all(validation.get(key) is True for key in ("passed", "same_model_outputs", "timing_and_no_backfill_passed",
+            "budget_and_recovery_passed", "original_full_workload_evidence_reused")):
+        raise ValueError("Delayed replay requires numerical, clock, recovery and workload evidence")
     after = {name: record["after_sha256"] for name, record in payload["changes"].items()}
     return {**prior, **after, **extra}, amendment
 
@@ -429,6 +474,6 @@ def verify_freeze(config):
     lock_paths = [POSTPROCESS_PATH, POSTPROCESS_PATH.with_name("rv30_statistics_lock.json"),
         ROOT / "delivery/rv30_acceleration_lock.json", ROOT / "delivery/rv30_throughput_lock.json",
         ROOT / "delivery/rv30_replay_lock.json", ROOT / "delivery/rv30_prospective_execution_lock.json",
-        ROOT / "delivery/rv30_completion_lock.json"]
+        ROOT / "delivery/rv30_completion_lock.json", ROOT / "delivery/rv30_delayed_execution_lock.json"]
     return {**freeze, "effective_source_files": source_files, "postprocessing_amendment": amendment,
         "postprocessing_lock_files": {str(path.relative_to(ROOT)): sha(path) for path in lock_paths if path.exists()}}

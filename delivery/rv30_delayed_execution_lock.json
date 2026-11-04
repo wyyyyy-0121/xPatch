@@ -1,0 +1,57 @@
+{
+  "signature": "922ffcb5571df599604eb83c42543e1d1911705d7085d81f4d78c8abcc846735",
+  "payload": {
+    "created_utc": "2026-11-04T06:03:19.756737+00:00",
+    "base_signature": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+    "base_freeze_sha256": "dcc00953da75049efa35b361b5dfcbee9922cd61bdbe2befeeb130aa36d3ad13",
+    "prior_source_snapshot_commit": "c4325cf2d169d2ace389893f8f015143559e90f1",
+    "prior_completion_lock_sha256": "81675735a274ab38338ddf1bff35359da5b096baadb2cd4c594bea05842816d3",
+    "original_plan_sha256": "a04cae9a959ec64e71534af652faf74a00292ab7596e5b3fd6b4b66f17850849",
+    "publication_delay_minutes": 15,
+    "original_prospective_plan_preserved": true,
+    "research_definitions_changed": false,
+    "model_fitting_changed": false,
+    "thresholds_changed": false,
+    "market_origin_or_target_changed": false,
+    "timely_forward_validation": false,
+    "changes": {
+      "finance/provenance.py": {
+        "before_sha256": "54b30be8fbe76cb682cd0ebdd0706cb9e3d8dc8bcf756f7168a3e1ff9f8a8555",
+        "after_sha256": "3619308ebe162ae8ea6e3015acba43dee9032b4f8c856ae1bdc09649f51cc002"
+      }
+    },
+    "added_sources": {
+      "finance/delayed.py": "6ad2951e942e0b116a3f78600bea0704ed535d222e393a1585dd0ec2eba1e765",
+      "finance/delayed_validation.py": "fdd46cbffc30ad517c6a824d32e6faba31a9e410da65b0a0f75f019958b320b4",
+      "finance/delayed_service.py": "929e9e396c4fd415bc0206621aff864bf8b9a246f0f16bd0143da844e06b337a"
+    },
+    "support_sources": {
+      "tests/test_rv30_delayed.py": "1f7d2e5524d081fd8c2ead6e9b1a74268f601e991926961381db1c99499d84d0",
+      "tests/test_rv30_delayed_lock.py": "a932df3ff6264bc9139f9f58f1b5f8282d1dd2883047442b9930e53504b05296",
+      "configs/rv30_delayed_sip.json": "ee7ccc4669b590cc32cfca0f1819d18e426f68ed9bedac7546ae9e4956d139b5",
+      "delivery/DELAYED_REPLAY.md": "8af924045238c6012fdce17afab35dc594121de52071bbcd04f53ee2ffcbcd51"
+    },
+    "validation_summary": "artifacts/rv30/setup/delayed_sip_20261104/validation.json",
+    "validation_files": {
+      "artifacts/rv30/setup/delayed_sip_20261104/validation.json": "228af671d975556db6e6130eeb8d2dd50a0b633a9dbf5538afc7809445ff567f",
+      "artifacts/rv30/setup/delayed_sip_20261104/tests_initial.log": "758c2ce5be84d9f3a2b4514636607d751e8065d5d232a310126953156d043890",
+      "artifacts/rv30/setup/delayed_sip_20261104/tests_full.log": "0cea8096f7ff032894389744f254795b49f5b1e94f0d4447670ef762e96ec0cc",
+      "artifacts/rv30/setup/delayed_sip_20261104/tests_collector.log": "8de091cfcda91d8ec6c47500607044fe373df88d10fec8493fed461810ac8db9",
+      "artifacts/rv30/setup/delayed_sip_20261104/tests_final.log": "1988cd3aec9069bd66f442e5f5b122c2268a2d27c2c308ab52186492b59a67ba",
+      "artifacts/rv30/setup/delayed_sip_20261104/tests_optimized.log": "21bb04b6155ce4ccc40d5d5b73431a72764cb125f61b1c9e86592891250bcbe6",
+      "artifacts/rv30/setup/delayed_sip_20261104/tests_release.log": "8ad6367bdbafdd74f0ee119d94f69c2bcf6e1802536bf895ea51e085ef491cdf",
+      "artifacts/rv30/setup/delayed_sip_20261104/run_tests.py": "cf5d0fd9e86c4529796d145579d5c853dcebc4c70982c1ec54d8e4953f7ef59a",
+      "artifacts/rv30/setup/delayed_sip_20261104/numerical.py": "e084443989379c263ae5371d31cc5f42a720db906f7525d97455412bdc993b8b",
+      "artifacts/rv30/setup/delayed_sip_20261104/numerical.json": "5d6f09c03ecb20eff599f7b1d611cb6ce5e301ebfdff492afc4cc7989b763cbb",
+      "artifacts/rv30/setup/delayed_sip_20261104/numerical_calendar.log": "d6713fca205bdd6bd22aa06d9ca8bf62e982e9551070687b69a3312f1a9a112c",
+      "artifacts/rv30/setup/delayed_sip_20261104/profile_inference.py": "d60e41f8503d1e35dbbecc1c3d732c28b98a1af9666aa559d69668914e167ee9",
+      "artifacts/rv30/setup/delayed_sip_20261104/profile_inference.log": "b7664b87df5e0540c45f4dad9ddf8cf44e1876b8163e4f0e18711426f3fe3599",
+      "artifacts/rv30/setup/delayed_sip_20261104/throughput.py": "d58d6d217a385b39934158a4e6a845db449aba6dc79c5cf8aa485fd2785d8429",
+      "artifacts/rv30/setup/delayed_sip_20261104/throughput.json": "440aa71125f37717af3aabe1d4a6d837d94414bc8c47e20d75709f08a94c955e",
+      "artifacts/rv30/setup/delayed_sip_20261104/throughput.log": "d774f79800216f576a0b234e00e84c846078f99504302260a65e90134d796258",
+      "artifacts/rv30/setup/delayed_sip_20261104/before/finance/provenance.py": "54b30be8fbe76cb682cd0ebdd0706cb9e3d8dc8bcf756f7168a3e1ff9f8a8555",
+      "artifacts/rv30/setup/delayed_sip_20261104/free_access_probe/probe.json": "76ea1d187125a0f0e9e47d1d9146bb3a97d08763d7b83cc4f7981936ebbac2bf",
+      "artifacts/rv30/setup/delayed_sip_20261104/seal.py": "3586598a7f7938eb9a6d4566d1411147730cea10fb25140f7b03c5a24ac55fcc"
+    }
+  }
+}
