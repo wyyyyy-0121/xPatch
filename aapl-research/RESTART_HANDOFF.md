@@ -1,5 +1,7 @@
 # AAPL 分钟预测研究：新窗口交接
 
+> 历史交接记录。本文保留旧研究的来源、用户约束和交接时的事实；其中待办、环境路径及当时状态可能已经变化。当前研究按 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) 和 `protocol_locked.json` 执行，进展见 [EXECUTION_STATUS.md](EXECUTION_STATUS.md)。正式准入已经完成，不再从本交接的规划步骤重新开始。
+
 日期：2026-11-04。由用户要求重新梳理项目而建立。此文件是短交接，不要求读取旧聊天。新研究工作目录为 `/home/ayaka/wslcode/aapl-research`，所在 Codex 项目是 `/home/ayaka/wslcode`。旧仓库 `/home/ayaka/xPatch` 仅作为只读参考和可复用工件来源，不复制整个项目或产生一串大版本目录。
 
 ## 用户最新意图与暂停边界
