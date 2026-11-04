@@ -1,0 +1,72 @@
+[
+  {
+    "key": "xpatch_model",
+    "url": "https://api.github.com/repos/stitsyuk/xPatch/contents/models/xPatch.py",
+    "retrieved_at_utc": "2026-11-04T12:57:20.055215+00:00",
+    "exit_code": 0,
+    "file": "xpatch_model.py",
+    "git_blob_sha": "de9f65469a2d0a000e7a579be91b931a1609290b",
+    "sha256": "7a9990ecf739410f18e72bd171699298b22e0738d1f9d45125447404412a221c",
+    "bytes": 2183
+  },
+  {
+    "key": "xpatch_network",
+    "url": "https://api.github.com/repos/stitsyuk/xPatch/contents/layers/network.py",
+    "retrieved_at_utc": "2026-11-04T12:57:20.500845+00:00",
+    "exit_code": 0,
+    "file": "xpatch_network.py",
+    "git_blob_sha": "3f01b6929581d00e0ff2c6e9380cf7bb768b5f3c",
+    "sha256": "616a93cb72a690bbe86d8e73a00255f6b964c90c6927416da74fa8da75e0d523",
+    "bytes": 3871
+  },
+  {
+    "key": "xpatch_ema",
+    "url": "https://api.github.com/repos/stitsyuk/xPatch/contents/layers/ema.py",
+    "retrieved_at_utc": "2026-11-04T12:57:18.927211+00:00",
+    "exit_code": 0,
+    "file": "xpatch_ema.py",
+    "git_blob_sha": "9ed3bd61a30706829b2feef999396dabdc0bf465",
+    "sha256": "b934b592ce7b8c9c2138b6a1c6cfa43a4b1f681312b8ec9b9247e874f6da1612",
+    "bytes": 1396
+  },
+  {
+    "key": "xpatch_license",
+    "url": "https://api.github.com/repos/stitsyuk/xPatch/contents/LICENSE",
+    "retrieved_at_utc": "2026-11-04T12:57:19.693836+00:00",
+    "exit_code": 0,
+    "file": "xpatch_license.txt",
+    "git_blob_sha": "a9f31bae4184a3462b7570079b4b53016da48d3e",
+    "sha256": "90d526945f5c87e6a20f486fb963649afef7d4ae450b033f8972d6c1e38d62b0",
+    "bytes": 11399
+  },
+  {
+    "key": "patchtst_license",
+    "url": "https://api.github.com/repos/yuqinie98/PatchTST/contents/LICENSE",
+    "retrieved_at_utc": "2026-11-04T12:57:20.868515+00:00",
+    "exit_code": 0,
+    "file": "patchtst_license.txt",
+    "git_blob_sha": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "bytes": 11357
+  },
+  {
+    "key": "chronos_license",
+    "url": "https://api.github.com/repos/amazon-science/chronos-forecasting/contents/LICENSE",
+    "retrieved_at_utc": "2026-11-04T12:57:21.762143+00:00",
+    "exit_code": 0,
+    "file": "chronos_license.txt",
+    "git_blob_sha": "67db8588217f266eb561f75fae738656325deac9",
+    "sha256": "09e8a9bcec8067104652c168685ab0931e7868f9c8284b66f5ae6edae5f1130b",
+    "bytes": 10142
+  },
+  {
+    "key": "kronos_license",
+    "url": "https://api.github.com/repos/shiyu-coder/Kronos/contents/LICENSE",
+    "retrieved_at_utc": "2026-11-04T12:57:21.165022+00:00",
+    "exit_code": 0,
+    "file": "kronos_license.txt",
+    "git_blob_sha": "88b04125e828241d8aada64bfe7f700bb03bcef8",
+    "sha256": "acb2d194d378204e5f2be4dcd24d39ecac437903620c790c3315a96dab388fdc",
+    "bytes": 1062
+  }
+]

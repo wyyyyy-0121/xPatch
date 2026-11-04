@@ -1,0 +1,36 @@
+{
+  "created_at_utc": "2026-11-04T13:51:59.937420+00:00",
+  "python": "3.13.13",
+  "interpreter": "/home/ayaka/wslcode/aapl-research/.venv/bin/python",
+  "packages": {
+    "torch": "2.14.1",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "lightgbm": "4.6.0",
+    "chronos-forecasting": "2.3.2",
+    "transformers": "4.57.6",
+    "accelerate": "1.15.0",
+    "peft": "0.17.1",
+    "safetensors": "0.8.0",
+    "exchange_calendars": "4.13.2",
+    "psutil": "7.2.2",
+    "pytest": "9.1.1"
+  },
+  "readonly_dependency_roots": [
+    "/home/ayaka/.venvs/xpatch-v2/lib/python3.13/site-packages",
+    "/home/ayaka/.venvs/xpatch-ls/lib/python3.13/site-packages"
+  ],
+  "local_overlay_packages": {
+    "peft": "0.17.1"
+  },
+  "critical_api_sources": {
+    "/home/ayaka/.venvs/xpatch-v2/lib/python3.13/site-packages/chronos/chronos2/model.py": "2aaab2f90cc9bb486d69483cb1f0d11b593643ce54c97f4902958a7776905782",
+    "/home/ayaka/.venvs/xpatch-v2/lib/python3.13/site-packages/chronos/chronos2/pipeline.py": "9fad1e4fb7251471463a40408a32d25d31b23b7afb88069911f095071b9b0599",
+    "/home/ayaka/wslcode/aapl-research/.venv/lib/python3.13/site-packages/peft/__init__.py": "efabc3b44d7326eee59c07910e426fa38ee0c6419b773e8f75af87ae61d3fa32"
+  },
+  "launch_script_sha256": "adfc60364c42ee753bc841dbbf23f4c4c462613d051b40c0c6b4948e5d22722d",
+  "verified_at_utc": "2026-11-04T14:41:53.738723+00:00",
+  "cpu_launch_policy": "Explicit AAPL_CPU_IDS and AAPL_CPU_THREADS per worker; fixed disjoint allocation within0-17"
+}

@@ -1,0 +1,33 @@
+{
+  "sealed": true,
+  "created_at_utc": "2026-11-04T14:13:19.096049+00:00",
+  "start": "2026-07-01",
+  "end": "2026-09-30",
+  "csv": "AAPL_sip_1min_raw.csv",
+  "csv_sha256": "bd0236875576e0ce6731c08fdf373277cd8242176f25e6d6b5d7658dd43402eb",
+  "rows": 54633,
+  "receipt_sha256": "7ddb5b0c69d07d79c812797af99e803357c9cb0acfecddf89299a20fb24d7d2c",
+  "receipt_verification": {
+    "pages_verified": 7,
+    "ranges_verified": 4,
+    "rows_verified": 54633,
+    "fields_verified": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "trade_count",
+      "vwap"
+    ],
+    "receipt_sha256": "7ddb5b0c69d07d79c812797af99e803357c9cb0acfecddf89299a20fb24d7d2c"
+  },
+  "regular_rows": 24960,
+  "calendar_sessions": 64,
+  "eligible_origins": 8832,
+  "effective_sessions": 64,
+  "exposure_audit_sha256": "a6c62691e91c683e4dfb172c7b221fbc279146b498089cb392ca700361b974b3",
+  "exposure_audit_time": "2026-11-04T14:03:37.016102+00:00",
+  "predictive_scores_computed": false,
+  "access_policy": "Admission inspection only; model access requires locked development decision and explicit unseal token"
+}

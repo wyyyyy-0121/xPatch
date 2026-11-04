@@ -1,0 +1,29 @@
+{
+  "checked_at": "2026-11-04",
+  "models": {
+    "chronos2": {
+      "official_release_notice_date": "2025-10-20",
+      "release_notice_file": "sources/chronos_readme.md",
+      "release_notice_sha256": "7f9e55723daadb20f79f3d76d23370888301d917f075e9eafa3e780c78f9ff35",
+      "pinned_revision": "29ec3766d36d6f73f0696f85560a422f50e8498c",
+      "checkpoint_metadata_lastModified": "2026-06-05T11:55:42.000Z",
+      "repository_createdAt": "2025-10-30T14:54:39.000Z",
+      "metadata_source_read_only": "/home/ayaka/xPatch/artifacts/aapl_v2/weights/chronos2/metadata.json",
+      "metadata_sha256": "c3bf7eac6bb5238fc96f429fba88eee8569c2e70808f40d2ca6f088d3f6fb0a2",
+      "lastModified_before_holdout_start": true,
+      "pretraining_sample_boundary_independently_verified": false
+    },
+    "xpatch": {
+      "training": "from_scratch",
+      "method_publication": "AAAI 2025; arXiv 2412.17323",
+      "pretrained_weights_used": false
+    },
+    "patchtst": {
+      "training": "from_scratch",
+      "method_publication": "ICLR 2023; arXiv 2211.14730",
+      "pretrained_weights_used": false
+    }
+  },
+  "public_metadata_live_refresh": "failed; saved pinned revision metadata verified locally",
+  "scope": "Method/checkpoint availability and identity, without claiming the entire pretraining corpus is known"
+}

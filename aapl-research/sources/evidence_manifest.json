@@ -1,0 +1,360 @@
+{
+  "collected_at_utc": "2026-11-04T13:08:01.863432+00:00",
+  "scope": "method-and-source inspection, no training, no checkpoint or market-data copying",
+  "documents": [
+    {
+      "file": "chronos2_paper.html",
+      "bytes": 347078,
+      "sha256": "fa1039e62f40c7d2dc2b8c9cc2f86ee7489080af521f262709ac830e9755e15f",
+      "url": "https://arxiv.org/html/2510.15821v1",
+      "complete_download": true
+    },
+    {
+      "file": "chronos2_paper.txt",
+      "bytes": 85542,
+      "sha256": "82fbc78e75e6908b7207092b0e0ea341b0f1df14250bb7076e550e0c957b70f1"
+    },
+    {
+      "file": "chronos_license.txt",
+      "bytes": 10142,
+      "sha256": "09e8a9bcec8067104652c168685ab0931e7868f9c8284b66f5ae6edae5f1130b"
+    },
+    {
+      "file": "chronos_license_api.json",
+      "bytes": 14914,
+      "sha256": "a1d5c751a264bc38d2680fd51eb3374cb16b3907c21411ac80828bbe258e6045",
+      "git_blob_sha": "67db8588217f266eb561f75fae738656325deac9",
+      "upstream_html_url": "https://github.com/amazon-science/chronos-forecasting/blob/main/LICENSE"
+    },
+    {
+      "file": "chronos_readme.md",
+      "bytes": 11168,
+      "sha256": "7f9e55723daadb20f79f3d76d23370888301d917f075e9eafa3e780c78f9ff35"
+    },
+    {
+      "file": "chronos_readme_api.json",
+      "bytes": 16342,
+      "sha256": "55f3419851b36f6487cf144dd05ac2e51265a3e0565d9514ff5e32dd8edb4e2d",
+      "git_blob_sha": "1ec146a2e037a7725f53ae6bdfba22970804efb2",
+      "upstream_html_url": "https://github.com/amazon-science/chronos-forecasting/blob/main/README.md"
+    },
+    {
+      "file": "installed_chronos2_fit.py",
+      "bytes": 12983,
+      "sha256": "ca390e3b43b8121855ce5e988c93619a88e7cff2ad7e5cf4ad8a6baa35f9486d"
+    },
+    {
+      "file": "installed_chronos2_predict_quantiles.py",
+      "bytes": 2992,
+      "sha256": "295d613953af4a1c7538a8f76dd47c2abcbdb1cadeeea08f7ae0710f7b32a142"
+    },
+    {
+      "file": "kronos_license.txt",
+      "bytes": 1062,
+      "sha256": "acb2d194d378204e5f2be4dcd24d39ecac437903620c790c3315a96dab388fdc"
+    },
+    {
+      "file": "kronos_license_api.json",
+      "bytes": 2299,
+      "sha256": "69911869b9502448f52e7825df26accc2001199f6d8b430593368b5904fadd1d",
+      "git_blob_sha": "88b04125e828241d8aada64bfe7f700bb03bcef8",
+      "upstream_html_url": "https://github.com/shiyu-coder/Kronos/blob/master/LICENSE"
+    },
+    {
+      "file": "kronos_paper.html",
+      "bytes": 1246088,
+      "sha256": "5140e49ff6cf15f41910f152177a5e96522179f54dd62c598307ea8251889feb",
+      "url": "https://arxiv.org/html/2508.02739v1",
+      "complete_download": true
+    },
+    {
+      "file": "kronos_paper.pdf.partial",
+      "bytes": 436430,
+      "sha256": "78b728a03858c2fe3fc2979260d64619bebb84d3c6948ffcfff9219032249c71",
+      "complete_download": false,
+      "eligible_for_full_document_claim": false
+    },
+    {
+      "file": "kronos_paper.txt",
+      "bytes": 151034,
+      "sha256": "819504694bc5e9b1a72942c9f41d9c6c569929b2105bc84a75c772ac2469e0ab"
+    },
+    {
+      "file": "kronos_readme.md",
+      "bytes": 16657,
+      "sha256": "b815b608192afa4b805a11bcbb66268f3e3db55736218964944318da7865357e"
+    },
+    {
+      "file": "kronos_readme_api.json",
+      "bytes": 23804,
+      "sha256": "c2a69156e28a55dd511852a65990dda46fc543dd14b3b69fa9f7096d20783254",
+      "git_blob_sha": "faffa1578cf0172f6b88f5db8a9b1205668ffef1",
+      "upstream_html_url": "https://github.com/shiyu-coder/Kronos/blob/master/README.md"
+    },
+    {
+      "file": "kronos_train_predictor.py",
+      "bytes": 10026,
+      "sha256": "b0d31d94da98e96636326674cef7ebc01c72d0de8a1b9e5b27123fd258529790"
+    },
+    {
+      "file": "kronos_train_predictor_api.json",
+      "bytes": 14781,
+      "sha256": "1a912499070d6dd6fe5e66a69e7f5b6b5c8dc019ac070a515baeca10e9a5445e",
+      "git_blob_sha": "47eddc91f58fd72db97ecc65da5372997b56e04a",
+      "upstream_html_url": "https://github.com/shiyu-coder/Kronos/blob/master/finetune/train_predictor.py"
+    },
+    {
+      "file": "official_retrieval_manifest.json",
+      "bytes": 2791,
+      "sha256": "24df96a161de84e5988f8f3e3ea84fc315eb510ac4f98135711e5a4c2541d822"
+    },
+    {
+      "file": "patchtst_license.txt",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "file": "patchtst_license_api.json",
+      "bytes": 16476,
+      "sha256": "3d33fe9ac20bfaf3b90c68a7231d48b3f978ecc05fc1440c9f25ffe50678499b",
+      "git_blob_sha": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "upstream_html_url": "https://github.com/yuqinie98/PatchTST/blob/main/LICENSE"
+    },
+    {
+      "file": "patchtst_paper.html",
+      "bytes": 676689,
+      "sha256": "54b454b26bde6d280e7e6192b58aee0a9777f5f380543ec7563c4787dd22c759",
+      "url": "https://arxiv.org/html/2211.14730v2",
+      "complete_download": true
+    },
+    {
+      "file": "patchtst_paper.pdf.partial",
+      "bytes": 529368,
+      "sha256": "89298cfeded6916f7b6dc3afd071d571340f02e204683d1cc50842205786caaf",
+      "complete_download": false,
+      "eligible_for_full_document_claim": false
+    },
+    {
+      "file": "patchtst_paper.txt",
+      "bytes": 97279,
+      "sha256": "d19cb74c8a613bfac3775bec9209ea17dfb9261e10866a98dd2b598ec6fc70fd"
+    },
+    {
+      "file": "patchtst_readme.md",
+      "bytes": 5389,
+      "sha256": "7b45e8c686111038986b3b6e35b7e29338dad16eb1a9586a321be8a19d16ea7e"
+    },
+    {
+      "file": "patchtst_readme_api.json",
+      "bytes": 8267,
+      "sha256": "c00752ab4f41e8226299e72fa294b8e6e440f9b836b39d3c48f00a2f30f36790",
+      "git_blob_sha": "68ca7130debcca2887458da3948e5e79dae07e8c",
+      "upstream_html_url": "https://github.com/yuqinie98/PatchTST/blob/main/README.md"
+    },
+    {
+      "file": "retrieval_manifest.json",
+      "bytes": 2168,
+      "sha256": "d5c9933f212904559418f6da88a7e1de0e574d55e4a6791a8d46a7746e19071b"
+    },
+    {
+      "file": "timesfm_readme.md",
+      "bytes": 11586,
+      "sha256": "4312675e2c65ce105cb9006e3caba3d3648fc9269b6bc297e3e94e37f76563d8"
+    },
+    {
+      "file": "timesfm_readme_api.json",
+      "bytes": 16849,
+      "sha256": "34d48ecc2065e10474ba78724f7ffb33fc1e0217452852c4bcefc7e000263800",
+      "git_blob_sha": "804951ffd5755267c96a1ef2867e0be895fae385",
+      "upstream_html_url": "https://github.com/google-research/timesfm/blob/master/README.md"
+    },
+    {
+      "file": "xpatch_ema.py",
+      "bytes": 1396,
+      "sha256": "b934b592ce7b8c9c2138b6a1c6cfa43a4b1f681312b8ec9b9247e874f6da1612"
+    },
+    {
+      "file": "xpatch_ema_api.json",
+      "bytes": 2767,
+      "sha256": "8fd5f363c44e761b86db1fa6d721ef952ae0dd7d5467ac788635fea8258d31bc",
+      "git_blob_sha": "9ed3bd61a30706829b2feef999396dabdc0bf465",
+      "upstream_html_url": "https://github.com/stitsyuk/xPatch/blob/main/layers/ema.py"
+    },
+    {
+      "file": "xpatch_license.txt",
+      "bytes": 11399,
+      "sha256": "90d526945f5c87e6a20f486fb963649afef7d4ae450b033f8972d6c1e38d62b0"
+    },
+    {
+      "file": "xpatch_license_api.json",
+      "bytes": 16513,
+      "sha256": "3e7f9f667a1caa09f44890cb3fb8b5e2e1d05909f4a784b79b104f6ff37df52b",
+      "git_blob_sha": "a9f31bae4184a3462b7570079b4b53016da48d3e",
+      "upstream_html_url": "https://github.com/stitsyuk/xPatch/blob/main/LICENSE"
+    },
+    {
+      "file": "xpatch_model.py",
+      "bytes": 2183,
+      "sha256": "7a9990ecf739410f18e72bd171699298b22e0738d1f9d45125447404412a221c"
+    },
+    {
+      "file": "xpatch_model_api.json",
+      "bytes": 3870,
+      "sha256": "605c5f6a1fd87cc0f89a96a8d5d8b104d9156276aee174ac0e564fdea521ab5f",
+      "git_blob_sha": "de9f65469a2d0a000e7a579be91b931a1609290b",
+      "upstream_html_url": "https://github.com/stitsyuk/xPatch/blob/main/models/xPatch.py"
+    },
+    {
+      "file": "xpatch_network.py",
+      "bytes": 3871,
+      "sha256": "616a93cb72a690bbe86d8e73a00255f6b964c90c6927416da74fa8da75e0d523"
+    },
+    {
+      "file": "xpatch_network_api.json",
+      "bytes": 6205,
+      "sha256": "63d12c73b846735e979c9534f544dbe968de85449f490aa4bfb1b58e3e908522",
+      "git_blob_sha": "3f01b6929581d00e0ff2c6e9380cf7bb768b5f3c",
+      "upstream_html_url": "https://github.com/stitsyuk/xPatch/blob/main/layers/network.py"
+    },
+    {
+      "file": "xpatch_paper.html",
+      "bytes": 734826,
+      "sha256": "4834c1d9b48ca6d2d8477180f9638dc748676e2174de1609cb42a9efe69acf3e",
+      "url": "https://arxiv.org/html/2412.17323v1",
+      "complete_download": false
+    },
+    {
+      "file": "xpatch_paper.pdf.partial",
+      "bytes": 335738,
+      "sha256": "97b8fd1c2756b0935feb781c8f067e7881c4ed38fda20367755ee34878538490",
+      "complete_download": false,
+      "eligible_for_full_document_claim": false
+    },
+    {
+      "file": "xpatch_paper.txt",
+      "bytes": 84785,
+      "sha256": "ade852d506f326b431b5ed52cd32b21a45b77bf203632fcc75ee5452a8858667"
+    }
+  ],
+  "failed_pdf_rename_map": {
+    "xpatch_paper.pdf": "xpatch_paper.pdf.partial",
+    "kronos_paper.pdf": "kronos_paper.pdf.partial",
+    "patchtst_paper.pdf": "patchtst_paper.pdf.partial"
+  },
+  "legacy_read_only_files": [
+    {
+      "path": "/home/ayaka/xPatch/configs/aapl_v2.json",
+      "bytes": 2381,
+      "sha256": "1404eeef905aebbc439fe1b1da260c442886bd6848d24168fd00c564fa569143",
+      "action": "read_only_inspection"
+    },
+    {
+      "path": "/home/ayaka/xPatch/configs/aapl_v2_model_lock.json",
+      "bytes": 2908,
+      "sha256": "e591284bf919d76ddfd3bf3aa2838a591bce9108543fa1736cfd008cf5565afc",
+      "action": "read_only_inspection"
+    },
+    {
+      "path": "/home/ayaka/xPatch/finance_v2/results_summary.json",
+      "bytes": 67138,
+      "sha256": "726c9b28364e6bee4394dff5544555734667e34c234ac5f9b043d82341d75f46",
+      "action": "read_only_inspection"
+    },
+    {
+      "path": "/home/ayaka/xPatch/finance_v2/RESULTS.md",
+      "bytes": 7237,
+      "sha256": "6c91764cbaf41172a5e28c351f65e463659a3ea3ed35967595a5596c3a7163cb",
+      "action": "read_only_inspection"
+    },
+    {
+      "path": "/home/ayaka/xPatch/finance_v2/data.py",
+      "bytes": 13688,
+      "sha256": "55d73f21bece769827d2c3ae3eab5fbc747730ccb6a3156c3d491f691159d02b",
+      "action": "read_only_inspection"
+    },
+    {
+      "path": "/home/ayaka/xPatch/finance_v2/models.py",
+      "bytes": 6463,
+      "sha256": "ec299fb522027957b120a14a755231f6c71230ea27b7b57f9a38ff2b13d019a0",
+      "action": "read_only_inspection"
+    },
+    {
+      "path": "/home/ayaka/xPatch/finance_v2/training.py",
+      "bytes": 6807,
+      "sha256": "762a1c70bf6f9dcd6a5a9306cc127b28fd500fb3b67dd134acc0d471f1a060a3",
+      "action": "read_only_inspection"
+    },
+    {
+      "path": "/home/ayaka/xPatch/finance_v2/metrics.py",
+      "bytes": 5525,
+      "sha256": "2b4d2ff9ce28c59ee3d7be426e24b0286ccb3d4820818ccd70fcc0e399410d76",
+      "action": "read_only_inspection"
+    },
+    {
+      "path": "/home/ayaka/xPatch/finance_v2/run.py",
+      "bytes": 17804,
+      "sha256": "dff82f93d7d49370d3649aa144b4b5c71dffbfea320bd8ab6ad1077d8bc19d0d",
+      "action": "read_only_inspection"
+    },
+    {
+      "path": "/home/ayaka/xPatch/finance_v2/provenance.py",
+      "bytes": 5018,
+      "sha256": "8e803b2f9885af7d3d8ffc30585826cc2860660877e5a476ccf13602eb8d13e4",
+      "action": "read_only_inspection"
+    },
+    {
+      "path": "/home/ayaka/xPatch/research/AAPL_V2_AMENDMENTS.md",
+      "bytes": 2420,
+      "sha256": "b4b9d668465999f16a7505aaf29cabf25b65e0c55812e95b50805956e0049625",
+      "action": "read_only_inspection"
+    },
+    {
+      "path": "/home/ayaka/xPatch/data_acquisition/V2_SOURCE_AUDIT.md",
+      "bytes": 5325,
+      "sha256": "847a55b399a200a98e459bc1fc4c6d992a3a2fcfdbd4793f211cd285e4ea028b",
+      "action": "read_only_inspection"
+    },
+    {
+      "path": "/home/ayaka/xPatch/models/xPatch.py",
+      "bytes": 2183,
+      "sha256": "7a9990ecf739410f18e72bd171699298b22e0738d1f9d45125447404412a221c",
+      "action": "read_only_inspection"
+    },
+    {
+      "path": "/home/ayaka/xPatch/layers/ema.py",
+      "bytes": 1360,
+      "sha256": "bcf960e02378937fb2ba61c675f3c5d2ba3853b3c479bb5626ca64b1ee9bff51",
+      "action": "read_only_inspection"
+    },
+    {
+      "path": "/home/ayaka/xPatch/layers/network.py",
+      "bytes": 4656,
+      "sha256": "8a26b2c00ecdeaf77cd7e2fa96865b14878521e5327fef75165503970652e378",
+      "action": "read_only_inspection"
+    }
+  ],
+  "limitations": [
+    "xPatch HTML only partially downloaded; core method was read, full appendices not claimed",
+    "Current source documents are identified by blob/SHA256; execution commit revisions still require G2/G4 lock",
+    "Legacy source hashes do not constitute revalidation of all historical run artifacts",
+    "Source CSV expected hash copied from inspected config; full byte hash not recomputed in this planning turn"
+  ],
+  "verified_environment_snapshot": {
+    "cpu_logical": 32,
+    "wsl_ram_gib_approx": 15,
+    "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+    "gpu_total_mib": 12227,
+    "gpu_used_mib_at_initial_query": 2841,
+    "torch": "2.14.1",
+    "chronos_forecasting": "2.3.2",
+    "peft_available": false,
+    "cuda_visible": true
+  },
+  "app_project_verified": {
+    "projectId": "01a18b56-896b-72e1-ba23-f479638087b3",
+    "project_path": "/home/ayaka/wslcode",
+    "threadId": "01a1a69a-2256-73a3-b1a1-1ce3af49c4e8",
+    "thread_cwd": "/home/ayaka/wslcode",
+    "membership_correct": true
+  }
+}

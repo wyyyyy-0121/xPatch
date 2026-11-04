@@ -1,0 +1,54 @@
+{
+  "scope": "Small public method documents; no checkpoints or market data",
+  "sources": [
+    {
+      "file": "xpatch_readme.md",
+      "url": "https://raw.githubusercontent.com/stitsyuk/xPatch/main/README.md",
+      "exit_code": 28,
+      "retrieved_at_utc": "2026-11-04T12:53:11.696110+00:00",
+      "error": "curl: (28) Connection timed out after 8001 milliseconds"
+    },
+    {
+      "file": "xpatch_paper.pdf",
+      "url": "https://arxiv.org/pdf/2412.17323",
+      "exit_code": 28,
+      "retrieved_at_utc": "2026-11-04T12:53:38.696268+00:00",
+      "error": "curl: (28) Operation timed out after 35002 milliseconds with 335738 out of 1225302 bytes received"
+    },
+    {
+      "file": "chronos_readme.md",
+      "url": "https://raw.githubusercontent.com/amazon-science/chronos-forecasting/main/README.md",
+      "exit_code": 28,
+      "retrieved_at_utc": "2026-11-04T12:53:11.696323+00:00",
+      "error": "curl: (28) Connection timed out after 8001 milliseconds"
+    },
+    {
+      "file": "kronos_readme.md",
+      "url": "https://raw.githubusercontent.com/shiyu-coder/Kronos/master/README.md",
+      "exit_code": 28,
+      "retrieved_at_utc": "2026-11-04T12:53:19.705384+00:00",
+      "error": "curl: (28) Connection timed out after 8002 milliseconds"
+    },
+    {
+      "file": "kronos_paper.pdf",
+      "url": "https://arxiv.org/pdf/2508.02739",
+      "exit_code": 28,
+      "retrieved_at_utc": "2026-11-04T12:53:46.703911+00:00",
+      "error": "curl: (28) Operation timed out after 35001 milliseconds with 436430 out of 11260064 bytes received"
+    },
+    {
+      "file": "timesfm_readme.md",
+      "url": "https://raw.githubusercontent.com/google-research/timesfm/master/README.md",
+      "exit_code": 28,
+      "retrieved_at_utc": "2026-11-04T12:53:27.714706+00:00",
+      "error": "curl: (28) Connection timed out after 8002 milliseconds"
+    },
+    {
+      "file": "patchtst_paper.pdf",
+      "url": "https://arxiv.org/pdf/2211.14730",
+      "exit_code": 28,
+      "retrieved_at_utc": "2026-11-04T12:54:02.722876+00:00",
+      "error": "curl: (28) Operation timed out after 35001 milliseconds with 529368 out of 4027069 bytes received"
+    }
+  ]
+}

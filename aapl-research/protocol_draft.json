@@ -1,0 +1,201 @@
+{
+  "schema_version": 2,
+  "research_id": "aapl-return12-restart-20261104",
+  "status": "implementation_plan_pending_admission",
+  "user_target_confirmed": true,
+  "timezone": "Asia/Shanghai",
+  "main_target": {
+    "symbol": "AAPL",
+    "quantity": "cumulative_log_return",
+    "horizon_minutes": 12,
+    "formula": "log(close[b+12]/close[b])",
+    "timestamp_label": "bar_start",
+    "scoring": "MSE"
+  },
+  "news_politics_sentiment_inputs": false,
+  "event_caused_returns_retained": true,
+  "panels": {
+    "primary": "close",
+    "conditional_extension": "cloud_only_not_authorized",
+    "common_origins_max_lookback_returns": 240,
+    "lookbacks": [
+      48,
+      96,
+      240
+    ],
+    "same_session_only": true,
+    "origin_stride_minutes": 1
+  },
+  "source_csv_read_only": "/home/ayaka/xPatch/data_acquisition/runs/alpaca_development_20261102/AAPL_sip_1min_raw.csv",
+  "source_csv_expected_sha256": "dafb2d2ac05ae7652fea0334caea209457db6418368efdcad8b7d648cdfb5830",
+  "models_primary": [
+    "zero",
+    "ridge",
+    "lightgbm",
+    "xpatch",
+    "patchtst",
+    "chronos2_frozen",
+    "chronos2_lora"
+  ],
+  "supervised_halving": {
+    "config_counts": [
+      32,
+      11,
+      4
+    ],
+    "cumulative_epochs": [
+      3,
+      9,
+      27
+    ],
+    "epochs_per_inner_block_before_seed_review": 234
+  },
+  "finetune_halving": {
+    "config_counts": [
+      12,
+      4,
+      2
+    ],
+    "cumulative_updates": [
+      100,
+      300,
+      900
+    ],
+    "updates_per_inner_block_before_seed_review": 3200
+  },
+  "seeds": {
+    "search": 20261104,
+    "initial_training": 2026,
+    "review_and_final": [
+      2026,
+      2027,
+      2028
+    ],
+    "bootstrap": 20261104
+  },
+  "xpatch_pred_len": 12,
+  "supervised_loss_candidates": [
+    "step_mse",
+    "cumulative12_mse"
+  ],
+  "chronos_point_estimators": [
+    "native_median",
+    "quantile_integral_tailflat"
+  ],
+  "chronos_cross_origin_learning": false,
+  "fine_tuning": {
+    "chronos2": "lora_no_silent_full_fallback",
+    "peft_currently_available": true
+  },
+  "admission": {
+    "data_passed": false,
+    "sealed_data_passed": false,
+    "adapters_passed": false,
+    "optimization_passed": false,
+    "performance_passed": false,
+    "formal_training_allowed": false
+  },
+  "resources": {
+    "global_research_logical_threads_max": 22,
+    "old_observation_threads_reserved": 4,
+    "new_research_threads_max": 18,
+    "default_concurrent_training_jobs": 1,
+    "dataloader_workers": 0,
+    "omp_blas_mkl_threads_max": 4,
+    "torch_intraop_threads_max": 4,
+    "torch_interop_threads": 1,
+    "pilot_wall_minutes_max": 90,
+    "proposed_gpu_hours_max": 24,
+    "proposed_wall_hours_max": 48,
+    "new_artifact_gib_max": 20,
+    "job_peak_rss_gib_max": 8,
+    "available_ram_gib_min": 4,
+    "gpu_total_utilized_memory_fraction_max": 0.85,
+    "gpu_free_gib_min": 1.5,
+    "projection_safety_factor": 1.5,
+    "gpu_jobs_requested": 3
+  },
+  "statistics": {
+    "primary_block_days": 5,
+    "sensitivity_block_days": [
+      1,
+      10
+    ],
+    "bootstrap_repeats": 5000,
+    "bootstrap_seed": 20261104,
+    "hypothesis": "loss(selected_candidate)-loss(zero)<0",
+    "p_value_method": "null_centered_moving_day_block_bootstrap",
+    "family_alpha": 0.05,
+    "minimum_relative_mse_improvement": 0.01,
+    "minimum_months_improved": 2,
+    "seed_aggregation": "mean_of_per_seed_losses",
+    "all_seeds_improved_required": true,
+    "technical_failure_blocks_positive_qualification": true,
+    "mde_confirmatory_ceiling": 0.03,
+    "power": 0.8,
+    "mde_source": "pre2023 training-period pseudo-residuals; no holdout outcomes"
+  },
+  "protected": {
+    "old_repo_read_only": true,
+    "old_goal_remains_paused": true,
+    "old_rv30_hourly_monitor_unchanged": true,
+    "new_goal": "current_user_goal_active_no_duplicate",
+    "new_monitor": "hourly_current_thread_at_formal_start",
+    "subagents": false,
+    "memory_writes": false,
+    "paid_services_orders_pushes": false,
+    "global_windows_wsl_changes": false
+  },
+  "authoritative_plan": {
+    "file": "IMPLEMENTATION_PLAN.md",
+    "sha256": "40731f05668ebeae5c21e2e4c66aff7363763383d2b5ad8e111cdbb666cbfc9a"
+  },
+  "development": {
+    "training_start": "2021-01-04",
+    "validation_quarters": [
+      "2024Q4",
+      "2025Q2",
+      "2025Q4"
+    ],
+    "purge_sessions": 1,
+    "selection_metric": "pooled_origin_weighted_12m_return_mse",
+    "confirmation_quarter": "2026Q1",
+    "confirmation_evaluated_once": true,
+    "final_fit_end": "2026-05-31",
+    "calibration_last_sessions_june2026": 20
+  },
+  "holdout": {
+    "start": "2026-07-01",
+    "end": "2026-09-30",
+    "manifest_file": "holdout_manifest.json",
+    "sealed_directory": "holdout_sealed",
+    "explicit_gate_authorization_required": true,
+    "max_selected_model_families": 2,
+    "months_improved_required": 2,
+    "all_fixed_seeds_must_improve": true,
+    "enter_if_validation_and_confirmation_below_zero": true
+  },
+  "search_configs_per_validation_block": {
+    "ridge": 24,
+    "lightgbm": 48,
+    "xpatch": 32,
+    "patchtst": 32,
+    "chronos2_frozen": 12,
+    "chronos2_lora": 12
+  },
+  "cloud_extensions": {
+    "authorized": false,
+    "models": [
+      "kronos_small_frozen",
+      "kronos_small_predictor_ft",
+      "timesfm3_frozen"
+    ],
+    "all_day_panel": false,
+    "uploaded_data": false
+  },
+  "fallback_if_budget_fails_before_new_scores": [
+    "reduce_lora_and_xpatch_starting_configuration_counts_preserving_loss_pairs",
+    "reduce_validation_blocks_to_V2_and_V3",
+    "stop_with_feasibility_result"
+  ]
+}

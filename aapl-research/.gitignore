@@ -1,0 +1,11 @@
+__pycache__/
+.venv*/
+outputs/
+.cache/
+tmp/
+holdout_sealed/
+sources/*.pdf
+sources/*.pdf.partial
+sources/*.html
+sources/*_paper.txt
+sources/*_api.json
