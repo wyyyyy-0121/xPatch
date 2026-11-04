@@ -2,6 +2,8 @@
 
 更新：2026-11-04。用户要求先读 AI 顶级期刊原文、确定框架，再写正文。本文件是当前写作依据；现有中英文、LaTeX 和 Word 仍为待重构工作稿。阅读记录见 [JOURNAL_READING.md](JOURNAL_READING.md)，精确来源见 [framework_evidence.json](framework_evidence.json)。
 
+后续可执行步骤、补证范围、资源子预算与停止条件已细化在 [EXECUTION_PLAN.md](EXECUTION_PLAN.md)。用户所指的 Goal 为 Codex 客户端目标；该文件末尾提供待替换正文，当前接口尚未写回客户端。
+
 ## 1. 定位与中心问题
 
 建议采用**历史实证比较研究，以受控仿真补充机制检验**。当前没有新网络结构或新理论。参考顶级期刊的组织方式，有助于从模型比较中形成论证；版式调整不会增加研究贡献。
