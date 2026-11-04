@@ -1,6 +1,6 @@
 # Intraday Realized-Variance Forecasting for AAPL: A Reproducible Comparison of Regularized Regression, Trees, and Time-Series Models
 
-Working manuscript, 4 November 2026. Author: Wang Yang. This draft reports completed historical experiments. The delayed observation service has not yet produced an evaluation sample. Numerical sources are indexed in `evidence.json`; reference verification and reading scope are recorded in `SOURCES.md` and `source_evidence.json`.
+Working manuscript, 4 November 2026. Author: Wang Yang. Affiliation: High School Affiliated to Shanghai Jiao Tong University, Shanghai 200439, China. Corresponding author's e-mail: ____________________. This draft reports completed historical experiments. The delayed observation service has not yet produced an evaluation sample. Numerical sources are indexed in `evidence.json`; reference verification and reading scope are recorded in `SOURCES.md` and `source_evidence.json`.
 
 ## Abstract
 

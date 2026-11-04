@@ -1,6 +1,6 @@
 # AAPL 日内已实现方差预测的可复现比较：正则化回归、树模型与时序深度模型
 
-中文核对稿，2026 年 11 月 4 日。作者署名：Wang Yang。英文主稿见 `MANUSCRIPT_EN.md`。本稿报告已完成的历史实验，免费延迟影子观察仍在收集阶段。数据与数值来源见同目录 `evidence.json` 和 `RESULTS.md`。
+中文核对稿，2026 年 11 月 4 日。作者署名：Wang Yang；单位：High School Affiliated to Shanghai Jiao Tong University，Shanghai 200439, China；邮箱留空。英文主稿见 `MANUSCRIPT_EN.md`。本稿报告已完成的历史实验，免费延迟影子观察仍在收集阶段。数据与数值来源见同目录 `evidence.json` 和 `RESULTS.md`。
 
 ## 摘要
 

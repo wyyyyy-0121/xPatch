@@ -1,8 +1,8 @@
 {
   "source": "research/paper/MANUSCRIPT_EN.md",
-  "source_sha256": "14e6a218a5ae78ac4e471f7ca05cc812e681ee577bf8c2160962e169d3ca37ef",
+  "source_sha256": "7f694b5ccd33e0fb4d850760a6c94658ebd7a658c6e7d49d7cdccd13f5f54dfe",
   "builder": "scripts/build_rv30_paper.py",
-  "builder_sha256": "dd99fd357d4bfd1bb91969c93ab5161d54be40e55188a4ce5e0bb7053995ff8a",
+  "builder_sha256": "9ff952e678c3a6dd42b5ccb8743d3fec2321a0f3be2a5d6c00a4f0d466bee10f",
   "purpose": "two_column_review_manuscript_not_final_submission_or_model_acceptance",
   "typesetting_versions": {
     "pandoc": "pandoc 3.7.0.2"
@@ -10,15 +10,18 @@
   "figures": 2,
   "delivered_as": "latex_sources_only",
   "files": {
-    "research/paper/latex/main.tex": "2d94a479ba6b4eaf9abcf44397762005baa4d19708c812c4347b59cb6a265b5d",
+    "research/paper/latex/main.tex": "924c1225dfc22fe29d2ec0e0b55bdfe70222f27d2cbd1b4c6a616adcfaf18d5d",
     "research/paper/latex/body.tex": "ae036c9c346d882c7ccbea8755b213da92cf66648e67a670ccac6579244ed9dd",
-    "research/paper/latex/titleblock.tex": "e2f38970f92f76ac10a79188228e02856e5e7dc6f87f613bfa3c23015a1ff7a0",
+    "research/paper/latex/titleblock.tex": "f756e594b426a32703071559baa4cbde9b15a804d61664c62453fa08e98c9005",
     "research/paper/latex/tables.lua": "3c5fbf870710e9520544b36da0e51052f4cd38a5528550ad6fae39fa38c10d5b",
-    "research/paper/latex/README.md": "8d8205accb8bd1a1dd0fc7d95f5fa64d21be53727cdde4f59e15eadf995d7017",
+    "research/paper/latex/README.md": "73b6b432b3e8d8e7c2d668f7a463767eb5b61bb9d406612040add5f6d3280756",
     "research/paper/latex/.gitignore": "158834a89274dbbbbe61e6280a6e123dc758df39771eb06bef7411759af05d5a",
     "research/paper/latex/images/development_loss_differences.pdf": "73ea2e1f2f081be490b801c04cf4c4a120453162937635139b58315179cc8e1d",
     "research/paper/latex/images/quarterly_loss_differences.pdf": "1c33cb2ed6ffb743ca07bb9e045b2ca767778df351f3db550890cf0d3001c5bc"
   },
   "author": "Wang Yang",
-  "author_setting": "paperauthor in main.tex; shared by byline and PDF metadata"
+  "author_setting": "paperauthor in main.tex; shared by byline and PDF metadata",
+  "author_details": "research/paper/author.json",
+  "author_details_sha256": "a0b6b2dcbc0c1dab8abdf125cc5f6fe24e77c8d13ea46512743812bb77479adf",
+  "email_intentionally_blank": true
 }

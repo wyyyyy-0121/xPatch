@@ -2,6 +2,8 @@
 
 This directory is a self-contained LaTeX source project. Copy the **whole directory**, including `images/`, when compiling elsewhere. No market credentials, model environment, Python, or Pandoc is needed to compile the saved `.tex` files.
 
+The author information has also been added to the editable Word copy `../AAPL_RV30_Wang_Yang.docx`. Its tables, figures, and equations were checked after conversion; the email line remains blank as requested. Conversion provenance is recorded in `../word_export.json`, and the verified author details are in `../author.json`.
+
 ## Compile
 
 Use **pdfLaTeX** with a current TeX Live or MiKTeX installation. In Overleaf, upload the directory contents, select `main.tex` as the main document, and choose pdfLaTeX.
@@ -29,7 +31,7 @@ Two passes resolve table and figure references. The project uses standard packag
 
 The style is a general two-column research-article layout. It is not an official IEEE, ACM, or journal template. Once a venue is selected, its official class and author instructions should replace the general layout. Figure and table references and the bibliography must then be checked again.
 
-The author name is **Wang Yang**. Edit `\newcommand{\paperauthor}{Wang Yang}` in `main.tex` to change it once for both the visible byline and PDF author metadata. The article contains no affiliation, email, coauthor, or venue fields to fill in. Some references still require original-source checking; the status is recorded in `../SOURCES.md`. The article distinguishes historical results from the uncompleted delayed and timely observation studies. Formatting does not change those evidence limits.
+The author name is **Wang Yang**. Edit `\newcommand{\paperauthor}{Wang Yang}` in `main.tex` to change it once for both the visible byline and PDF author metadata. The affiliation is **High School Affiliated to Shanghai Jiao Tong University, Shanghai 200439, China**, verified against the official school logo and main-campus contact page. The corresponding-author email line is intentionally blank for the author to fill in. Some references still require original-source checking; the status is recorded in `../SOURCES.md`. The article distinguishes historical results from the uncompleted delayed and timely observation studies. Formatting does not change those evidence limits.
 
 The longer editable Markdown draft is `../MANUSCRIPT_EN.md`. To regenerate the `.tex` files from that draft, use the optional repository script `scripts/build_rv30_paper.py` with Pandoc installed. **Regeneration overwrites `body.tex` and `titleblock.tex`**, so preserve direct LaTeX edits first. Ordinary editing and compilation can use this directory alone.
 

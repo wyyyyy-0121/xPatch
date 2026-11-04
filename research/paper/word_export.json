@@ -1,0 +1,53 @@
+{
+  "checked_utc": "2026-11-04T10:46:55.965005+00:00",
+  "passed": true,
+  "author": {
+    "name": "Wang Yang",
+    "school": "High School Affiliated to Shanghai Jiao Tong University",
+    "city": "Shanghai",
+    "postal_code": "200439",
+    "country": "China",
+    "email": "",
+    "school_name_source": "https://fz.sjtu.edu.cn/images/logo1.png",
+    "postal_code_source": "https://fz.sjtu.edu.cn/jrjz/lxwm.htm",
+    "source_scope": "Official school logo and main-campus contact page checked on 2026-11-04"
+  },
+  "article_and_table_values_preserved": true,
+  "presentation_header_shortened": {
+    "from": "Unique configurations per information set and outer fold",
+    "to": "Configs."
+  },
+  "editable_math_objects": 16,
+  "tables": 5,
+  "embedded_images": 2,
+  "image_bytes_preserved": true,
+  "email_intentionally_blank": true,
+  "body_columns": 2,
+  "rendered_pages": 7,
+  "all_rendered_pages_visually_inspected": true,
+  "figure_line_height_clipping_corrected": true,
+  "word_document": {
+    "path": "research/paper/AAPL_RV30_Wang_Yang.docx",
+    "sha256": "bbf86578187ebb86d5eae68dd09bdd43cd8f3fa57adae2e95266b1c0dd27a8a2",
+    "bytes": 245273
+  },
+  "desktop_copy": {
+    "path": "/mnt/c/Users/hiuni/Desktop/AAPL_RV30_Wang_Yang.docx",
+    "sha256": "bbf86578187ebb86d5eae68dd09bdd43cd8f3fa57adae2e95266b1c0dd27a8a2"
+  },
+  "official_school_sources": [
+    {
+      "url": "https://fz.sjtu.edu.cn/images/logo1.png",
+      "path": "artifacts/rv30/paper_author_20261104/school_logo.png",
+      "sha256": "3822b2286f1e0f146d7138802a17bdebdf4d938beeb26d85134d93bd36df5b9c",
+      "verification": "English name read from the official school wordmark"
+    },
+    {
+      "url": "https://fz.sjtu.edu.cn/jrjz/lxwm.htm",
+      "path": "artifacts/rv30/paper_author_20261104/school_contact.html",
+      "sha256": "d6442704f0d01add2d558ee5e619a307366fbdc9ccb105149c1442164f3cc62c",
+      "verification": "Main-campus postal code 200439; campus address 42 Yingao Road"
+    }
+  ],
+  "model_or_statistical_changes": false
+}

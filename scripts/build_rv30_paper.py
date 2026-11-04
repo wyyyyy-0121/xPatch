@@ -46,7 +46,10 @@ def main():
             '-t', 'latex'], input=value, text=True, capture_output=True, check=True).stdout.strip()
 
     titleblock = '\\twocolumn[\n\\begin{center}\n{\\Large\\bfseries ' + latex_fragment(title) + '}\\par\n'
-    titleblock += '\\vspace{5pt}\n{\\normalsize \\paperauthor}\\par\n'
+    titleblock += '\\vspace{5pt}\n{\\normalsize \\paperauthor\\textsuperscript{1,*}}\\par\n'
+    titleblock += '{\\small \\textsuperscript{1}\\paperaffiliation}\\par\n'
+    titleblock += '{\\small \\paperlocation}\\par\n'
+    titleblock += "{\\small \\textsuperscript{*}Corresponding author's e-mail: \\underline{\\hspace{3.5cm}}}\\par\n"
     titleblock += '{\\small Working manuscript -- 4 November 2026}\\par\n\\end{center}\n'
     titleblock += '\\begin{center}\\begin{minipage}{0.96\\textwidth}\\small\n'
     titleblock += '\\textbf{Abstract.} ' + latex_fragment(abstract) + '\n\\par\\vspace{4pt}\n'
