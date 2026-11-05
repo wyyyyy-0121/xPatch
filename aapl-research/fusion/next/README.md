@@ -4,11 +4,11 @@
 
 用户已授权后续研究变更持续推送 GitHub，取代计划书末尾原先的“不推送”限制；计划正文与哈希保持原身份。同步分支为 [`codex/aapl-return12-implementation`](https://github.com/wyyyyy-0121/xPatch/tree/codex/aapl-return12-implementation/aapl-research)。代码、计划和运行说明随完成的提交推送；行情、基础权重、账户凭据及本地输出不进入 Git。
 
-阶段证据摘要见 [STATUS.md](STATUS.md)。当前 F1 全量独立审计、本地 CPU 预检和训练包验证已完成，云端 F2 正在实测。下文命令按阶段列出，不应据此重复启动已经完成或仍在运行的任务。
+阶段证据摘要见 [STATUS.md](STATUS.md)。F1、训练包验证及最终 F2 已完成，F3 已开始正式执行。用户随后设定 **100 小时硬上限**，原后续长队列已撤下，已有 F3 保留。时间守护按实际起点停止计算，后续范围正在修订；下文列出的完整范围命令不能当作新预算下的待执行队列。
 
 F1 的逐股票覆盖、排除原因、共同预测起点和开盘时间轴见 [DATA_ADMISSION.md](DATA_ADMISSION.md)，该记录不含原始行情。
 
-针对 RTX 5090 的追加安排见 [PERFORMANCE_OPTIMIZATION_PLAN.md](PERFORMANCE_OPTIMIZATION_PLAN.md)。用户最新决定保留全部研究范围，每个完整神经候选只做两个等价覆盖轮，适配尾段包含在内，每折按自己的合法历史量分配更新。总 24 卡小时和包级时限已取消。实测选 Chronos/LoRA batch 256、xPatch 256、PatchTST 512；CPU 有界预取与 GPU 重叠，最后配置须通过数值和压力准入。
+针对 RTX 5090 的追加安排见 [PERFORMANCE_OPTIMIZATION_PLAN.md](PERFORMANCE_OPTIMIZATION_PLAN.md)。用户最新决定保留全部研究范围，每个完整神经候选只做两个等价覆盖轮，适配尾段包含在内，每折按自己的合法历史量分配更新。原 24 卡小时和包级时限曾取消，现由用户最新的总 100 小时硬上限替代。实测选 Chronos/LoRA batch 256、xPatch 256、PatchTST 512；CPU 有界预取与 GPU 重叠，最后配置须通过数值和压力准入。
 
 大型神经网络训练指定在用户的 AutoDL 单卡实例执行。本地负责数据、审计、打包和最终推理。当前云端连接及实际硬件已经核验；实例重启后须复核连接地址。GPU 暂不需要时由用户关闭实例，本工具不会创建或付费租赁实例。
 
@@ -84,7 +84,7 @@ bash cloud/run.sh -m fusion.next.experiment F4
 bash cloud/run.sh -m fusion.next.experiment F5
 ```
 
-本轮已启动云端 `fusion.next.cloud_driver`：它自动等待旧计量完成、归档证据、完成最终代码的 F2 测量、计算完整范围成本并冻结搜索，随后执行 F3。实际阶段见 `outputs/fusion_next/cloud/driver_state.json`，子作业日志在同目录的 `logs/` 中；不应与上面的手工命令重复启动。入口在 F3 完成后结束，后续继续 F4/F5。完整训练的预览排程和缓存假设见性能修订文档。
+本轮已启动云端 `fusion.next.cloud_driver`：它自动等待旧计量完成、归档证据、完成最终代码的 F2 测量、计算完整范围成本并冻结搜索，随后执行 F3。实际阶段见 `outputs/fusion_next/cloud/driver_state.json`，子作业日志在同目录的 `logs/` 中；不应与上面的手工命令重复启动。入口在 F3 完成后结束。完整范围投影超过新上限，后续 F4/F5/F6 不再自动继续，须按修订范围执行；已撤下的旧长队列不得重启。范围、100 小时守护及新卡的价格比较见性能修订文档。
 
 预算入口为每个合法训练折冻结两个等价覆盖轮，保留全宽度和全部候选。最大历史段 xPatch/融合/LoRA 的 batch 256 预算为 23,424 步，PatchTST batch 512 为 11,712 步；适配 AAPL 的最多 20% 尾段包含在两轮内，共享阶段约 1.6 轮。连续晋级对应 0.2/0.6/2 等价轮，第一档不声称完整覆盖。各折使用自己的更新表，AAPL 单股配对保持相同样本预算并单列重复使用。采样器报告去重覆盖与重复曝光，CPU 对照使用全部窗口及股票/交易日均衡权重。入口列入全部 OOF、三种子、七组机制和最终拟合，按最新实际计时重算费用。预算保守保留第二次拟合额度，最终检验使用 Q2 已确认的同一模型。正式实验只接受通过 F2 且与冻结代码身份一致的配置。
 
@@ -177,3 +177,13 @@ AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m fusion.next.rese
 - 新的最终统计入口使用 5 日非循环 moving-block bootstrap、5000 次、零中心化单侧检验和三对照 Holm 校正，并提供 1/10 日敏感性。
 
 当前代码校验不能证明预测优于零收益或其他模型。F2 真实性能、正式搜索、机制结论、Q2 确认、条件式 Q3 检验和部署验收均须取得相应实测产物；未通过前不宣称完成。
+
+## 最新 100 小时守护
+
+独立脚本 `scripts/limit_fusion_cloud.py` 已在云端运行，限制当前实例研究工作的累计墙钟时间。绝对截止为 2026-11-09 17:34:22（Asia/Shanghai），包括本次已记录作业起点之后的 CPU、GPU 和空闲时间。它不会关闭供应商实例。状态见 `outputs/fusion_next/cloud/hard_time_limit_state.json`，开始与截止收据见 `hard_time_limit.json`。只读查看目标时，单独上传该脚本后可运行：
+
+```bash
+bash cloud/run.sh scripts/limit_fusion_cloud.py --inspect-only
+```
+
+该脚本位于版本控制的 `scripts/` 中，与冻结模型源代码独立，上传后按自身 SHA 追溯；当前模型代码身份仍为 `fb0a03b4841e9bde2b555440214b2b4308bc89e8ce2f3473b22a73b6ffd063cb`。没有必要为仅增加外层计时守护重跑已经通过的 F2。
