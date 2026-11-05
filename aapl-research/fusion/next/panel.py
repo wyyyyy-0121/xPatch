@@ -8,6 +8,12 @@ from .common import OUT,read_json,digest,identity
 from .data import CHANNELS
 
 
+def close_signals(raw):
+    """Close-only day-boundary move is separate from the intraday return series."""
+    start=raw[...,7]
+    return np.stack([raw[...,11]*(1-start),start,raw[...,9],raw[...,11]*start],axis=-1)
+
+
 @dataclass
 class Panel:
     stocks:list
@@ -58,11 +64,14 @@ class Panel:
             seasonal=np.divide(seasonal,counts,out=np.full(390,values[:,4].mean()),where=counts>0)
             values[:,4]-=seasonal[minute[select]]
             center=values.mean(0);std=values.std(0);std[std<1e-7]=1.
+            close_values=close_signals(values);close_center=close_values.mean(0);close_std=close_values.std(0)
+            close_std[close_std<1e-7]=1.
             target_ids=self.origins[name][self.dates[self.origins[name]]<=fit_end]
             target=np.asarray(self.targets[name][target_ids]);target=target[np.isfinite(target)]
             if not len(target):raise ValueError('Scaler fit has no eligible training targets')
             target_std=max(float(np.sqrt(np.mean(target**2))),1e-5)
             result[name]={'center':center.astype(np.float32),'std':std.astype(np.float32),
+                          'close_center':close_center.astype(np.float32),'close_std':close_std.astype(np.float32),
                           'volume_seasonal':seasonal.astype(np.float32),'target_std':target_std,'fit_end':fit_end}
         return result
 
@@ -75,30 +84,32 @@ class Panel:
         if stock_ids.min()<0 or stock_ids.max()>=len(self.stocks):raise ValueError('Stock ID outside admitted panel')
         if include_labels and rows.max()+12>=len(self.dates):raise ValueError('Training label is unavailable')
         idx=rows[:,None]+np.arange(1-length,1)
-        local=np.empty((len(rows),length,len(CHANNELS)),dtype=np.float32)
-        foundation=np.empty((len(rows),length,3),dtype=np.float32)
+        close_only=config.get('information','ohlcv')=='close'
+        local=np.empty((len(rows),length,4 if close_only else len(CHANNELS)),dtype=np.float32)
+        foundation=np.empty((len(rows),length,2 if close_only else 3),dtype=np.float32)
         sigma=np.empty(len(rows),dtype=np.float32);target_scale=np.empty(len(rows),dtype=np.float32)
         labels=np.empty(len(rows),dtype=np.float32)
         steps=np.empty((len(rows),12),dtype=np.float32) if include_labels else None
         phase=self.clock_minute[rows]/390
-        close_only=config.get('information','ohlcv')=='close'
         state=np.empty((len(rows),8),dtype=np.float32)
         for sid in np.unique(stock_ids):
             select=np.flatnonzero(stock_ids==sid);name=self.stocks[int(sid)];s=scalers[name]
             raw=np.asarray(self.features[name][idx[select]],dtype=np.float32)
-            foundation[select]=raw[:,:,[3,5,4]]
+            close=close_signals(raw) if close_only else None
+            foundation[select]=close[:,:,[0,3]] if close_only else raw[:,:,[3,5,4]]
             minute=self.clock_minute[idx[select]]
             x=raw.copy();x[:,:,4]-=s['volume_seasonal'][minute]
-            local[select]=np.clip((x-s['center'])/s['std'],-10,10)
+            local[select]=np.clip((close-s['close_center'])/s['close_std'] if close_only else (x-s['center'])/s['std'],-10,10)
             return_channel=11 if close_only else 3
             past=raw[:,-min(60,length):,return_channel]
+            if close_only:past=past*(1-raw[:,-min(60,length):,7])
             scale=np.sqrt(np.mean(past**2,axis=1)*12+1e-12)
             sigma[select]=scale;target_scale[select]=s['target_std']
             if include_labels:
                 labels[select]=self.targets[name][rows[select]]
                 steps[select]=self.features[name][rows[select,None]+np.arange(1,13),3]
             state[select]=np.column_stack([np.log(scale/s['target_std']).clip(-6,6),
-                raw[:,-12:,return_channel].sum(1)/scale,past.sum(1)/(scale*np.sqrt(past.shape[1]/12)),
+                (close[:,-12:,0] if close_only else raw[:,-12:,3]).sum(1)/scale,past.sum(1)/(scale*np.sqrt(past.shape[1]/12)),
                 np.sin(2*np.pi*phase[select]),np.cos(2*np.pi*phase[select]),phase[select],
                 np.where(raw[:,-1,7]>0,raw[:,-1,11],0.) if close_only else raw[:,-1,8],raw[:,:,9].mean(1)])
         background=[]
@@ -106,13 +117,8 @@ class Panel:
             s=scalers[name];raw=np.asarray(self.features[name][idx],dtype=np.float32)
             minute=self.clock_minute[idx]
             raw[:,:,4]-=s['volume_seasonal'][minute]
-            background.append(np.clip((raw-s['center'])/s['std'],-10,10))
+            background.append(np.clip((close_signals(raw)-s['close_center'])/s['close_std'] if close_only else (raw-s['center'])/s['std'],-10,10))
         market=np.concatenate(background,axis=2) if background else np.empty((len(rows),length,0),dtype=np.float32)
-        if close_only:
-            local=local[:,:,[11,7,9]]
-            if background:market=np.concatenate([m[:,:,[11,7,9]] for m in np.split(market,len(self.background),axis=2)],axis=2)
-            # Same close history only; do not quietly retain volume in the FM branch.
-            foundation=np.stack([self.features[self.stocks[int(s)]][idx[i],11] for i,s in enumerate(stock_ids)])[:,:,None]
         if experts is None:experts=np.zeros((len(rows),4),dtype=np.float32)
         batch={'local':local,'market':market,'foundation_context':foundation,'sigma12':sigma,
                'state':state,'stock':stock_ids,'experts':np.asarray(experts,dtype=np.float32),

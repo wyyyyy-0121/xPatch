@@ -30,8 +30,13 @@ class Stream:
         stamp=stamp.tz_convert('UTC');received=received.tz_convert('UTC')
         if stamp not in self.calendar:raise ValueError('Bar is outside regular-session calendar')
         if stamp+pd.Timedelta(minutes=1)>received:raise ValueError('Bar was not completed when received')
-        if set(values)!=set(FIELDS):raise ValueError('Input must have exactly OHLCV, trade_count and vwap')
-        record={'values':{name:float(values[name]) for name in FIELDS},'received_at':received.isoformat()}
+        required={'open','high','low','close','volume'}
+        if not required<=set(values) or not set(values)<=set(FIELDS):raise ValueError('Input requires OHLCV; only trade_count and vwap may be added')
+        # Ancillary fields are not model features. Missing values have causal
+        # placeholders so an OHLCV-only feed need not invent a trade count/VWAP.
+        normalized={**values,'trade_count':values.get('trade_count',0.),'vwap':values.get('vwap',values['close'])}
+        record={'values':{name:float(normalized[name]) for name in FIELDS},'received_at':received.isoformat(),
+                'ancillary_fields_unavailable':[name for name in ('trade_count','vwap') if name not in values]}
         if not all(np.isfinite(v) for v in record['values'].values()):raise ValueError('Nonfinite input bar')
         o,h,l,c,v,n,vw=[record['values'][name] for name in FIELDS]
         if min(o,h,l,c,vw)<=0 or v<0 or n<0 or h<max(o,c,l) or l>min(o,c):raise ValueError('Invalid or inconsistent OHLCV bar')
@@ -113,6 +118,7 @@ class Stream:
             output={'status':'input_or_model_failure','symbol':'AAPL','bar_start':key,'input_cutoff':decision.isoformat(),
                     'generated_at':generated.isoformat(),'mode':mode,'model_identity':self.model_identity,'reason':str(exc)}
         # Keep the full prediction journal, including failures; never silently drop failed origins.
+        output['emitted_at_wall_clock_utc']=utc_now()
         self.outputs[key]=output;self.save();return output
 
     def save(self):

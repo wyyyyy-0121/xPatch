@@ -35,6 +35,7 @@ def audit(require_complete=False):
             per_quarter.append(float(fields['observed'][mask].mean()))
         admitted=bool(coverage>=.995 and all(c>=.995 for c in per_quarter))
         stock_checks={'file_hashes':valid,'feature_shape':fields['features'].shape==(len(dates),len(CHANNELS)),
+                      'coverage_policy_matches_prepared_receipt':report['missing_policy']==POLICY,
                       'all_features_rebuilt_from_raw':np.array_equal(original_features,fields['features']),
                       'observations_rebuilt_from_raw':np.array_equal(original_observed,fields['observed']),
                       'prices_rebuilt_from_raw':np.array_equal(original_close,fields['close'],equal_nan=True),
@@ -69,6 +70,9 @@ def audit(require_complete=False):
            'time_splits':time_manifest(dates),'plan_sha256':digest(PLAN),
            'preprocessing_source':{name:digest(ROOT/'fusion/next'/name) for name in ('acquire.py','data.py','panel.py','splits.py')},
            'global_files_sha256':{p.name:digest(p) for p in root.glob('*.npy')},
+           'coverage_policy_first_prepared_evidence':{'symbol':'AAPL','prepared_at_utc':prepared['symbols']['AAPL']['prepared_at_utc'],
+               'policy_identical_to_current':prepared['symbols']['AAPL']['missing_policy']==POLICY,
+               'note':'The process policy file timestamp was rewritten by an early preparation restart; original prepared receipts preserve the same threshold. Future restarts preserve the policy file.'},
            'Q3_values_read':False}
     write_json(OUT/'data_audit.json',value)
     if not value['partial_checks_passed']:raise ValueError('Prepared-data audit failed; inspect data_audit.json')

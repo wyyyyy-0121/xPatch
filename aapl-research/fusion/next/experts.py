@@ -71,7 +71,7 @@ def fit_cpu(panel,config,fit_end,directory,seed=2026):
         model=lgb.LGBMRegressor(**params,n_estimators=config.get('trees',1000),n_jobs=config.get('cpu_threads',8),
                                 verbosity=-1,deterministic=True,force_col_wise=True,random_state=seed)
         model.fit(x,y,sample_weight=weight);model_path=directory/'lightgbm.txt';model.booster_.save_model(str(model_path))
-        predict=lambda values:model.predict(values,num_threads=config.get('cpu_threads',8))*unit
+        predict=lambda values:model.booster_.predict(values,num_threads=config.get('cpu_threads',8))*unit
     else:raise ValueError('CPU family must be Ridge or LightGBM')
     report={'family':config['family'],'config':config,'fit_end':fit_end,'fit_start':str(panel.dates[rows].min()),
             'seed':seed,'training_rows':len(rows),'stock_count':len(np.unique(stock)),

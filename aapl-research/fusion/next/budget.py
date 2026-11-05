@@ -158,16 +158,18 @@ def admit_search():
         'lora':measured['lora_end_to_end']['seconds_per_update']}
     updates={name:int(np.clip(math.floor((120 if name in ('xpatch','patchtst') else 90)/seconds/100)*100,1000,4000))
              for name,seconds in seconds_per_update.items()}
-    batch=gpu['config']['batch_size'];variants=[('full',dict(counts)) ,('narrow',dict(counts))]
+    batch=gpu['config']['batch_size'];variants=[('full',dict(counts),'full search'),('narrow',dict(counts),'reduce width choices')]
     # Ordered count reductions retain every family and every required paired mechanism.
     for factor in (.75,.5,.25):
-        reduced={key:(12 if key=='simple' else max(2,int(value*factor))) for key,value in counts.items()}
-        variants.append(('narrow',reduced))
-    last=dict(variants[-1][1]);last['lora']=2;variants.append(('narrow',last))
+        reduced={key:(12 if key=='simple' else (counts[key] if key=='lora' else max(2,int(value*factor)))) for key,value in counts.items()}
+        variants.append(('narrow',reduced,'reduce initial counts; retain paired mechanisms and LoRA domain'))
+    last=dict(variants[-1][1])
+    variants.append(('narrow',dict(last),'representation work is already lazy on sampled prefixes; no full candidate precomputation to remove'))
+    last['lora']=2;variants.append(('narrow',last,'finally restrict LoRA to two prespecified configurations'))
     selected=None
-    for width,reduced in variants:
+    for width,reduced,reduction_step in variants:
         spec=execution_spec(base,reduced,width,updates,batch);projection=project(panel,spec,gpu,cpu)
-        attempts.append({'width':width,'counts':reduced,'projection':projection})
+        attempts.append({'width':width,'counts':reduced,'reduction_step':reduction_step,'projection':projection})
         if projection['within_budget']:selected=(spec,projection);break
     write_json(OUT/'budget_projection.json',{'attempts':attempts,'selected':selected is not None,
                 'update_budget_policy':{'updates':updates,'seconds_per_update':seconds_per_update,

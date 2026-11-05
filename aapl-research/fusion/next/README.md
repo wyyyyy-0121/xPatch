@@ -11,7 +11,7 @@
 在项目根目录运行本地检查：
 
 ```bash
-AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m pytest fusion/next/tests_data.py fusion/next/tests_models.py fusion/next/tests_training.py fusion/next/tests_evaluation.py fusion/next/tests_experiment.py fusion/next/tests_stream.py fusion/next/tests_budget.py -q
+AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m pytest fusion/next/tests_data.py fusion/next/tests_models.py fusion/next/tests_training.py fusion/next/tests_evaluation.py fusion/next/tests_experiment.py fusion/next/tests_stream.py fusion/next/tests_budget.py fusion/next/tests_confirmation.py fusion/next/tests_inference.py -q
 AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m fusion.next.audit
 ```
 
@@ -77,9 +77,28 @@ bash cloud/run.sh -m fusion.next.experiment F5
 
 `freeze` 提供 F6 前的候选系统、最强单模型、简单融合及统计阈值冻结入口；`stream` 提供完成柱验证、延迟重放时间标记、重复与缺失输入处理和状态恢复；`inference` 提供固定四专家及三种子均值的加载接口。这些代码存在不表示已完成实际重放、延迟或预测验收。
 
+F5 完成后，才允许冻结候选并做一次已知 Q2 的流程确认：
+
+```bash
+bash cloud/run.sh -m fusion.next.freeze
+bash cloud/run.sh -m fusion.next.confirmation
+```
+
+开发门槛未通过时，确认入口仍按固定流程拟合和导出可运行系统，但不计算 Q2 分数，不开启 Q3。已完成的确认报告不能被新系统替换。Q3 的受控读取与最终检验另设入口；上述命令均不授权访问 Q3。
+
+将固定部署产物带回本地后，可执行开发期延迟历史重放、恢复和延迟测量：
+
+```bash
+AAPL_CPU_THREADS=4 AAPL_CPU_IDS=0-3 bash scripts/python.sh -m fusion.next.delivery --deployment outputs/fusion_next/deployment/pre_Q2 --origins 256
+AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m fusion.next.delivery --score-file outputs/fusion_next/confirmation_predictions.npz
+```
+
+第二条命令只有在一次 Q2 确认确实运行并生成预测文件后才有输入。重放的接收/生成时间是显式模拟时间，实际输出的墙钟另存；不能据此声称预测在历史当时及时发出。任何缺失预测都会使验收失败，不选择性丢弃。
+
 ## 实现细节与仍待实测的项目
 
 - 历史窗口为 48/96/240，所有主比较使用共同合格起点；开盘可接前一交易日历史，隔夜跳空单列。
+- close-only 对照将会话边界的收盘到收盘变动与日内收益分开，边界跳空不进入分钟波动尺度；只使用收盘和会话/缺失标记，不保留量价字段。
 - 缺失只向前填充，保留显式掩码；未来 12 根标签柱必须均被观测，且不跨收盘。
 - 联合训练按股票、交易日均衡采样，统一覆盖 2021 年起的历史。同一批次中，2021—2022 年样本使用联合分支的辅助读出；此后样本接入此前季度的真实 OOF 专家。早期历史不设固定百分比，避免改变各交易日的权重。采样和更新顺序在 10%/30%/100% 训练前缀之间保持连续。
 - 多股训练的末段可按冻结配置适配 AAPL；只训练 AAPL 的配对对照使用相同更新预算。

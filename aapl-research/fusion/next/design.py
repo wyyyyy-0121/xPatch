@@ -43,6 +43,12 @@ def candidates(family,count,seed=2026):
         if family=='lora':domain.update(rank=[8,16],backbone_lr=[1e-5,3e-5])
     else:raise ValueError(family)
     configs=[]
+    if family=='lora':
+        defaults={key:values[0] for key,values in domain.items()}
+        # The final two-configuration budget reduction must still compare both
+        # prescribed ranks and learning-rate levels, fixed before any score.
+        configs.extend([{**shared,**defaults,'rank':8,'backbone_lr':1e-5},
+                        {**shared,**defaults,'rank':16,'backbone_lr':3e-5}])
     if family in ('lightgbm','xpatch','patchtst'):
         previous=previous_configs()[family]
         previous={k:v for k,v in previous.items() if k in domain}

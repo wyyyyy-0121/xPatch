@@ -144,8 +144,14 @@ def prepare_all(wait=False):
     stamps,dates,start,first,end=calendar();directory=OUT/'data';directory.mkdir(exist_ok=True)
     for name,array in [('timestamps_ns.npy',stamps.as_unit('ns').asi8),('dates.npy',dates),
                        ('session_start.npy',start),('session_end.npy',end)]:np.save(directory/name,array)
-    write_json(OUT/'data_policy.json',{'fixed_before_coverage_scoring_at_utc':utc_now(),'policy':POLICY,
-                                     'stocks':list(STOCKS),'background':list(BACKGROUND),'plan_sha256':digest(PLAN)})
+    policy_path=OUT/'data_policy.json'
+    if policy_path.exists():
+        previous=read_json(policy_path)
+        if previous['policy']!=POLICY or previous['stocks']!=list(STOCKS) or previous['background']!=list(BACKGROUND) or previous['plan_sha256']!=digest(PLAN):
+            raise ValueError('Data policy changed after its original coverage freeze')
+    else:
+        write_json(policy_path,{'fixed_before_coverage_scoring_at_utc':utc_now(),'policy':POLICY,
+                              'stocks':list(STOCKS),'background':list(BACKGROUND),'plan_sha256':digest(PLAN)})
     reports={}
     pending=list(STOCKS+BACKGROUND)
     import time

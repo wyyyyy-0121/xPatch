@@ -89,6 +89,11 @@ def test_close_only_path_does_not_retain_open_high_low_or_volume():
     b=second.windows(stocks,rows,config,second.scaler('2021-01-05'))
     for field in ('local','market','foundation_context','state','sigma12','target'):
         torch.testing.assert_close(a[field],b[field],rtol=0,atol=0)
+    # An overnight close-to-close move is its own signal, never minute volatility.
+    assert a['local'].shape[-1]==4 and a['foundation_context'].shape[-1]==2
+    assert a['foundation_context'][0,-1,0]==0
+    assert a['foundation_context'][0,-1,1]==pytest.approx(float(np.log(1.1)))
+    assert a['sigma12'][0]==pytest.approx(1e-6)
 
 
 def test_prediction_window_never_reads_targets_or_future_rows():

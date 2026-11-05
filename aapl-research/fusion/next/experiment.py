@@ -32,7 +32,7 @@ def admitted():
 
 
 def model_for(panel,config,device):
-    channels=3 if config.get('information')=='close' else 12
+    channels=4 if config.get('information')=='close' else 12
     market=channels*len(panel.background) if config.get('market_information',True) else 0
     if config['family']=='fusion':return NeuralFusion(config,channels,market,len(panel.stocks),device)
     return NativeExpert(config,channels+market,len(panel.stocks))

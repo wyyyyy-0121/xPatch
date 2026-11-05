@@ -63,3 +63,11 @@ def test_delayed_data_cannot_be_labeled_a_timely_forecast():
         stream,frame,_=engine(Path(folder)/'state.json');populate(stream,frame)
         result=stream.predict(frame.index[390],frame.index[390]+pd.Timedelta(minutes=16),mode='timely_forecast')
         assert result['status']=='input_or_model_failure' and 'Delayed' in result['reason']
+
+
+def test_OHLCV_only_feed_is_sufficient_and_ancillary_placeholders_are_recorded():
+    with TemporaryDirectory(prefix='unit_stream_',dir=OUT) as folder:
+        stream,frame,_=engine(Path(folder)/'state.json');values=frame.iloc[300].to_dict()
+        del values['trade_count'];del values['vwap'];stamp=frame.index[300]
+        assert stream.ingest('AAPL',stamp,values,stamp+pd.Timedelta(minutes=1))['status']=='accepted'
+        assert stream.bars['AAPL'][stamp.isoformat()]['ancillary_fields_unavailable']==['trade_count','vwap']
