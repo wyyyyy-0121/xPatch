@@ -65,6 +65,23 @@ def inspect(evidence_root=OUT):
             if digest(artifact)!=speed[field]:raise ValueError('Future speed evidence changed: '+filename)
             provenance.append(artifact)
         provenance.append(speed_path)
+    handoff=None
+    handoff_path=root/'performance/speed_handoff_request.json'
+    if handoff_path.exists():
+        handoff=read_json(handoff_path)
+        if (handoff['identity']!=identity({k:v for k,v in handoff.items() if k!='identity'}) or
+            handoff['source_identity']!=scope['source_identity'] or speed is None or
+            handoff['speed_policy_identity']!=speed['identity'] or
+            handoff['numerical_policy_identity']!=numerical['identity'] or
+            handoff['old_dispatch']['scope_identity']!=scope['identity'] or
+            handoff['limit']!=read_json(time_limit) or handoff['stage_receipt']!='F4_complete.json'):
+            raise ValueError('Bound speed handoff request differs')
+        for field,filename in [('controller_sha256','handoff_fusion_speed.py.txt'),
+                               ('completion_wrapper_sha256','start_handoff_completion.py.txt')]:
+            artifact=root/'performance'/filename
+            if digest(artifact)!=handoff[field]:raise ValueError('Handoff implementation changed: '+filename)
+            provenance.append(artifact)
+        provenance.append(handoff_path)
     for name in ('F3','F4','F5'):
         artifact=root/(name+'_complete.json')
         stages[name]={'completed':False}
@@ -88,6 +105,7 @@ def inspect(evidence_root=OUT):
         'projection':scope['projection'],'stages':stages,
         'portable_inference_policy':numerical,
         'future_speed_policy':speed,
+        'future_speed_handoff_request':handoff,
         'original_complete_scope_claimed':False,'Q3_values_read_by_this_report':False,
         'claim_limits':['Omitted mechanisms do not provide evidence of foundation, market, feature or transfer contributions',
             'Search and seed reviews use the reduced scope, not all original configurations',
