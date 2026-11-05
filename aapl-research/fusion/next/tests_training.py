@@ -11,7 +11,7 @@ from torch import nn
 
 from . import checkpoint
 from .data import CHANNELS, causal_transform, eligible_origins
-from .panel import Panel, BalancedSampler
+from .panel import Panel, BalancedSampler,CoverageSampler
 from .splits import fold
 from .common import OUT,digest
 from .expert_models import NativeExpert
@@ -111,9 +111,11 @@ def test_prediction_window_never_reads_targets_or_future_rows():
     with pytest.raises(ValueError,match='history'):panel.windows([0],[5],{'lookback':48},scalers,include_labels=False)
 
 
-def test_actual_trainer_halving_and_mid_forward_failure_preserve_exact_resume():
+@pytest.mark.parametrize('sampler_policy',[None,CoverageSampler.policy])
+def test_actual_trainer_halving_and_mid_forward_failure_preserve_exact_resume(sampler_policy):
     frame,starts,ends=two_sessions();panel=make_panel(frame,starts,ends)
     config={'family':'xpatch','lookback':48,'lr':.001,'batch_size':4,'total_updates':4,'loss':'raw'}
+    if sampler_policy:config['sampler_policy']=sampler_policy
     parent=OUT/'training';parent.mkdir(parents=True,exist_ok=True)
     with TemporaryDirectory(prefix='unit_resume_',dir=parent) as directory:
         from pathlib import Path
@@ -137,6 +139,31 @@ def test_actual_trainer_halving_and_mid_forward_failure_preserve_exact_resume():
         batch=panel.windows([0,0],[430,700],config,scalers,include_labels=False)
         restored.model.eval()
         torch.testing.assert_close(loaded(batch)['prediction'],restored.model(batch)['prediction'],rtol=0,atol=0)
+
+
+def test_coverage_epoch_visits_all_rows_balances_stocks_and_resumes_mid_epoch(tmp_path):
+    dates=np.array(['2021-01-04']*13+['2021-01-05']*7+['2021-01-06']*8)
+    panel=SimpleNamespace(stocks=['AAPL','MSFT'],dates=dates,
+        origins={'AAPL':np.arange(28),'MSFT':np.r_[np.arange(10),np.arange(13,19)]})
+    allowed={0:np.arange(28)!=3,1:np.arange(28)!=15}
+    sampler=CoverageSampler(panel,'2021-01-05',83,available=allowed)
+    first=sampler.sample(11);saved=sampler.state_dict()
+    # Test the actual safe checkpoint serialization format, not an in-memory copy.
+    path=tmp_path/'sampler.pt';torch.save(saved,path)
+    restored=CoverageSampler(panel,'2021-01-05',83,available=allowed)
+    restored.load_state_dict(torch.load(path,weights_only=True))
+    tail=sampler.sample(sampler.epoch_size-11)
+    actual=restored.sample(restored.epoch_size-11)
+    for left,right in zip(tail,actual):np.testing.assert_array_equal(left,right)
+    stocks=np.r_[first[0],tail[0]];rows=np.r_[first[1],tail[1]]
+    expected={(sid,int(row)) for sid,name in enumerate(panel.stocks) for row in panel.origins[name]
+              if dates[row]<='2021-01-05' and allowed[sid][row]}
+    assert set(zip(stocks,rows))==expected
+    assert np.sum(stocks==0)==np.sum(stocks==1)
+    report=sampler.summary();assert report['unique_windows_seen']==len(expected)
+    assert report['unique_coverage_fraction']==1. and report['completed_coverage_epochs']==1
+    for left,right in zip(sampler.sample(sampler.epoch_size+3),restored.sample(restored.epoch_size+3)):
+        np.testing.assert_array_equal(left,right)
 
 
 def test_fusion_uses_one_day_balanced_sampler_for_early_and_OOF_history():

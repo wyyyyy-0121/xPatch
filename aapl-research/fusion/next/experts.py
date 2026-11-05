@@ -28,11 +28,11 @@ def balanced_rows(panel,fit_end,seed,per_day=16,only_aapl=False):
         days=panel.dates[available];groups=np.split(available,np.flatnonzero(days[1:]!=days[:-1])+1)
         for group in groups:
             if not len(group):continue
-            selected=np.sort(rng.choice(group,min(per_day,len(group)),replace=False))
-            stocks.extend([sid]*len(selected));rows.extend(selected.tolist())
-            weights.extend([1/(len(chosen)*len(groups)*len(selected))]*len(selected))
-    weights=np.asarray(weights,dtype=np.float64);weights*=len(weights)/weights.sum()
-    return np.asarray(stocks),np.asarray(rows),weights
+            selected=group if per_day is None else np.sort(rng.choice(group,min(per_day,len(group)),replace=False))
+            stocks.append(np.full(len(selected),sid,dtype=np.int64));rows.append(selected)
+            weights.append(np.full(len(selected),1/(len(chosen)*len(groups)*len(selected)),dtype=np.float64))
+    weights=np.concatenate(weights);weights*=len(weights)/weights.sum()
+    return np.concatenate(stocks),np.concatenate(rows),weights
 
 
 def matrix(panel,stocks,rows,config,scalers,batch_size=256,with_labels=True):
@@ -59,8 +59,12 @@ def fit_cpu(panel,config,fit_end,directory,seed=2026):
     y=y/unit;guard=ResourceGuard();guard.check();start=time.perf_counter()
     if config['family']=='ridge':
         # No implicit intercept: stock indicators already provide stock-specific offsets.
-        z=x.astype(np.float64);weighted=z*weight[:,None]
-        gram=z.T@weighted;rhs=weighted.T@y
+        # Accumulate sufficient statistics in bounded blocks; the full feature
+        # matrix need not be duplicated as two multi-gigabyte float64 arrays.
+        gram=np.zeros((x.shape[1],x.shape[1]),dtype=np.float64);rhs=np.zeros(x.shape[1],dtype=np.float64)
+        for first in range(0,len(x),4096):
+            z=x[first:first+4096].astype(np.float64);weighted=z*weight[first:first+4096,None]
+            gram+=z.T@weighted;rhs+=weighted.T@y[first:first+4096]
         gram.flat[::gram.shape[0]+1]+=config.get('alpha',1000.)
         coefficient=solve(gram,rhs,assume_a='pos')
         np.savez(directory/'ridge.npz',coefficient=coefficient,unit=unit)

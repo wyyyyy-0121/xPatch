@@ -9,7 +9,7 @@ import torch
 
 from .common import OUT, PLAN, digest, read_json, write_json, utc_now,source_identity
 from .hardware import runtime, inspect_hardware, ResourceGuard,gpu_telemetry
-from .panel import Panel, BalancedSampler
+from .panel import Panel, CoverageSampler
 from .models import NeuralFusion,MarketBranch
 from .expert_models import NativeExpert
 from .trainer import optimizer_for, loss_for
@@ -83,7 +83,7 @@ def inference_timing(model,panel,ids,scalers,config):
 def cpu_admission():
     if (OUT/'search_manifest.json').exists():raise ValueError('CPU admission must precede score/search freeze')
     if not read_json(OUT/'data_audit.json')['passed']:raise ValueError('Complete F1 audit required')
-    panel=Panel.load();config={'lookback':240,'information':'ohlcv','training_scope':'multistock','rows_per_day':16,
+    panel=Panel.load();config={'lookback':240,'information':'ohlcv','training_scope':'multistock','rows_per_day':None,
         'family':'lightgbm','trees':1000,'num_leaves':31,'max_depth':-1,'min_child_samples':100,
         'learning_rate':.03,'reg_lambda':10.,'colsample_bytree':1.,'cpu_threads':min(8,len(__import__('os').sched_getaffinity(0)))}
     report={'started_at_utc':utc_now(),'source_identity':source_identity(),'plan_sha256':digest(PLAN),
@@ -100,15 +100,17 @@ def cpu_admission():
     report['completed_at_utc']=utc_now();write_json(OUT/'performance_cpu.json',report);return report
 
 
-def run(batch_size=64,stress_seconds=900):
+def run(batch_size=64,stress_seconds=900,precision='fp32'):
     if stress_seconds<900:raise ValueError('F2 continuous stress must last at least 15 minutes')
     device=runtime(2026)
     if device!='cuda':raise RuntimeError('Large-model F2 is assigned to the AutoDL GPU; local execution refused')
     admission=read_json(OUT/'data_audit.json')
     if not admission['passed']:raise ValueError('Complete F1 audit required before GPU admission')
     panel=Panel.load();start=time.perf_counter();scalers=panel.scaler('2022-12-30');scaler_seconds=time.perf_counter()-start
-    sampler=BalancedSampler(panel,'2022-12-30',2026)
-    config={**BASE,'batch_size':batch_size,'raw_loss_unit':scalers['AAPL']['target_std']}
+    sampler=CoverageSampler(panel,'2022-12-30',2026)
+    config={**BASE,'batch_size':batch_size,'raw_loss_unit':scalers['AAPL']['target_std'],
+            'precision':precision,'fused_optimizer':True,'sampler_policy':CoverageSampler.policy}
+    reference={**config,'precision':'fp32','fused_optimizer':False}
     report={'started_at_utc':utc_now(),'plan_sha256':digest(PLAN),'hardware':inspect_hardware(True),
             'source_identity':source_identity(),
             'data_audit_sha256':digest(OUT/'data_audit.json'),'config':config,'training_dates_only':True,
@@ -130,9 +132,9 @@ def run(batch_size=64,stress_seconds=900):
             with torch.no_grad():batch['foundation_cached']=model.foundation.latent(batch['foundation_context']).detach().float()
             batches.append(batch)
         initial=changing_state(model);rng=capture_rng()
-        raw=benchmark(model,batches,config);report['measurements']['frozen_raw_fp32']=raw
+        raw=benchmark(model,batches,reference);report['measurements']['frozen_raw_fp32']=raw
         model.load_state_dict(initial,strict=False);restore_rng(rng)
-        optimized={**config,'fused_optimizer':True}
+        optimized={**reference,'fused_optimizer':True}
         cached=benchmark(model,batches,optimized,cached=True);report['measurements']['frozen_cached_fp32']=cached
         a=np.asarray(raw['predictions']);b=np.asarray(cached['predictions']);unit=config['raw_loss_unit']
         checks={'cache_and_fused_prediction_rmse':float(np.sqrt(np.mean((a-b)**2))/unit)<1e-4,
@@ -163,9 +165,9 @@ def run(batch_size=64,stress_seconds=900):
         report['measurements']['end_to_end_raw']=end_to_end(model,panel,ids,scalers,config)
         representation_cache=RepresentationCache(panel,model.foundation,config,allowed_end='2022-12-30')
         model.load_state_dict(initial,strict=False);restore_rng(rng)
-        report['measurements']['end_to_end_cache_population']=end_to_end(model,panel,ids,scalers,optimized,representation_cache)
+        report['measurements']['end_to_end_cache_population']=end_to_end(model,panel,ids,scalers,config,representation_cache)
         model.load_state_dict(initial,strict=False);restore_rng(rng)
-        report['measurements']['end_to_end_cache_reuse']=end_to_end(model,panel,ids,scalers,optimized,representation_cache)
+        report['measurements']['end_to_end_cache_reuse']=end_to_end(model,panel,ids,scalers,config,representation_cache)
         del representation_cache
         # Exercise a real optimizer interruption with the maximum-shape fusion network.
         model.load_state_dict(initial,strict=False);restore_rng(rng);model.train()
@@ -195,15 +197,23 @@ def run(batch_size=64,stress_seconds=900):
         for family in ('xpatch','patchtst'):
             native_config={**config,'family':family,'patch':8,'stride':4,'d_model':64}
             native=NativeExpert(native_config,12*(1+len(panel.background)),len(panel.stocks)).to('cuda')
-            report['measurements'][family]=benchmark(native,batches,native_config)
+            native_initial=changing_state(native);native_rng=capture_rng()
+            native_fp32=benchmark(native,batches,{**native_config,'precision':'fp32'})
+            native.load_state_dict(native_initial,strict=False);restore_rng(native_rng)
+            measured=benchmark(native,batches,native_config)
+            report['measurements'][family]=measured
+            if precision=='bf16':
+                a=np.asarray(native_fp32['predictions']);b=np.asarray(measured['predictions'])
+                checks['bf16_'+family+'_prediction_rmse']=float(np.sqrt(np.mean((a-b)**2))/unit)<.05
+                checks['bf16_'+family+'_loss_difference']=bool(np.allclose(native_fp32['losses'],measured['losses'],rtol=.05,atol=.001))
             report['measurements'][family+'_end_to_end']=end_to_end(native,panel,ids,scalers,native_config)
             report['measurements'][family+'_inference']=inference_timing(native,panel,ids[:8],scalers,native_config)
-            del native;gc.collect();torch.cuda.empty_cache();guard.check();usage.record()
+            del native,native_initial;gc.collect();torch.cuda.empty_cache();guard.check();usage.record()
         # Maximum LoRA rank, largest context, all market variables, multistock batch.
-        lora_config={**config,'foundation_mode':'lora','precision':'fp32'}
+        lora_config={**config,'foundation_mode':'lora'}
         model=NeuralFusion(lora_config,12,len(panel.background)*12,len(panel.stocks),'cuda').to('cuda')
         initial=changing_state(model);rng=capture_rng()
-        lora_fp32=benchmark(model,batches,lora_config,cached=False)
+        lora_fp32=benchmark(model,batches,{**lora_config,'precision':'fp32'},cached=False)
         report['measurements']['lora_fp32']=lora_fp32
         model.load_state_dict(initial,strict=False);restore_rng(rng)
         if checks.get('bf16_encoder_prediction_rmse') and checks.get('bf16_encoder_loss_difference'):
@@ -212,8 +222,6 @@ def run(batch_size=64,stress_seconds=900):
             a=np.asarray(lora_fp32['predictions']);b=np.asarray(lora_bf16['predictions'])
             checks['bf16_lora_prediction_rmse']=float(np.sqrt(np.mean((a-b)**2))/unit)<.05
             checks['bf16_lora_loss_difference']=bool(np.allclose(lora_fp32['losses'],lora_bf16['losses'],rtol=.05,atol=.001))
-            # Formal recipes currently admit FP32. Keep stress and cost timing on
-            # FP32 even when the optional BF16 comparison passes.
         model.load_state_dict(initial,strict=False);restore_rng(rng)
         del initial
         model.train();opt=optimizer_for(model,lora_config,'cuda');torch.cuda.synchronize();start=time.perf_counter();steps=0
@@ -241,7 +249,7 @@ def run(batch_size=64,stress_seconds=900):
         report['measurements']['lora_tcn_end_to_end']=end_to_end(model,panel,ids[:8],scalers,lora_config)
         report['measurements']['lora_tcn_inference']=inference_timing(model,panel,ids[:8],scalers,lora_config)
         # FP32 can remain the admitted policy when optional lower precision fails.
-        optional={k for k in checks if k.startswith('bf16_')}|{'fp16_cache_prediction_rmse'}
+        optional=({k for k in checks if k.startswith('bf16_')} if precision=='fp32' else set())|{'fp16_cache_prediction_rmse'}
         report.update(checks=checks,numerical_and_resource_checks_passed=all(v for k,v in checks.items() if k not in optional),
                       completed_at_utc=utc_now(),passed=False,
                       remaining_gate='CPU/tree timing, end-to-end all-fold budget projection with 50% margin, then search freeze')
@@ -250,7 +258,8 @@ def run(batch_size=64,stress_seconds=900):
 
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('--batch-size',type=int,choices=(32,64),default=64)
+    parser=argparse.ArgumentParser();parser.add_argument('--batch-size',type=int,choices=(32,64,128,256,512,1024),default=64)
+    parser.add_argument('--precision',choices=('fp32','bf16'),default='fp32')
     parser.add_argument('--cpu-only',action='store_true')
     parser.add_argument('--stress-seconds',type=int,default=900);args=parser.parse_args()
-    cpu_admission() if args.cpu_only else run(args.batch_size,args.stress_seconds)
+    cpu_admission() if args.cpu_only else run(args.batch_size,args.stress_seconds,args.precision)

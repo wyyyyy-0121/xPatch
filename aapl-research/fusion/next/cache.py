@@ -18,7 +18,8 @@ class RepresentationCache:
         self.base={'weights':branch.receipt,'source':source_identity(),'information':config.get('information','ohlcv'),
                    'lookback':config['lookback'],'start':'2021-01-04','end':allowed_end,
                    'calendar_sha256':digest(OUT/'data/timestamps_ns.npy'),'dtype':storage_dtype,
-                   'encoder_compute_precision':config.get('precision','fp32')}
+                   'encoder_compute_precision':'fp32',
+                   'head_compute_precision':config.get('precision','fp32')}
         self.width=branch.backbone.config.d_model;self.arrays={};self.filled={};self.paths={}
 
     def shard(self,sid):

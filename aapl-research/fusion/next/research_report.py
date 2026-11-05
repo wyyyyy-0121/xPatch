@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from .common import ROOT,OUT,PLAN,digest,read_json,write_json,utc_now,source_identity
-from .accounting import totals
+from .accounting import totals,COMPUTE_POLICY
 from .delivery import score_journal
 from .evaluation import compare
 
@@ -50,7 +50,7 @@ def cost_report(acceptance=None):
     setup=optional('environment_setup.json');profile=optional('execution_profile.json') or {}
     setups=[read_json(p) for p in (OUT/'environment_setup_events').glob('*.json')]
     quote=profile.get('price_cny_per_hour_quoted');gpu_hours=usage['gpu_card_hours']
-    return {'usage':usage,'GPU_budget_card_hours':24.,
+    return {'usage':usage,'GPU_budget_card_hours':None,'compute_policy':COMPUTE_POLICY,
             'quoted_price_cny_per_hour':quote,'compute_only_cost_at_quote_cny':None if quote is None else quote*gpu_hours,
             'actual_provider_billed_cost_cny':None,'billing_note':'Only measured accounted GPU computation is estimated; provider idle/install/network billing is not inferred',
             'environment_setup':setup,'environment_setup_measured':setup is not None,

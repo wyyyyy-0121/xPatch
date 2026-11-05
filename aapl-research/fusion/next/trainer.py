@@ -10,7 +10,7 @@ from . import checkpoint
 from .common import OUT, PLAN, digest, identity, source_identity, write_json, utc_now
 from .common import read_json
 from .hardware import ResourceGuard
-from .panel import BalancedSampler
+from .panel import BalancedSampler,CoverageSampler
 from .cache import RepresentationCache
 
 
@@ -98,14 +98,15 @@ class Trainer:
         only=config.get('training_scope','multistock')=='aapl'
         fusion=config.get('family')=='fusion'
         total=int(config['total_updates']);self.fusion=fusion
+        sampler_class=CoverageSampler if config.get('sampler_policy')==CoverageSampler.policy else BalancedSampler
         self.samplers={}
         if fusion:
             if experts is None:raise ValueError('Fusion training requires real earlier-quarter OOF experts')
             available={sid:(experts.available[sid]|(panel.dates<'2023-01-01')) for sid in range(len(panel.stocks))}
-            self.samplers['main']=BalancedSampler(panel,fit_end,seed+2,only,available=available)
+            self.samplers['main']=sampler_class(panel,fit_end,seed+2,only,available=available)
             if config.get('adaptation_fraction',0)>0:
-                self.samplers['adapt_main']=BalancedSampler(panel,fit_end,seed+4,True,available=available)
-        else:self.samplers['main']=BalancedSampler(panel,fit_end,seed+2,only)
+                self.samplers['adapt_main']=sampler_class(panel,fit_end,seed+4,True,available=available)
+        else:self.samplers['main']=sampler_class(panel,fit_end,seed+2,only)
         self.optimizer=optimizer_for(self.model,config,device);self.step=0
         self.cache=None
         if config.get('representation_cache',False):
@@ -115,18 +116,21 @@ class Trainer:
         self.recipe={'config':config,'fit_end':fit_end,'seed':seed,'plan_sha256':digest(PLAN),
                      'source_identity':source_identity(),'scalers_identity':identity({name:{k:v.tolist() if isinstance(v,np.ndarray) else v for k,v in row.items()} for name,row in self.scalers.items()}),
                      'expert_sources':experts.sources if experts is not None else {},
-                     'early_history_objective':'auxiliary readout on pre-2023 rows; same uniform stock/day sampler',
+                     'early_history_objective':'auxiliary readout on pre-2023 rows; same balanced stock/day sampler',
                      'total_updates':total}
         if fusion and model.use_foundation:self.recipe['foundation_weights']=model.foundation.receipt
         self.guard=ResourceGuard(device);self.wall_seconds=0.;self.last_loss=None
+        self.loss_trace=[];self.loss_sum=0.;self.loss_count=0
 
     def resume(self):
         self.step,extra=checkpoint.load(self.path,self.model,self.optimizer,self.samplers,self.recipe)
         self.wall_seconds=extra['wall_seconds'];self.last_loss=extra.get('last_loss')
+        self.loss_trace=extra.get('loss_trace',[]);self.loss_sum=extra.get('loss_sum',0.);self.loss_count=extra.get('loss_count',0)
 
     def save(self):
         checkpoint.save(self.path,self.model,self.optimizer,self.samplers,self.step,self.recipe,
                         {'wall_seconds':self.wall_seconds,'last_loss':self.last_loss,
+                         'loss_trace':self.loss_trace,'loss_sum':self.loss_sum,'loss_count':self.loss_count,
                          'stocks':self.panel.stocks,'background':self.panel.background,
                          'scalers':{name:{key:value.tolist() if isinstance(value,np.ndarray) else value for key,value in row.items()} for name,row in self.scalers.items()}})
 
@@ -158,11 +162,14 @@ class Trainer:
                 loss.backward();norm=torch.nn.utils.clip_grad_norm_([p for p in self.model.parameters() if p.requires_grad],1.)
                 if not torch.isfinite(norm):raise FloatingPointError('Nonfinite gradient norm')
                 self.optimizer.step();self.step+=1;self.last_loss=float(loss.detach())
+                self.loss_sum+=self.last_loss;self.loss_count+=1
                 if self.step%20==0:
                     self.guard.check()
                     if usage is not None:usage.record()
-                if self.step%100==0:
+                if self.step%self.config.get('checkpoint_every_updates',100)==0:
+                    self.flush_loss_trace()
                     elapsed=time.perf_counter()-start;self.wall_seconds+=elapsed;start=time.perf_counter();self.save()
+                    write_json(self.path.with_suffix('.progress.json'),self.progress())
         except BaseException as exc:
             # The last committed prefix is valid even if interruption hits mid-forward or mid-step.
             # Never replace it with partially updated BatchNorm/optimizer/RNG state.
@@ -172,12 +179,24 @@ class Trainer:
             raise
         else:
             if self.device=='cuda':torch.cuda.synchronize()
-            self.wall_seconds+=time.perf_counter()-start;self.save()
-        result={'step':self.step,'total_updates':self.config['total_updates'],'last_training_loss':self.last_loss,
-                'wall_seconds':self.wall_seconds,'resources':self.guard.check(),'recipe':self.recipe,
-                'updated_at_utc':utc_now()}
+            self.wall_seconds+=time.perf_counter()-start;self.flush_loss_trace();self.save()
+        result=self.progress()
         write_json(self.path.with_suffix('.progress.json'),result)
         return result
+
+    def flush_loss_trace(self):
+        if self.loss_count:
+            self.loss_trace.append({'step':self.step,'updates':self.loss_count,
+                'mean_training_loss':self.loss_sum/self.loss_count})
+            self.loss_sum=0.;self.loss_count=0
+
+    def progress(self):
+        return {'step':self.step,'total_updates':self.config['total_updates'],'last_training_loss':self.last_loss,
+                'wall_seconds':self.wall_seconds,'resources':self.guard.check(),'recipe':self.recipe,
+                'loss_trace':self.loss_trace,
+                'data_coverage':{name:sampler.summary() for name,sampler in self.samplers.items() if hasattr(sampler,'summary')},
+                'training_loss_alone_does_not_establish_generalization_or_convergence':True,
+                'updated_at_utc':utc_now()}
 
     @torch.inference_mode()
     def predict(self,stocks,rows,expert_predictions=None,usage=None):

@@ -36,15 +36,33 @@ def test_budget_reduced_search_keeps_two_full_budget_finalists():
     assert halving_units(2)==2.
 
 
+def test_coverage_budget_is_data_based_and_shared_phase_has_ten_full_epochs():
+    dates=pd.bdate_range('2021-01-04','2026-06-30').strftime('%Y-%m-%d').to_numpy()
+    panel=SimpleNamespace(stocks=['AAPL','MSFT'],dates=dates,
+        origins={s:np.arange(len(dates)) for s in ('AAPL','MSFT')})
+    updates,policy=budget.coverage_budget(panel,256)
+    examples=policy['largest_fit_data']['balanced_epoch_examples']
+    assert updates['fusion']==updates['lora']
+    assert updates['fusion']*256*.8>=10*examples
+    assert updates['xpatch']*256>=10*examples
+    assert int(np.ceil(.1*updates['xpatch']))*256>=examples
+    assert not policy['budget_selection_uses_validation_scores']
+    assert policy['CPU_rows_per_day'] is None
+
+
 def test_actual_lora_search_preserves_promoted_structure_and_matches_its_separate_f2_budget():
     spec=draft();spec['updates']={'xpatch':2000,'patchtst':2000,'fusion':4000,'lora':1000}
     top=[{**cfg,'total_updates':4000,'early_stopping_patience_updates':4000} for cfg in spec['groups']['fusion'][:2]]
     actual=lora_configs(top,spec)
     for index,config in enumerate(actual):
         assert config['total_updates']==config['early_stopping_patience_updates']==1000
-        assert config['lookback']==top[index%2]['lookback'] and config['projection']==top[index%2]['projection']
+        base=top[spec['groups']['lora'][index]['promoted_structure_slot']]
+        assert config['lookback']==base['lookback'] and config['projection']==base['projection']
         assert not config['representation_cache'] and config['foundation_mode']=='lora'
     assert {config['rank'] for config in actual}>={8,16}
+    assert len(actual)==len({c['candidate_id'] for c in actual})==8
+    assert {(c['promoted_structure_slot'],c['rank'],c['backbone_lr']) for c in actual}=={
+        (slot,rank,rate) for slot in (0,1) for rank in (8,16) for rate in (1e-5,3e-5)}
     assert all(config['total_updates']==4000 for config in top)
 
 

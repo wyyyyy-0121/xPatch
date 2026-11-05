@@ -239,8 +239,9 @@ def lora_configs(top,spec):
     # promoted architecture, but bind the actual fit to the LoRA work projection.
     result=[]
     for index,adapter in enumerate(spec['groups']['lora']):
-        base=top[index%len(top)]
+        slot=adapter.get('promoted_structure_slot',index%len(top));base=top[slot%len(top)]
         config={**base,'foundation_mode':'lora','rank':adapter['rank'],'backbone_lr':adapter['backbone_lr'],
+                'promoted_structure_slot':slot,
                 'representation_cache':False,'total_updates':spec['updates']['lora'],
                 'early_stopping_patience_updates':spec['updates']['lora']}
         config['candidate_id']='lora_'+identity(config)[:12];result.append(config)

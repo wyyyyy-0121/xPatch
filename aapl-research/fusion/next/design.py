@@ -5,6 +5,7 @@ import numpy as np
 
 from .common import OUT, ROOT, PLAN, digest, identity, read_json, write_json, utc_now,source_identity
 from .splits import VALIDATION
+from .accounting import COMPUTE_POLICY
 
 
 MAX_COUNTS={'lightgbm':24,'xpatch':16,'patchtst':16,'simple':12,'fusion':24,'transfer_pairs':8,'lora':8}
@@ -27,7 +28,7 @@ def candidates(family,count,seed=2026):
         domain={'lookback':[48,96,240],'num_leaves':[7,15,31],'max_depth':[3,5,-1],
                 'min_child_samples':[100,500],'learning_rate':[.01,.03,.05],
                 'reg_lambda':[1.,10.,100.],'colsample_bytree':[.7,1.]}
-        shared.update(trees=1000,rows_per_day=16,cpu_threads=8)
+        shared.update(trees=1000,rows_per_day=None,cpu_threads=8)
     elif family in ('xpatch','patchtst'):
         domain={'lookback':[48,96,240],'patch':[8,16],'stride':[4,8],'lr':[1e-4,3e-4,1e-3],
                 'weight_decay':[.001,.01,.1],'loss':['raw','scaled','step_mse']}
@@ -45,10 +46,13 @@ def candidates(family,count,seed=2026):
     configs=[]
     if family=='lora':
         defaults={key:values[0] for key,values in domain.items()}
-        # The final two-configuration budget reduction must still compare both
-        # prescribed ranks and learning-rate levels, fixed before any score.
-        configs.extend([{**shared,**defaults,'rank':8,'backbone_lr':1e-5},
-                        {**shared,**defaults,'rank':16,'backbone_lr':3e-5}])
+        # All 2 promoted structures x 2 ranks x 2 rates get distinct trials.
+        # Randomizing unused structural fields previously duplicated adapters
+        # after replacing them with the promoted architecture.
+        grid=[(0,8,1e-5),(1,16,3e-5)]
+        grid += [item for item in product((0,1),(8,16),(1e-5,3e-5)) if item not in grid]
+        configs=[{**shared,**defaults,'promoted_structure_slot':slot,'rank':rank,'backbone_lr':rate}
+                 for slot,rank,rate in grid]
     if family in ('lightgbm','xpatch','patchtst'):
         previous=previous_configs()[family]
         previous={k:v for k,v in previous.items() if k in domain}
@@ -94,8 +98,9 @@ def freeze(specification,projection):
     # This entry intentionally cannot invent performance data or waive a failing gate.
     admission=read_json(OUT/'performance_admission.json')
     if not admission.get('numerical_and_resource_checks_passed'):raise ValueError('F2 actual GPU admission has not passed')
-    if projection['margin_multiplier']!=1.5 or projection['total_gpu_card_hours_with_margin']>24:
-        raise ValueError('Complete 50% margin projection must fit 24 card-hours')
+    if projection['margin_multiplier']!=1.5 or not math.isfinite(projection['total_gpu_card_hours_with_margin']):
+        raise ValueError('Complete finite 50% margin projection is required')
+    if projection.get('compute_policy')!=COMPUTE_POLICY:raise ValueError('Time projection uses an outdated compute policy')
     if not projection.get('all_required_work_included'):raise ValueError('OOF/seeds/mechanisms/retraining/deployment must all be budgeted')
     path=OUT/'search_manifest.json'
     if path.exists():raise ValueError('Search is already frozen; do not silently replace it')

@@ -10,8 +10,13 @@ import psutil
 from .common import OUT, read_json, write_json, utc_now
 
 
-LIMITS={'performance':1.,'experts_and_cache':5.,'fusion_search':7.,
-        'adaptation_and_mechanisms':6.,'final_and_deployment':3.,'recovery':2.}
+LIMITS={name:None for name in ('performance','experts_and_cache','fusion_search',
+        'adaptation_and_mechanisms','final_and_deployment','recovery')}
+COMPUTE_POLICY={'version':'2026-11-05-goal-driven',
+    'authorization':'User: 卡没有上限时间 以达成目标为主',
+    'total_gpu_card_hours_limit':None,'category_gpu_card_hours_limits':LIMITS,
+    'actual_cost_accounting_required':True,
+    'scientific_gates_and_resource_limits_unchanged':True}
 
 
 def recover_interrupted():
@@ -50,6 +55,7 @@ def totals():
         for start,stop in sorted(intervals):
             cpu_seconds+=max(0.,stop-max(start,end));end=max(end,stop)
     return {'gpu_card_hours':gpu,'jobs':len(jobs),
+            'compute_policy':COMPUTE_POLICY,
             'accounted_process_CPU_seconds':cpu_seconds,
             'CPU_policy':'union of process CPU-time intervals per PID creation/boot; overlapping CPU/GPU jobs in one process are not double-counted',
             'CPU_jobs_without_measurements':sum('process_cpu_start_seconds' not in job for job in jobs),
@@ -68,8 +74,6 @@ class Usage(AbstractContextManager):
     def __enter__(self):
         recover_interrupted()
         current=totals()
-        if self.gpu and (current['gpu_card_hours']>=24 or current['by_category'][self.category]>=LIMITS[self.category]):
-            raise RuntimeError('Prespecified GPU budget exhausted')
         if self.gpu and current['active_gpu_jobs']:raise RuntimeError('An accounted GPU job is already active; inspect it before starting another')
         process=psutil.Process();cpu=process.cpu_times();self.cpu_start=cpu.user+cpu.system;self.sampled_peak_rss=0
         self.start=time.monotonic();self.started=utc_now();self.record('running');return self
@@ -82,13 +86,12 @@ class Usage(AbstractContextManager):
              'boot_id':Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
              'started_at_utc':self.started,'updated_at_utc':utc_now(),'status':status,
              'wall_seconds':elapsed,'gpu':self.gpu,'gpu_card_hours':elapsed/3600 if self.gpu else 0.,'error':error}
+        row['compute_policy_version']=COMPUTE_POLICY['version']
         row.update(process_cpu_start_seconds=self.cpu_start,process_cpu_end_seconds=cpu.user+cpu.system,
                    process_CPU_seconds=cpu.user+cpu.system-self.cpu_start,sampled_peak_rss_bytes=self.sampled_peak_rss,
                    cpu_affinity=sorted(process.cpu_affinity()),sampled_process_threads=process.num_threads())
         write_json(OUT/'usage_events'/f'{self.id}.json',row)
         current=totals();write_json(OUT/'usage_summary.json',current)
-        if status=='running' and self.gpu and (current['gpu_card_hours']>24 or current['by_category'][self.category]>LIMITS[self.category]):
-            raise RuntimeError('Prespecified GPU budget exceeded; checkpoint and stop')
         return row
 
     def __exit__(self,kind,error,traceback):

@@ -88,14 +88,25 @@ def inspect_hardware(require_cuda=False):
     return report
 
 
+def available_memory():
+    available=psutil.virtual_memory().available
+    root=Path('/sys/fs/cgroup')
+    try:
+        maximum=(root/'memory.max').read_text().strip()
+        if maximum!='max':available=min(available,max(0,int(maximum)-int((root/'memory.current').read_text())))
+    except (OSError,ValueError):pass
+    return available
+
+
 class ResourceGuard:
-    def __init__(self,device='cpu',rss_gib=8.,available_gib=4.,gpu_fraction=.85):
+    def __init__(self,device='cpu',rss_gib=None,available_gib=4.,gpu_fraction=.85):
+        if rss_gib is None:rss_gib=64. if os.environ.get('FUSION_EXECUTION_PROFILE')=='autodl' else 8.
         self.device=device;self.rss_limit=rss_gib*2**30;self.available_limit=available_gib*2**30
         self.gpu_fraction=gpu_fraction;self.peak_rss=0;self.peak_vram=0;self.minimum_available=None
 
     def check(self):
         process=psutil.Process();rss=process.memory_info().rss
-        available=psutil.virtual_memory().available
+        available=available_memory()
         self.peak_rss=max(self.peak_rss,rss)
         self.minimum_available=available if self.minimum_available is None else min(self.minimum_available,available)
         if rss>self.rss_limit:raise MemoryError('Process RSS exceeds admitted limit')

@@ -1,5 +1,6 @@
 """Memory-mapped multistock panel with training-only scaling and balanced day sampling."""
 from dataclasses import dataclass
+import hashlib
 import numpy as np
 import pandas as pd
 import torch
@@ -156,3 +157,84 @@ class BalancedSampler:
     def state_dict(self):return self.rng.bit_generator.state
 
     def load_state_dict(self,state):self.rng.bit_generator.state=state
+
+
+class CoverageSampler(BalancedSampler):
+    """Shuffle complete stock/day blocks; balance short days by explicit repeats.
+
+    Every eligible stock/row appears in each coverage epoch. Each stock has the
+    same number of day slots, and each day slot the same number of examples.
+    Extra day slots rotate randomly across epochs when stock day counts differ.
+    """
+    policy='balanced_complete_coverage_v1'
+
+    def __init__(self,panel,fit_end,seed,only_aapl=False,fit_start='2021-01-04',available=None):
+        super().__init__(panel,fit_end,seed,only_aapl,fit_start,available)
+        self.seed=int(seed);self.epoch=0;self.cursor=0;self.emitted=0;self.block=4
+        self.panel_rows=len(panel.dates);self.max_days=max(map(len,self.groups.values()))
+        self.rows_per_day=max(len(day) for days in self.groups.values() for day in days)
+        self.rows_per_day=int(np.ceil(self.rows_per_day/self.block))*self.block
+        self.epoch_size=len(self.stocks)*self.max_days*self.rows_per_day
+        self.unique_total=sum(len(day) for days in self.groups.values() for day in days)
+        self.seen=np.zeros(len(panel.stocks)*self.panel_rows,dtype=bool);self.unique_seen=0
+        stamp=hashlib.sha256()
+        for sid in self.stocks:
+            for day in self.groups[sid]:
+                stamp.update(np.asarray([sid,len(day)],dtype='<i8').tobytes())
+                stamp.update(np.asarray(day,dtype='<i8').tobytes())
+        self.universe_identity=stamp.hexdigest();self._build_epoch()
+
+    def _build_epoch(self):
+        rng=np.random.default_rng(np.random.SeedSequence([self.seed,self.epoch]))
+        rows=[];stocks=[]
+        for sid in self.stocks:
+            days=self.groups[sid];slots=np.arange(len(days))
+            if len(slots)<self.max_days:
+                slots=np.r_[slots,rng.choice(len(days),self.max_days-len(days),replace=True)]
+            for index in slots:
+                day=days[int(index)];offset=int(rng.integers(len(day)))
+                # Rotation makes the repeated remainder fair across epochs, while
+                # retaining consecutive origins inside most four-row blocks.
+                values=np.resize(np.roll(day,offset),self.rows_per_day).reshape(-1,self.block)
+                rows.append(values);stocks.extend([sid]*len(values))
+        blocks=np.concatenate(rows);permutation=rng.permutation(len(blocks))
+        self.epoch_rows=blocks[permutation].reshape(-1)
+        self.epoch_stocks=np.repeat(np.asarray(stocks,dtype=np.int16)[permutation],self.block)
+
+    def sample(self,batch_size,block=4):
+        if batch_size<1 or block!=self.block:raise ValueError('Coverage batches require a positive size and four-row blocks')
+        stocks=[];rows=[];remaining=batch_size
+        while remaining:
+            if self.cursor==self.epoch_size:
+                self.epoch+=1;self.cursor=0;self._build_epoch()
+            count=min(remaining,self.epoch_size-self.cursor);stop=self.cursor+count
+            stocks.append(self.epoch_stocks[self.cursor:stop]);rows.append(self.epoch_rows[self.cursor:stop])
+            self.cursor=stop;remaining-=count
+        stocks=np.concatenate(stocks).astype(np.int64);rows=np.concatenate(rows)
+        if self.unique_seen<self.unique_total:
+            keys=np.unique(stocks*self.panel_rows+rows)
+            self.unique_seen+=int(np.count_nonzero(~self.seen[keys]));self.seen[keys]=True
+        self.emitted+=batch_size
+        return stocks,rows
+
+    def summary(self):
+        return {'policy':self.policy,'eligible_unique_windows':self.unique_total,
+                'balanced_epoch_examples':self.epoch_size,'emitted_examples':self.emitted,
+                'unique_windows_seen':self.unique_seen,'unique_coverage_fraction':self.unique_seen/self.unique_total,
+                'completed_coverage_epochs':self.emitted//self.epoch_size,
+                'equivalent_exposure_epochs':self.emitted/self.unique_total,
+                'repeat_policy':'equal day-slot length and stock day-slot count; extra slots rotate per epoch'}
+
+    def state_dict(self):
+        return {'policy':self.policy,'seed':self.seed,'epoch':self.epoch,'cursor':self.cursor,
+                'emitted':self.emitted,'unique_seen':self.unique_seen,'seen_bits':np.packbits(self.seen).tobytes(),
+                'universe_identity':self.universe_identity}
+
+    def load_state_dict(self,state):
+        if state['policy']!=self.policy or state['seed']!=self.seed or state['universe_identity']!=self.universe_identity:
+            raise ValueError('Coverage sampler identity differs from saved training data or recipe')
+        self.epoch=state['epoch'];self.cursor=state['cursor'];self.emitted=state['emitted']
+        self.unique_seen=state['unique_seen'];self.seen=np.unpackbits(np.frombuffer(state['seen_bits'],dtype=np.uint8),count=len(self.seen)).astype(bool)
+        if self.unique_seen!=int(np.count_nonzero(self.seen)) or not 0<=self.cursor<=self.epoch_size:
+            raise ValueError('Invalid saved coverage state')
+        self._build_epoch()

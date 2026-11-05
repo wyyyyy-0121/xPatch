@@ -15,9 +15,9 @@ def write_profile():
     report={'recorded_at_utc':utc_now(),'source':'user specified AutoDL screenshot',
             'training_location':'AutoDL','gpu_model_requested':'RTX 5090','gpus':1,'vram_gib_quoted':32,
             'cpu_cores_quoted':25,'ram_gib_quoted':120,'data_disk_gib_quoted':50,
-            'price_cny_per_hour_quoted':2.88,'24h_cost_cny_at_quoted_rate':69.12,
+            'price_cny_per_hour_quoted':2.88,'GPU_hours_hard_limit':None,
             'live_hardware_verified':False,'connection_status':'connection supplied; user advised to shut down while local preparation continues',
-            'ssh':{'host':'connect.bjb1.seetacloud.com','port':23367,'user':'root',
+            'ssh':{'host':'connect.bjb2.seetacloud.com','port':19046,'user':'root',
                    'verify_connection_after_instance_restart':True},
             'remote_training_started':False,'remote_start_gate':'F1 passed and local training bundle validated; confirm instance is running',
             'paid_rental_performed_by_agent':False,'local_work':['F0 audit','F1 acquisition and all-day data audit','code and training bundle'],
@@ -142,7 +142,7 @@ def return_bundle():
     if os.environ.get('FUSION_EXECUTION_PROFILE')!='autodl':raise RuntimeError('Create the result return bundle on the training host')
     if totals()['active_jobs']:raise RuntimeError('Do not snapshot while an accounted training or CPU job is running')
     if not (OUT/'confirmation.json').exists():raise ValueError('The fixed F6 export/confirmation must finish before returning final artifacts')
-    fixed=('search_manifest.json','budget_projection.json','performance_admission.json','performance_cpu.json',
+    fixed=('search_manifest.json','budget_projection.json','batch_scaling.json','performance_admission.json','performance_cpu.json',
            'hardware_cloud.json','environment_setup.json','F3_complete.json','F4_complete.json','F5_complete.json','system_freeze.json',
            'confirmation_started.json','confirmation.json','confirmation_predictions.npz','usage_summary.json')
     items={str((OUT/name).relative_to(ROOT)):OUT/name for name in fixed if (OUT/name).is_file()}
