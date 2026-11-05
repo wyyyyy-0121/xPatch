@@ -191,3 +191,11 @@ bash cloud/run.sh scripts/limit_fusion_cloud.py --inspect-only
 ## 当前精简执行入口
 
 `scripts/run_fusion_100h.py` 已作为单实例进程启动。它将新增范围收据和自身文本保存到 `performance/`，与后续正式结果一起回传；模型源代码及同配方检查点不变。范围包括 LightGBM/xPatch/PatchTST 各 4 个、冻结融合 2 个、LoRA 2 个，13 季度主 OOF、12 个简单融合对照，以及三个最终候选结构的三种子复核。详见独立的 [100 小时执行清单](SCOPE_REDUCTION_100H.md)。不应再手工运行原完整 F3/F4/F5 队列。
+
+正式回传恢复后，应同时生成精简范围核验报告，避免把原完整清单与实际执行范围混用：
+
+```bash
+AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh scripts/report_fusion_scope.py
+```
+
+报告为 `outputs/fusion_next/bounded_scope_report.json` 和 `.md`，与原研究报告一并交付。它核验精简范围、原清单、外层入口和硬时间限制的身份，逐阶段检查完成收据绑定，并列明未执行机制；不加载行情、模型或预测数值。范围及入口文本已验证可通过既有正式回传允许列表。
