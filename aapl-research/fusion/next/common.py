@@ -32,11 +32,15 @@ def write_json(path,value):
     finally:os.close(directory_fd)
 
 
-def source_identity():
+def source_files():
     files=[p for p in (ROOT/'fusion/next').rglob('*') if p.is_file() and p.suffix in ('.py','.sh','.txt')]
     files+=[ROOT/name for name in ('fusion/__init__.py','aapl/__init__.py','aapl/common.py','aapl/data.py','aapl/models.py')]
     files+=[p for p in (ROOT/'aapl/vendor').glob('*') if p.suffix in ('.py','.json','.txt')]
-    return identity({str(p.relative_to(ROOT)):digest(p) for p in sorted(set(files))})
+    return {str(p.relative_to(ROOT)):p for p in sorted(set(files))}
+
+
+def source_identity():
+    return identity({name:digest(path) for name,path in source_files().items()})
 
 
 def status(stage,**details):

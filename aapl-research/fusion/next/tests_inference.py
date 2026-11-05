@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 import numpy as np
 import torch
 
-from .common import OUT
+from .common import OUT,PLAN,digest,write_json,source_identity
 from .tests_data import two_sessions
 from .tests_training import make_panel
 from .experts import fit_cpu,tabular
@@ -14,7 +14,7 @@ from .trainer import Trainer
 from .inference import export,FrozenSystem
 
 
-def test_real_fitted_four_experts_and_three_seeds_export_load_exactly():
+def test_real_fitted_four_experts_and_three_seeds_export_load_exactly(monkeypatch):
     frame,starts,ends=two_sessions();panel=make_panel(frame,starts,ends)
     root=OUT/'deployment';root.mkdir(parents=True,exist_ok=True)
     with TemporaryDirectory(prefix='unit_ensemble_',dir=root) as folder:
@@ -43,7 +43,9 @@ def test_real_fitted_four_experts_and_three_seeds_export_load_exactly():
             trainer=Trainer(panel,model,config,'2021-01-04',parent.name+'/system',seed,ToyOOF(),device='cpu')
             trainer.run_until(2);model.eval();trained.append((model,trainer.scalers,config))
             systems.append({'config':config,'checkpoint':str(trainer.path)})
-        destination=parent/'package';manifest=export(destination,panel.stocks,panel.background,references,systems,'unit-only-freeze')
+        evidence=parent/'evidence';freeze=evidence/'system_freeze.json'
+        write_json(freeze,{'source_identity':source_identity(),'plan_sha256':digest(PLAN),'unit_test':True})
+        destination=parent/'package';manifest=export(destination,panel.stocks,panel.background,references,systems,digest(freeze))
         loaded=FrozenSystem(destination,'cpu');rows=np.array([430,500,700]);stock=np.zeros(3,dtype=np.int64)
         experts=[]
         with torch.no_grad():
@@ -62,6 +64,24 @@ def test_real_fitted_four_experts_and_three_seeds_export_load_exactly():
         _,development_ensemble=seed_system(panel.targets['AAPL'][rows],np.stack(expected))
         np.testing.assert_array_equal(output['prediction'],development_ensemble)
         assert loaded.model_identity==manifest['identity']
+        # Execute the same exported fits after isolated packaging, without any
+        # development arrays or old checkout. All example values are fabricated.
+        import pandas as pd
+        from .stream import Stream
+        from . import local_package
+        shifted=frame.copy();shifted.index=shifted.index+(pd.Timestamp('2026-01-05')-pd.Timestamp('2021-01-04'))
+        acceptance=evidence/'deployment_acceptance'/manifest['identity']
+        stream=Stream(shifted.index,panel.stocks,panel.background,cfg,trained[0][1],loaded,manifest['identity'],acceptance/'state.json')
+        origin=350
+        for stamp,row in shifted.iloc[:origin+1].iterrows():
+            for name in stream.names:stream.ingest(name,stamp,row.to_dict(),stamp+pd.Timedelta(minutes=16))
+        assert stream.predict(shifted.index[origin],shifted.index[origin]+pd.Timedelta(minutes=16))['status']=='ok'
+        write_json(acceptance/'report.json',{'unit_test':True,'model_identity':manifest['identity'],'Q3_accessed':False,'engineering_acceptance_passed':False})
+        write_json(acceptance/'progress.json',{'recipe':{'source_identity':source_identity(),'system_freeze_sha256':digest(freeze)}})
+        write_json(evidence/'confirmation.json',{'unit_test':True,'predictive_success':False})
+        monkeypatch.setattr(local_package,'OUT',evidence)
+        archive=local_package.build(destination);portable=local_package.verify(archive)
+        assert portable['isolated_example_and_fresh_process_resume_passed'] and portable['files_hash_verified']>50
         # Temporary training checkpoints are test artifacts, not research results.
         import shutil
         shutil.rmtree(OUT/'training'/parent.name)

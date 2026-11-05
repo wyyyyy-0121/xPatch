@@ -1,5 +1,7 @@
 # AAPL 12 分钟收益预测研究
 
+下一阶段研发计划见 [基础模型与多专家神经融合计划书](FUSION_IMPLEMENTATION_PLAN.md)：覆盖全天预测、多股票联合训练、状态门控、基础模型适配、机制对照与部署验收。该文件是待执行计划，下面的结果描述属于已完成的上一轮比较实验。
+
 本研究按 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) 执行。主目标是未来 12 分钟累计 log 收益，不加入新闻、政治或舆情输入。主评价时点为 13:30–15:47 ET。
 
 本地研究流程已完成，结果见 [RESULTS.md](RESULTS.md)。六类候选均完成预定搜索，主指标已从保存的预测独立重算。没有候选同时在开发验证和 D 块优于零收益，因此按计划结束本轮研究，2026 年 7—9 月数据保持封存。该结果适用于本轮 AAPL 下午时段、信息输入与训练预算。
@@ -17,4 +19,4 @@
 
 正式运行使用 `scripts/python.sh`，其进程亲和性、依赖、缓存和临时目录限定在本项目中。主代码位于 `aapl/`，原生方法的小型源码位于 `aapl/vendor/`，并附来源和许可证。旧仓库 `/home/ayaka/xPatch` 只读，旧 Goal 和观察安排保持用户原有状态。
 
-本地只执行零收益、Ridge、LightGBM、xPatch、PatchTST、Chronos-2 冻结和真实 LoRA 微调。Kronos、TimesFM 与全天面板属于未启用的云端扩展。研究比较完成后才判断论文方向；当前不写论文、不付费、不下单、不推送。
+上一轮本地执行零收益、Ridge、LightGBM、xPatch、PatchTST、Chronos-2 冻结和真实 LoRA 微调。新的全天面板与云端融合训练按页首链接的下一阶段计划执行。研究比较完成后才判断论文方向；当前不写论文、不付费、不下单。用户已授权后续变更持续推送，研究代码及运行说明同步至 [GitHub 研究分支](https://github.com/wyyyyy-0121/xPatch/tree/codex/aapl-return12-implementation/aapl-research)。

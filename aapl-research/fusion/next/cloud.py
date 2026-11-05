@@ -6,7 +6,7 @@ from pathlib import Path
 import tarfile
 import time
 
-from .common import ROOT,OUT,PLAN,digest,read_json,write_json,utc_now
+from .common import ROOT,OUT,PLAN,digest,read_json,write_json,utc_now,source_files
 from .foundation import manifest as weight_manifest
 
 
@@ -31,7 +31,7 @@ def write_profile():
 def bundle(include_data=False):
     # Name patterns are never used as the sole credential exclusion mechanism.
     # Only individually enumerated code/model files and F1-admitted array shards enter.
-    weight=weight_manifest();items={}
+    weight=weight_manifest();items=source_files()
     for folder in ('fusion/next','aapl/vendor'):
         for p in sorted((ROOT/folder).glob('*')):
             if p.suffix in ('.py','.txt','.json','.md'):items[str(p.relative_to(ROOT))]=p

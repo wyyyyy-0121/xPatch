@@ -2,6 +2,8 @@
 
 本目录严格对应项目根目录的 `FUSION_IMPLEMENTATION_PLAN.md`，不替代该计划。旧 `fusion/*.py` 和旧实验产物保留原身份。本轮输出在 `outputs/fusion_next/`。
 
+用户已授权后续研究变更持续推送 GitHub，取代计划书末尾原先的“不推送”限制；计划正文与哈希保持原身份。同步分支为 [`codex/aapl-return12-implementation`](https://github.com/wyyyyy-0121/xPatch/tree/codex/aapl-return12-implementation/aapl-research)。代码、计划和运行说明随完成的提交推送；行情、基础权重、账户凭据及本地输出不进入 Git。
+
 大型神经网络训练指定在用户的 AutoDL 单卡实例执行。本地继续数据下载、审计和打包。当前 SSH 地址只用于记录；实例重启后须确认实际连接地址。GPU 暂不需要时由用户关闭实例，本工具不会创建或付费租赁实例。
 
 ## 已实现的入口
@@ -11,7 +13,7 @@
 在项目根目录运行本地检查：
 
 ```bash
-AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m pytest fusion/next/tests_data.py fusion/next/tests_models.py fusion/next/tests_training.py fusion/next/tests_evaluation.py fusion/next/tests_experiment.py fusion/next/tests_stream.py fusion/next/tests_budget.py fusion/next/tests_confirmation.py fusion/next/tests_inference.py fusion/next/tests_freeze.py fusion/next/tests_final_test.py fusion/next/tests_cloud.py fusion/next/tests_delivery.py fusion/next/tests_accounting.py -q
+AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m pytest fusion/next/tests_data.py fusion/next/tests_models.py fusion/next/tests_training.py fusion/next/tests_evaluation.py fusion/next/tests_experiment.py fusion/next/tests_stream.py fusion/next/tests_budget.py fusion/next/tests_confirmation.py fusion/next/tests_inference.py fusion/next/tests_freeze.py fusion/next/tests_final_test.py fusion/next/tests_cloud.py fusion/next/tests_delivery.py fusion/next/tests_accounting.py fusion/next/tests_serve.py -q
 AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m fusion.next.audit
 ```
 
@@ -114,6 +116,22 @@ AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m fusion.next.deli
 第二条命令只有在一次 Q2 确认确实运行并生成预测文件后才有输入。默认重放命令先在子进程中完成前半段并退出，再用另一个进程重新加载模型、恢复状态和完成后半段；冷启动计入实际输入准备与首次输出，温启动计入当前柱接入、窗口、推理及持久化。进程 ID、各阶段耗时、CPU 时间和逐起点计时保存于验收记录。异常退出后可在同一条重放命令上加 `--resume` 恢复；已有完成报告不能被覆盖。
 
 重放的接收/生成时间是显式模拟时间，实际输出的墙钟另存；不能据此声称预测在历史当时及时发出。任何缺失预测都会使验收失败，不选择性丢弃。流式状态的数据与校验信息一次原子发布；训练检查点以原子收据提交完整版本，即使在收据与便利路径更新之间退出也能恢复。最多保留当前和前一个完整版本，旧版本的删除数量、字节及哈希逐项留存。
+
+完成实际重放后，生成独立 CPU 推理包并隔离执行示例与进程恢复：
+
+```bash
+AAPL_CPU_THREADS=4 AAPL_CPU_IDS=0-3 bash scripts/python.sh -m fusion.next.local_package --deployment outputs/fusion_next/deployment/pre_Q2 --verify
+```
+
+包内含冻结代码、四专家和三种子模型、所需固定骨干权重、版本锁、运行说明及已知 2026Q1 的少量完成柱示例；不包含账户凭据、保留期数值或完整行情。运行入口不依赖旧仓库和原虚拟环境，逐文件校验后接收 JSONL 的 `bar` / `predict` 事件。输入被拒或模型失败会记录并返回非零退出码。示例使用延迟历史重放时间，不能用作历史实时预测的证据。原始工程验收即使失败也随包保留，包的可运行性与预测研究门槛分别报告。
+
+研究目录内也可直接使用 JSONL 入口：
+
+```bash
+AAPL_CPU_THREADS=4 AAPL_CPU_IDS=0-3 bash scripts/python.sh -m fusion.next.serve --deployment outputs/fusion_next/deployment/pre_Q2 --calendar-start 2026-10-01 --calendar-end 2026-10-31 --state outputs/fusion_next/streams/feed/state.json < feed.jsonl
+```
+
+日历必须涵盖输入历史和预测当日，输入需包含 AAPL 与固定背景的至少 242 根完成常规时段柱。事件含显式时区的 `bar_start`；bar 另含 `symbol`、`received_at` 和 OHLCV `values`，predict 可含 `generated_at`。默认延迟历史重放，及时模式须显式设置 `--mode timely_forecast` 并使用真实接收与生成时间。通用入口拒绝 2026Q3 输入，避免绕过研究专用最终检验入口。
 
 汇总已经存在的研究、工程、成本和清理证据：
 

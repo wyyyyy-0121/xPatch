@@ -16,9 +16,7 @@ def manifest():
     return result
 
 
-def load_foundation(device='cuda'):
-    from chronos import Chronos2Pipeline
-    receipt=manifest()
+def weight_directory():
     override=os.environ.get('FUSION_CHRONOS_WEIGHTS')
     if override:directory=Path(override).expanduser().resolve()
     elif (ROOT/'weights/chronos2').exists():directory=ROOT/'weights/chronos2'
@@ -26,6 +24,12 @@ def load_foundation(device='cuda'):
         old=Path('/home/ayaka/xPatch')
         row=read_json(old/'configs/aapl_v2_model_lock.json')['models']['chronos2']
         directory=old/row['directory']
+    return directory
+
+
+def load_foundation(device='cuda'):
+    from chronos import Chronos2Pipeline
+    receipt=manifest();directory=weight_directory()
     for name,row in receipt['files'].items():
         if digest(directory/name)!=row['sha256']:raise ValueError('Chronos-2 weight identity differs from pinned manifest')
     pipe=Chronos2Pipeline.from_pretrained(str(directory),device_map=device,local_files_only=True,torch_dtype=torch.float32)

@@ -27,14 +27,19 @@ def checkpoint_model(panel,path,config,device):
     return model,scalers,recipe
 
 
+def checked_manifest(root):
+    root=Path(root).resolve();manifest=read_json(root/'deployment.json')
+    expected=manifest['identity'];body={k:v for k,v in manifest.items() if k!='identity'}
+    if identity(body)!=expected:raise ValueError('Deployment manifest identity differs')
+    for name,row in manifest['files'].items():
+        path=(root/name).resolve()
+        if not path.is_relative_to(root) or digest(path)!=row['sha256']:raise ValueError('Deployment artifact identity differs: '+name)
+    return manifest
+
+
 class FrozenSystem:
     def __init__(self,root,device='cpu'):
-        self.root=Path(root).resolve();self.manifest=read_json(self.root/'deployment.json');self.device=device
-        expected=self.manifest['identity'];body={k:v for k,v in self.manifest.items() if k!='identity'}
-        if identity(body)!=expected:raise ValueError('Deployment manifest identity differs')
-        for name,row in self.manifest['files'].items():
-            path=(self.root/name).resolve()
-            if not path.is_relative_to(self.root) or digest(path)!=row['sha256']:raise ValueError('Deployment artifact identity differs: '+name)
+        self.root=Path(root).resolve();self.manifest=checked_manifest(self.root);self.device=device
         from types import SimpleNamespace
         panel=SimpleNamespace(stocks=self.manifest['stocks'],background=self.manifest['background'])
         self.stocks=panel.stocks;self.background=panel.background
