@@ -44,15 +44,23 @@ class RepresentationCache:
     def get(self,batch):
         stocks=batch['stock'].detach().cpu().numpy();rows=batch['row'].detach().cpu().numpy()
         if np.any(self.panel.dates[rows]>self.allowed_end):raise ValueError('Cache request crosses its declared time boundary')
-        result=np.empty((len(rows),self.width),dtype=np.float32)
+        result=np.empty((len(rows),self.width),dtype=np.float32);pending=[];shards={}
         for sid in np.unique(stocks):
             select=np.flatnonzero(stocks==sid);values,filled=self.shard(int(sid))
+            shards[int(sid)]=(select,values,filled)
             unknown=select[~filled[rows[select]]]
-            if len(unknown):
-                # Duplicate sampled rows are harmless; no labels are read by the encoder.
-                latent=self.branch.latent(batch['foundation_context'][unknown]).float().cpu().numpy()
-                if not np.isfinite(latent).all():raise FloatingPointError('Nonfinite foundation latent')
-                values[rows[unknown]]=latent.astype(self.dtype);values.flush()
-                filled[rows[unknown]]=True;filled.flush()
+            if len(unknown):pending.append(unknown)
+        if pending:
+            # One origin-isolated backbone call for all missing stocks avoids
+            # six small launches and six CPU/GPU synchronizations per batch.
+            unknown=np.concatenate(pending)
+            latent=self.branch.latent(batch['foundation_context'][unknown]).float().cpu().numpy()
+            if not np.isfinite(latent).all():raise FloatingPointError('Nonfinite foundation latent')
+            for sid,(_,values,filled) in shards.items():
+                take=stocks[unknown]==sid;ids=unknown[take]
+                if not len(ids):continue
+                values[rows[ids]]=latent[take].astype(self.dtype);values.flush()
+                filled[rows[ids]]=True;filled.flush()
+        for select,values,filled in shards.values():
             result[select]=values[rows[select]]
         return torch.as_tensor(result,device=batch['local'].device)

@@ -112,16 +112,18 @@ def test_prediction_window_never_reads_targets_or_future_rows():
 
 
 @pytest.mark.parametrize('sampler_policy',[None,CoverageSampler.policy])
-def test_actual_trainer_halving_and_mid_forward_failure_preserve_exact_resume(sampler_policy):
+@pytest.mark.parametrize('prefetch',[0,2])
+def test_actual_trainer_halving_and_mid_forward_failure_preserve_exact_resume(sampler_policy,prefetch):
     frame,starts,ends=two_sessions();panel=make_panel(frame,starts,ends)
     config={'family':'xpatch','lookback':48,'lr':.001,'batch_size':4,'total_updates':4,'loss':'raw'}
     if sampler_policy:config['sampler_policy']=sampler_policy
+    config['prefetch_batches']=prefetch
     parent=OUT/'training';parent.mkdir(parents=True,exist_ok=True)
     with TemporaryDirectory(prefix='unit_resume_',dir=parent) as directory:
         from pathlib import Path
         prefix=Path(directory).name
         torch.manual_seed(31)
-        continuous=Trainer(panel,NativeExpert(config,24,1),config,'2021-01-05',prefix+'/continuous',device='cpu')
+        continuous=Trainer(panel,NativeExpert(config,24,1),{**config,'prefetch_batches':0},'2021-01-05',prefix+'/continuous',device='cpu')
         continuous.run_until(4);expected=checkpoint.changing_state(continuous.model)
         torch.manual_seed(31)
         first=Trainer(panel,NativeExpert(config,24,1),config,'2021-01-05',prefix+'/resumed',device='cpu')

@@ -9,6 +9,8 @@ from . import budget
 from .common import OUT,write_json
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import pytest
+from .recipe import for_fit
 
 
 def test_budget_enumerates_all_information_scopes_mechanisms_and_conditional_final_work():
@@ -36,16 +38,22 @@ def test_budget_reduced_search_keeps_two_full_budget_finalists():
     assert halving_units(2)==2.
 
 
-def test_coverage_budget_is_data_based_and_shared_phase_has_ten_full_epochs():
+def test_two_epoch_budget_is_fold_specific_includes_adaptation_and_keeps_all_work():
     dates=pd.bdate_range('2021-01-04','2026-06-30').strftime('%Y-%m-%d').to_numpy()
     panel=SimpleNamespace(stocks=['AAPL','MSFT'],dates=dates,
         origins={s:np.arange(len(dates)) for s in ('AAPL','MSFT')})
     updates,policy=budget.coverage_budget(panel,256)
     examples=policy['largest_fit_data']['balanced_epoch_examples']
     assert updates['fusion']==updates['lora']
-    assert updates['fusion']*256*.8>=10*examples
-    assert updates['xpatch']*256>=10*examples
-    assert int(np.ceil(.1*updates['xpatch']))*256>=examples
+    assert updates['fusion']==updates['xpatch']
+    assert 2*examples<=updates['xpatch']*256<2*examples+256
+    assert policy['adaptation_included_in_total'] and not policy['additional_epochs_after_two']
+    for row in policy['folds'].values():
+        assert 2*row['balanced_epoch_examples']<=row['total_updates']*256<2*row['balanced_epoch_examples']+256
+    table=policy['updates_by_fit_end']['fusion'];end=min(table)
+    effective=for_fit({'total_updates':updates['fusion'],'updates_by_fit_end':table},end)
+    assert effective['total_updates']==table[end]<updates['fusion']
+    with pytest.raises(ValueError,match='boundary'):for_fit(effective,'2026-07-01')
     assert not policy['budget_selection_uses_validation_scores']
     assert policy['CPU_rows_per_day'] is None
 

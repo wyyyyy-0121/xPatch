@@ -9,7 +9,7 @@ import pandas as pd
 from .common import OUT,PLAN,digest,read_json,write_json,utc_now,source_identity,identity
 from .design import draft,halving_units,halving_survivors,freeze
 from .panel import Panel,CoverageSampler
-from .splits import VALIDATION
+from .splits import VALIDATION,fold
 from .accounting import LIMITS,totals,COMPUTE_POLICY
 
 
@@ -29,13 +29,17 @@ def work_items(panel,spec):
         work.append({'category':category,'family':family,'fit_equivalents':float(fits),'updates':float(updates),
                      'predict_rows':int(predict_rows),'description':description})
     def halving_calls(count):return count+halving_survivors(count)+min(2,halving_survivors(count))
+    def sum_updates(family,quarters):
+        config=spec['groups'][family][0];table=config.get('updates_by_fit_end')
+        if table is None:return len(quarters)*config.get('total_updates',spec.get('updates',{}).get(family,0))
+        return sum(table[fold(panel.dates,str(q),confirmation=str(q)=='2026Q2')['fit_end']] for q in quarters)
     for family in ('ridge','lightgbm','xpatch','patchtst'):
         configs=spec['groups'][family];n=len(configs)
         if family in ('ridge','lightgbm'):
             add('experts_and_cache',family,n*nfold,predict_rows=n*all_main,description='same-information full CPU search')
         else:
             updates=configs[0]['total_updates']
-            add('experts_and_cache',family,nfold*halving_units(n),updates*nfold*halving_units(n),
+            add('experts_and_cache',family,nfold*halving_units(n),sum_updates(family,VALIDATION)*halving_units(n),
                 halving_calls(n)*all_main,'supervised search 10/30/100% prefixes')
     # Four independent information/training scopes; the AAPL-only OOF supports transfer.
     quarters=13
@@ -46,29 +50,29 @@ def work_items(panel,spec):
                 ('adaptation_and_mechanisms',all_oof,'no contemporaneous market mechanism')]
         updates=spec['groups'][family][0].get('total_updates',0)
         for category,predict_rows,description in scopes:
-            add(category,family,quarters,quarters*updates,predict_rows,'quarterly OOF '+description)
+            add(category,family,quarters,sum_updates(family,list(pd.period_range('2023Q1','2026Q1',freq='Q'))),predict_rows,'quarterly OOF '+description)
     for family,category,key in [('fusion','fusion_search','fusion'),('lora','adaptation_and_mechanisms','lora')]:
         n=len(spec['groups'][key]);updates=spec['updates'][family]
-        add(category,family,nfold*halving_units(n),updates*nfold*halving_units(n),halving_calls(n)*all_main,'neural search')
+        add(category,family,nfold*halving_units(n),sum_updates(family,VALIDATION)*halving_units(n),halving_calls(n)*all_main,'neural search')
     n=len(spec['transfer_configs']);updates=spec['updates']['fusion']
-    add('fusion_search','fusion',2*nfold*halving_units(n),2*nfold*halving_units(n)*updates,
+    add('fusion_search','fusion',2*nfold*halving_units(n),2*sum_updates('fusion',VALIDATION)*halving_units(n),
         2*halving_calls(n)*all_main,'paired transfer; both sides always advance')
     # Generously include seed 2026 again rather than rely on a cache hit/namespace identity.
     for family in ('fusion','lora'):
-        add('adaptation_and_mechanisms',family,2*3*nfold,2*3*nfold*spec['updates'][family],2*3*all_main,'top two, three seeds')
-    add('adaptation_and_mechanisms','fusion',2*3*nfold,2*3*nfold*updates,2*3*all_main,'transfer top two, three seeds')
+        add('adaptation_and_mechanisms',family,2*3*nfold,2*3*sum_updates(family,VALIDATION),2*3*all_main,'top two, three seeds')
+    add('adaptation_and_mechanisms','fusion',2*3*nfold,2*3*sum_updates('fusion',VALIDATION),2*3*all_main,'transfer top two, three seeds')
     # Seven variants, each gets both fixed structural configurations and all three seeds.
     for variant in ('full','plain_mlp','no_foundation','random_frozen','no_market','close','aapl'):
         family='fusion_random' if variant=='random_frozen' else 'fusion'
-        add('adaptation_and_mechanisms',family,2*3*nfold,2*3*nfold*updates,2*3*all_main,
+        add('adaptation_and_mechanisms',family,2*3*nfold,2*3*sum_updates('fusion',VALIDATION),2*3*all_main,
             'mechanism '+variant+' (no speed discount for removed modules)')
     # Preserve a conservative two-fit allowance even though the frozen final-fit
     # policy now evaluates the exact pre-Q2 artifact without post-Q2 retraining.
     final_rows=3*64*378  # extra allowance for development replay and inference acceptance
-    add('final_and_deployment','lora',6,6*spec['updates']['lora'],6*final_rows,'pre-Q2 system fits, conservative spare fit allowance and acceptance replay')
+    add('final_and_deployment','lora',6,6*sum_updates('lora',['2026Q2']),6*final_rows,'pre-Q2 system fits, conservative spare fit allowance and acceptance replay')
     for family in ('ridge','lightgbm','xpatch','patchtst'):
         u=spec['groups'][family][0].get('total_updates',0)
-        add('final_and_deployment',family,2,2*u,2*final_rows,'two governed expert/control retrains')
+        add('final_and_deployment',family,2,2*sum_updates(family,['2026Q2']),2*final_rows,'two governed expert/control retrains')
     return work,{'validation_origins':all_main,'all_stock_OOF_origins':all_oof,
                  'AAPL_OOF_origins':aapl_oof,'maximum_fit_calendar_days':max_fit_days,
                  'stocks':len(panel.stocks)}
@@ -76,14 +80,17 @@ def work_items(panel,spec):
 
 def project(panel,spec,gpu,cpu):
     work,counts=work_items(panel,spec);m=gpu['measurements'];c=cpu['measurements']
+    fp32=spec.get('groups',{}).get('fusion',[{}])[0].get('precision')=='fp32'
+    suffix='_fp32' if fp32 else ''
+    def timing(name):return m.get(name+suffix,m[name])
     # The random frozen backbone cannot reuse the pretrained cache. Use raw timing.
     rates={'xpatch':m['xpatch_end_to_end']['seconds_per_update'],
            'patchtst':m['patchtst_end_to_end']['seconds_per_update'],
-           'fusion':max(m['end_to_end_cache_population']['seconds_per_update'],m['end_to_end_raw']['seconds_per_update'],m['frozen_tcn_end_to_end']['seconds_per_update']),
-           'fusion_random':max(m['end_to_end_raw']['seconds_per_update'],m['frozen_tcn_end_to_end']['seconds_per_update']),
+           'fusion':max(timing('end_to_end_cache_population')['seconds_per_update'],timing('end_to_end_raw')['seconds_per_update'],timing('frozen_tcn_end_to_end')['seconds_per_update']),
+           'fusion_random':max(timing('end_to_end_raw')['seconds_per_update'],timing('frozen_tcn_end_to_end')['seconds_per_update']),
            'lora':max(m['lora_stress']['seconds_per_update'],m['lora_end_to_end']['seconds_per_update'],m['lora_tcn_end_to_end']['seconds_per_update'])}
     infer={family:m[family+'_inference']['seconds_per_origin'] for family in ('xpatch','patchtst','lora')}
-    infer['fusion']=infer['fusion_random']=max(m['frozen_inference']['seconds_per_origin'],m['frozen_tcn_inference']['seconds_per_origin'])
+    infer['fusion']=infer['fusion_random']=max(timing('frozen_inference')['seconds_per_origin'],timing('frozen_tcn_inference')['seconds_per_origin'])
     infer['lora']=max(infer['lora'],m['lora_tcn_inference']['seconds_per_origin'])
     current=totals();categories={name:0. for name in LIMITS};cpu_seconds=0.
     init=m['fusion_initialization_seconds']+m['scaler_fit_seconds']*counts['maximum_fit_calendar_days']/m['scaler_training_calendar_days']
@@ -114,9 +121,13 @@ def project(panel,spec,gpu,cpu):
             'measurement_cpu_sha256':digest(OUT/'performance_cpu.json')}
 
 
-def execution_spec(base,counts,widths,updates,batch_size):
+def execution_spec(base,counts,widths,updates,batch_size,tables=None):
     spec=copy.deepcopy(base);spec['counts']=dict(counts);spec['updates']=dict(updates)
     admission=read_json(OUT/'performance_admission.json');checks=admission['checks']
+    measured=admission['measurements']
+    frozen_precision=admission['config']['precision']
+    if ('end_to_end_cache_reuse_fp32' in measured and measured['end_to_end_cache_reuse_fp32']['seconds_per_update']
+            <=.95*measured['end_to_end_cache_reuse']['seconds_per_update']):frozen_precision='fp32'
     for family in ('lightgbm','xpatch','patchtst','fusion','lora'):
         configs=spec['groups'][family]
         if widths=='narrow':
@@ -128,11 +139,14 @@ def execution_spec(base,counts,widths,updates,batch_size):
         configs=configs[:counts[family]]
         for cfg in configs:
             if family in updates:
-                cfg.update(total_updates=updates[family],batch_size=batch_size,early_stopping_patience_updates=updates[family],
+                size=admission.get('native_batch_sizes',{}).get(family,batch_size)
+                cfg.update(total_updates=updates[family],batch_size=size,early_stopping_patience_updates=updates[family],
                     sampler_policy=CoverageSampler.policy,checkpoint_every_updates=1000,fused_optimizer=True,
-                    precision=admission['config']['precision'])
+                    precision=admission['config']['precision'],prefetch_batches=2,pin_memory=True)
+                if tables is not None:cfg['updates_by_fit_end']=tables[family]
             if family in ('fusion','lora'):
                 cfg['representation_cache']=family=='fusion'
+                if family=='fusion':cfg['precision']=frozen_precision
                 cfg['fp16_cache_admitted']=bool(checks.get('fp16_cache_prediction_rmse'))
                 cfg['cache_dtype']='float16' if cfg['fp16_cache_admitted'] else 'float32'
             cfg['candidate_id']=family+'_'+identity({k:v for k,v in cfg.items() if k!='candidate_id'})[:12]
@@ -147,23 +161,32 @@ def execution_spec(base,counts,widths,updates,batch_size):
     return spec
 
 
-def coverage_budget(panel,batch_size,epochs=10):
+def coverage_budget(panel,batch_size,epochs=2,native_batch_sizes=None):
     # Use the largest allowed fit, including the exact pre-Q2 final artifact.
     # Every earlier fold has at most this many balanced examples per epoch.
     from .splits import fold
     fit_end=fold(panel.dates,'2026Q2',confirmation=True)['fit_end']
     sampler=CoverageSampler(panel,fit_end,2026)
-    supervised=int(math.ceil(epochs*sampler.epoch_size/batch_size))
-    # At most 20% of a fusion run is the predeclared AAPL adaptation tail.
-    # Thus its shared phase still completes at least ten coverage epochs.
-    fusion=int(math.ceil(epochs*sampler.epoch_size/(batch_size*.8)))
-    updates={'xpatch':supervised,'patchtst':supervised,'fusion':fusion,'lora':fusion}
-    policy={'minimum_shared_coverage_epochs':epochs,'largest_fit_end':fit_end,
+    tables={family:{} for family in ('xpatch','patchtst','fusion','lora')};folds={}
+    sizes={family:(native_batch_sizes or {}).get(family,batch_size) for family in tables}
+    for quarter in pd.period_range('2023Q1','2026Q2',freq='Q'):
+        boundary=fold(panel.dates,str(quarter),confirmation=str(quarter)=='2026Q2')['fit_end']
+        eligible=CoverageSampler(panel,boundary,2026)
+        for family in tables:tables[family][boundary]=int(math.ceil(epochs*eligible.epoch_size/sizes[family]))
+        steps=tables['fusion'][boundary]
+        folds[str(quarter)]={'fit_end':boundary,'balanced_epoch_examples':eligible.epoch_size,
+                            'eligible_unique_windows':eligible.unique_total,'total_updates':steps,
+                            'updates_by_family':{family:table[boundary] for family,table in tables.items()}}
+    updates={family:max(table.values()) for family,table in tables.items()}
+    policy={'total_coverage_equivalent_epochs':epochs,'largest_fit_end':fit_end,
         'largest_fit_data':sampler.summary(),'maximum_adaptation_fraction':.2,
-        'updates':updates,'full_sample_budget':{name:value*batch_size for name,value in updates.items()},
+        'updates':updates,'updates_by_fit_end':tables,'folds':folds,
+        'batch_sizes':sizes,'full_sample_budget':{name:value*sizes[name] for name,value in updates.items()},
         'sampling_policy':CoverageSampler.policy,'paired_variants_same_batch_and_updates':True,
+        'AAPL_only_pair':'same sample/update budget as the multistock member; extra AAPL reuse reported',
+        'adaptation_included_in_total':True,'additional_epochs_after_two':False,
         'CPU_rows_per_day':None,'CPU_training_rows':'all eligible windows with balanced stock/day weights',
-        'halving_10_percent':'at least one complete shared coverage epoch at the largest fit',
+        'halving_10_percent':'0.2 coverage-equivalent epochs; no full-coverage claim at the first rung',
         'training_diagnostics':'save mean training-loss traces and actual unique coverage; fixed update prefixes, no unimplemented early stopping',
         'budget_selection_uses_validation_scores':False}
     return updates,policy
@@ -178,8 +201,8 @@ def admit_search():
     if cpu.get('hardware',{}).get('profile')!='autodl' or gpu.get('hardware',{}).get('profile')!='autodl':
         raise ValueError('Cloud budget requires both GPU and CPU timings from the cloud execution profile')
     panel=Panel.load();base=draft();counts=dict(base['counts']);batch=gpu['config']['batch_size']
-    updates,policy=coverage_budget(panel,batch)
-    spec=execution_spec(base,counts,'full',updates,batch)
+    updates,policy=coverage_budget(panel,batch,native_batch_sizes=gpu.get('native_batch_sizes'))
+    spec=execution_spec(base,counts,'full',updates,batch,policy['updates_by_fit_end'])
     spec['training_budget_policy']=policy;spec['compute_policy']=COMPUTE_POLICY
     projection=project(panel,spec,gpu,cpu)
     write_json(OUT/'budget_projection.json',{'attempts':[{'width':'full','counts':counts,

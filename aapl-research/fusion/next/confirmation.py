@@ -16,6 +16,7 @@ from .accounting import Usage
 from .inference import export
 from . import simple
 from .evaluation import point_scores,seed_system
+from .recipe import for_fit
 
 
 def checked_freeze():
@@ -35,7 +36,7 @@ def fit_frozen(panel,spec,frozen,fit_end,namespace):
         config.get('information','ohlcv'),config.get('training_scope','multistock'),config.get('market_information',True))
     references={}
     for name in NAMES:
-        cfg=configs[name];directory=OUT/'frozen_fits'/namespace/name
+        cfg=for_fit(configs[name],fit_end);directory=OUT/'frozen_fits'/namespace/name
         if name in ('ridge','lightgbm'):
             with Usage('final_and_deployment',namespace+'/'+name,gpu=False):
                 fit_cpu(panel,cfg,fit_end,directory)
@@ -54,7 +55,7 @@ def fit_frozen(panel,spec,frozen,fit_end,namespace):
     store=ExpertStore(panel,config.get('information','ohlcv'),config.get('training_scope','multistock'),config.get('market_information',True))
     systems=[]
     for seed in (2026,2027,2028):
-        cfg={**config,'seed':seed};device=runtime(seed)
+        cfg=for_fit({**config,'seed':seed},fit_end);device=runtime(seed)
         if device!='cuda':raise RuntimeError('Final system retraining requires the specified GPU')
         with Usage('final_and_deployment',namespace+f'/system/seed_{seed}') as usage:
             model=model_for(panel,cfg,device)

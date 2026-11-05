@@ -21,6 +21,7 @@ from .evaluation import point_scores,seed_system,minimum_detectable_improvement
 from .accounting import Usage,totals
 from .design import halving_survivors
 from . import simple
+from .recipe import for_fit
 
 
 def admitted():
@@ -62,7 +63,7 @@ def read_prediction(directory,rows,details):
 
 
 def neural_trial(panel,config,quarter,seed,prefix,namespace,store=None,category='fusion_search'):
-    f,rows=score_rows(panel,quarter);updates=int(math.ceil(prefix*config['total_updates']))
+    f,rows=score_rows(panel,quarter);config=for_fit(config,f['fit_end']);updates=int(math.ceil(prefix*config['total_updates']))
     trial=namespace+'/'+config['candidate_id']+'/'+quarter
     directory=OUT/'trials'/trial/f'seed_{seed}'/f'updates_{updates}'
     details={'config':config,'fold':f,'seed':seed,'updates':updates,'source':source_identity()}
@@ -156,7 +157,7 @@ def build_oof(panel,configs,category='experts_and_cache'):
             futures=[pool.submit(cpu_column,expert) for expert in ('ridge','lightgbm')]
             for expert in ('xpatch','patchtst'):
                 column=NAMES.index(expert)
-                cfg=configs[expert];namespace='oof_models/'+key+'/'+expert+'/'+str(period)
+                cfg=for_fit(configs[expert],f['fit_end']);namespace='oof_models/'+key+'/'+expert+'/'+str(period)
                 directory=OUT/namespace;directory.mkdir(parents=True,exist_ok=True)
                 status('F3_F5_OOF',scope=key,quarter=str(period),expert=expert)
                 device=runtime(2026)
@@ -242,6 +243,7 @@ def lora_configs(top,spec):
         slot=adapter.get('promoted_structure_slot',index%len(top));base=top[slot%len(top)]
         config={**base,'foundation_mode':'lora','rank':adapter['rank'],'backbone_lr':adapter['backbone_lr'],
                 'promoted_structure_slot':slot,
+                'precision':adapter['precision'],
                 'representation_cache':False,'total_updates':spec['updates']['lora'],
                 'early_stopping_patience_updates':spec['updates']['lora']}
         config['candidate_id']='lora_'+identity(config)[:12];result.append(config)

@@ -8,6 +8,7 @@ from .panel import Panel
 from .splits import VALIDATION
 from .splits import fold
 from .accounting import totals
+from .recipe import for_fit
 
 
 def validation_identity(panel):
@@ -49,7 +50,8 @@ def recheck_controls(panel):
                 details={'config':cfg,'fold':f,'seed':2026,'source':source_identity()}
                 directory=OUT/'trials'/('single_'+name)/cfg['candidate_id']/quarter
                 if name in ('xpatch','patchtst'):
-                    details['updates']=cfg['total_updates'];directory=directory/'seed_2026'/f"updates_{cfg['total_updates']}"
+                    effective=for_fit(cfg,f['fit_end']);details['config']=effective
+                    details['updates']=effective['total_updates'];directory=directory/'seed_2026'/f"updates_{effective['total_updates']}"
                 report,prediction=read_prediction(directory,rows,details)
                 scores=point_scores(panel.targets['AAPL'][rows],prediction)
                 if scores!=report['scores']:raise ValueError('Single-control score differs from saved raw predictions')

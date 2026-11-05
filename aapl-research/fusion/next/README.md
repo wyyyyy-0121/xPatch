@@ -8,7 +8,7 @@
 
 F1 的逐股票覆盖、排除原因、共同预测起点和开盘时间轴见 [DATA_ADMISSION.md](DATA_ADMISSION.md)，该记录不含原始行情。
 
-针对 RTX 5090 的追加安排见 [PERFORMANCE_OPTIMIZATION_PLAN.md](PERFORMANCE_OPTIMIZATION_PLAN.md)。用户已取消总 24 卡小时和包级时限，改按完整数据覆盖分配更新数、保留全部搜索机会。批量实测推荐 256 + BF16，须重新通过该形状的数值和压力准入；更大的 LoRA batch 实际显存不足。
+针对 RTX 5090 的追加安排见 [PERFORMANCE_OPTIMIZATION_PLAN.md](PERFORMANCE_OPTIMIZATION_PLAN.md)。用户最新决定保留全部研究范围，每个完整神经候选只做两个等价覆盖轮，适配尾段包含在内，每折按自己的合法历史量分配更新。总 24 卡小时和包级时限已取消。实测选 Chronos/LoRA batch 256、xPatch 256、PatchTST 512；CPU 有界预取与 GPU 重叠，最后配置须通过数值和压力准入。
 
 大型神经网络训练指定在用户的 AutoDL 单卡实例执行。本地负责数据、审计、打包和最终推理。当前云端连接及实际硬件已经核验；实例重启后须复核连接地址。GPU 暂不需要时由用户关闭实例，本工具不会创建或付费租赁实例。
 
@@ -19,7 +19,7 @@ F1 的逐股票覆盖、排除原因、共同预测起点和开盘时间轴见 [
 在项目根目录运行本地检查：
 
 ```bash
-AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m pytest fusion/next/tests_data.py fusion/next/tests_models.py fusion/next/tests_training.py fusion/next/tests_evaluation.py fusion/next/tests_experiment.py fusion/next/tests_stream.py fusion/next/tests_budget.py fusion/next/tests_confirmation.py fusion/next/tests_inference.py fusion/next/tests_freeze.py fusion/next/tests_final_test.py fusion/next/tests_cloud.py fusion/next/tests_delivery.py fusion/next/tests_accounting.py fusion/next/tests_serve.py -q
+AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m pytest fusion/next/tests_data.py fusion/next/tests_models.py fusion/next/tests_training.py fusion/next/tests_evaluation.py fusion/next/tests_experiment.py fusion/next/tests_stream.py fusion/next/tests_budget.py fusion/next/tests_confirmation.py fusion/next/tests_inference.py fusion/next/tests_freeze.py fusion/next/tests_final_test.py fusion/next/tests_cloud.py fusion/next/tests_delivery.py fusion/next/tests_accounting.py fusion/next/tests_serve.py fusion/next/tests_cache.py -q
 AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m fusion.next.audit
 ```
 
@@ -60,7 +60,8 @@ AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m fusion.next.clou
 cd aapl-fusion
 bash cloud/bootstrap.sh
 bash cloud/run.sh -m fusion.next.batch_probe --examples 8192
-bash cloud/run.sh -m fusion.next.performance --batch-size 256 --precision bf16 --stress-seconds 900
+bash cloud/run.sh -m fusion.next.native_probe
+bash cloud/run.sh -m fusion.next.performance --batch-size 256 --precision bf16 --xpatch-batch-size 256 --patchtst-batch-size 512 --stress-seconds 900
 bash cloud/run.sh -m fusion.next.performance --cpu-only
 ```
 
@@ -85,7 +86,7 @@ bash cloud/run.sh -m fusion.next.experiment F5
 
 本轮已启动云端 `fusion.next.cloud_driver`：它自动等待旧计量完成、归档证据、完成最终代码的 F2 测量、计算完整范围成本并冻结搜索，随后执行 F3。实际阶段见 `outputs/fusion_next/cloud/driver_state.json`，子作业日志在同目录的 `logs/` 中；不应与上面的手工命令重复启动。入口在 F3 完成后结束，后续继续 F4/F5。完整训练的预览排程和缓存假设见性能修订文档。
 
-预算入口按最大合法训练段的完整覆盖轮数确定更新数，保留全宽度和全部候选。batch 256 时，监督基线 117,118 步，融合与 LoRA 同为 146,397 步；最多 20% AAPL 适配尾段后，共享训练仍至少十个覆盖轮。新的采样器保证每轮遍历全部窗口，并分别报告去重覆盖量与重复曝光。CPU 对照使用全部窗口及股票/交易日均衡权重。入口列入所有范围的 OOF、三种子、七组机制和最终拟合，继续记录实际成本。预算保守保留第二次拟合额度，但最终检验明确使用 Q2 已确认的同一模型。正式实验只接受通过 F2 且与冻结代码身份一致的配置。
+预算入口为每个合法训练折冻结两个等价覆盖轮，保留全宽度和全部候选。最大历史段 xPatch/融合/LoRA 的 batch 256 预算为 23,424 步，PatchTST batch 512 为 11,712 步；适配 AAPL 的最多 20% 尾段包含在两轮内，共享阶段约 1.6 轮。连续晋级对应 0.2/0.6/2 等价轮，第一档不声称完整覆盖。各折使用自己的更新表，AAPL 单股配对保持相同样本预算并单列重复使用。采样器报告去重覆盖与重复曝光，CPU 对照使用全部窗口及股票/交易日均衡权重。入口列入全部 OOF、三种子、七组机制和最终拟合，按最新实际计时重算费用。预算保守保留第二次拟合额度，最终检验使用 Q2 已确认的同一模型。正式实验只接受通过 F2 且与冻结代码身份一致的配置。
 
 标准组按前 1/3、再前 2 个晋级。连续保留优化器、采样器和随机状态，小组规则仍至少保留两个完整预算候选。性能投影包含训练段缩放器拟合，并对 TCN 与 Transformer 实测取较慢速度；使用实际通过准入的精度计时。保存训练损失曲线不能单独证明泛化或收敛，当前采用固定覆盖预算，不宣称已实现自适应早停。
 

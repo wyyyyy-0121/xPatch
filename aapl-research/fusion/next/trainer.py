@@ -1,5 +1,7 @@
 """Budgeted deterministic neural training with continuous halving and early-history pretraining."""
 import math
+import copy
+from contextlib import ExitStack
 from pathlib import Path
 import time
 
@@ -12,6 +14,7 @@ from .common import read_json
 from .hardware import ResourceGuard
 from .panel import BalancedSampler,CoverageSampler
 from .cache import RepresentationCache
+from .batches import BatchAhead,pin,transfer
 
 
 class ExpertStore:
@@ -138,18 +141,32 @@ class Trainer:
         if not self.step<=updates<=self.config['total_updates']:raise ValueError('Halving must advance a continuous update prefix')
         if not self.path.with_suffix('.pt.json').exists():self.save()
         self.model.train();start=time.perf_counter()
+        stack=ExitStack()
         try:
+            ahead=None
+            if self.config.get('prefetch_batches',0):
+                # Advance only shadow samplers while preparing ahead. Committed
+                # samplers advance when a batch is consumed, so saved RNG/coverage
+                # never skip prefetched but unconsumed examples after a restart.
+                shadows=copy.deepcopy(self.samplers)
+                def requests():
+                    for step in range(self.step,updates):
+                        adapting=self.fusion and step>=self.config['total_updates']*(1-self.config.get('adaptation_fraction',0))
+                        key='adapt_main' if adapting else 'main'
+                        stocks,rows=shadows[key].sample(self.config['batch_size']);yield key,stocks,rows
+                def prepare(item):
+                    key,stocks,rows=item;return key,stocks,rows,self.cpu_batch(stocks,rows)
+                ahead=stack.enter_context(BatchAhead(prepare,requests(),self.config['prefetch_batches']))
             while self.step<updates:
                 adapting=self.fusion and self.step>=self.config['total_updates']*(1-self.config.get('adaptation_fraction',0))
                 sampler=self.samplers['adapt_main' if adapting else 'main']
                 stocks,rows=sampler.sample(self.config['batch_size'])
-                predictions=None;early=None
-                if self.fusion:
-                    early=self.panel.dates[rows]<'2023-01-01'
-                    predictions=np.zeros((len(rows),4),dtype=np.float32)
-                    if np.any(~early):predictions[~early]=self.experts.predict(stocks[~early],rows[~early])
-                batch=self.panel.windows(stocks,rows,self.config,self.scalers,predictions,self.device)
-                if early is not None:batch['early_history_mask']=torch.as_tensor(early,device=self.device)
+                if ahead is not None:
+                    key,expected_stocks,expected_rows,prepared=next(ahead)
+                    if key!=('adapt_main' if adapting else 'main') or not np.array_equal(stocks,expected_stocks) or not np.array_equal(rows,expected_rows):
+                        raise ValueError('Prepared stream differs from committed training sampler')
+                else:prepared=self.cpu_batch(stocks,rows)
+                batch=transfer(prepared,self.device)
                 if self.cache is not None:batch['foundation_cached']=self.cache.get(batch)
                 fraction=self.step/self.config['total_updates']
                 ratio=self.config.get('adapt_lr_ratio',1.) if adapting else 1.
@@ -180,9 +197,19 @@ class Trainer:
         else:
             if self.device=='cuda':torch.cuda.synchronize()
             self.wall_seconds+=time.perf_counter()-start;self.flush_loss_trace();self.save()
+        finally:stack.close()
         result=self.progress()
         write_json(self.path.with_suffix('.progress.json'),result)
         return result
+
+    def cpu_batch(self,stocks,rows):
+        predictions=None;early=None
+        if self.fusion:
+            early=self.panel.dates[rows]<'2023-01-01';predictions=np.zeros((len(rows),4),dtype=np.float32)
+            if np.any(~early):predictions[~early]=self.experts.predict(stocks[~early],rows[~early])
+        batch=self.panel.windows(stocks,rows,self.config,self.scalers,predictions,'cpu')
+        if early is not None:batch['early_history_mask']=torch.as_tensor(early)
+        return pin(batch,self.device=='cuda' and self.config.get('pin_memory',False))
 
     def flush_loss_trace(self):
         if self.loss_count:

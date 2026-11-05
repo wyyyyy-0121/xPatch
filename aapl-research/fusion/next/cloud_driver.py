@@ -63,7 +63,10 @@ def run():
         if not old.get('numerical_and_resource_checks_passed'):
             raise RuntimeError('Prior maximum-shape numerical checks failed; inspect before repeating the same policy')
         receipt=archive_source();state('F2_final_source_measurement',source_archive=receipt)
-        gpu=launch('fusion.next.performance',['--batch-size','256','--precision','bf16','--stress-seconds','900'],
+        choices=read_json(OUT/'native_scaling.json')['choices']
+        native_args=['--xpatch-batch-size',str(choices['xpatch']['batch_size']),
+                     '--patchtst-batch-size',str(choices['patchtst']['batch_size'])]
+        gpu=launch('fusion.next.performance',['--batch-size','256','--precision','bf16','--stress-seconds','900',*native_args],
             '8-24','performance_gpu_final')
         cpu=launch('fusion.next.performance',['--cpu-only'],'0-7','performance_cpu_final',threads=8)
         while gpu.poll() is None or cpu.poll() is None:
@@ -83,6 +86,8 @@ def run():
         if result.wait():raise RuntimeError('Full-scope cost projection or immutable search freeze failed')
     from .experiment import admitted
     spec=admitted()
+    if spec.get('training_budget_policy',{}).get('total_coverage_equivalent_epochs')!=2:
+        raise RuntimeError('User replaced the old budget with exactly two total coverage-equivalent epochs')
     if not (OUT/'F3_complete.json').exists():
         process=launch('fusion.next.experiment',['F3'],'0-24','F3_full_coverage')
         while process.poll() is None:

@@ -3,6 +3,7 @@ import argparse
 import copy
 import gc
 import time
+from contextlib import nullcontext
 
 import numpy as np
 import torch
@@ -17,6 +18,7 @@ from .checkpoint import changing_state, capture_rng, restore_rng, save, load
 from .accounting import Usage
 from .cache import RepresentationCache
 from .experts import fit_cpu,predict_cpu
+from .batches import BatchAhead,pin,transfer
 
 
 BASE={'family':'fusion','lookback':240,'projection':128,'hidden':64,'market_encoder':'transformer',
@@ -56,14 +58,22 @@ def primitive_experts(batch):
 
 def end_to_end(model,panel,ids,scalers,config,representation_cache=None):
     model.train();opt=optimizer_for(model,config,'cuda');torch.cuda.synchronize();start=time.perf_counter()
-    for stocks,rows in ids:
-        batch=panel.windows(stocks,rows,config,scalers,device='cuda')
+    def prepare(item):
+        stocks,rows=item;batch=panel.windows(stocks,rows,config,scalers,device='cpu')
         batch['experts']=primitive_experts(batch)
-        if representation_cache is not None:batch['foundation_cached']=representation_cache.get(batch)
-        train_batch(model,opt,batch,config)
+        return pin(batch,config.get('pin_memory',False))
+    depth=config.get('prefetch_batches',0)
+    context=BatchAhead(prepare,ids,depth) if depth else nullcontext(map(prepare,ids))
+    losses=[]
+    with context as batches:
+        for prepared in batches:
+            batch=transfer(prepared,'cuda')
+            if representation_cache is not None:batch['foundation_cached']=representation_cache.get(batch)
+            losses.append(train_batch(model,opt,batch,config))
     torch.cuda.synchronize();elapsed=time.perf_counter()-start
     return {'seconds':elapsed,'updates':len(ids),'seconds_per_update':elapsed/len(ids),
-            'includes_sampling_windows_transfer_cache_IO_optimizer':True}
+            'includes_windows_transfer_cache_IO_optimizer':True,'includes_sampling':False,
+            'prefetch_batches':depth,'losses':losses}
 
 
 @torch.inference_mode()
@@ -100,7 +110,7 @@ def cpu_admission():
     report['completed_at_utc']=utc_now();write_json(OUT/'performance_cpu.json',report);return report
 
 
-def run(batch_size=64,stress_seconds=900,precision='fp32'):
+def run(batch_size=64,stress_seconds=900,precision='fp32',xpatch_batch_size=None,patchtst_batch_size=None):
     if stress_seconds<900:raise ValueError('F2 continuous stress must last at least 15 minutes')
     device=runtime(2026)
     if device!='cuda':raise RuntimeError('Large-model F2 is assigned to the AutoDL GPU; local execution refused')
@@ -109,12 +119,14 @@ def run(batch_size=64,stress_seconds=900,precision='fp32'):
     panel=Panel.load();start=time.perf_counter();scalers=panel.scaler('2022-12-30');scaler_seconds=time.perf_counter()-start
     sampler=CoverageSampler(panel,'2022-12-30',2026)
     config={**BASE,'batch_size':batch_size,'raw_loss_unit':scalers['AAPL']['target_std'],
-            'precision':precision,'fused_optimizer':True,'sampler_policy':CoverageSampler.policy}
+            'precision':precision,'fused_optimizer':True,'sampler_policy':CoverageSampler.policy,
+            'prefetch_batches':2,'pin_memory':True}
     reference={**config,'precision':'fp32','fused_optimizer':False}
     report={'started_at_utc':utc_now(),'plan_sha256':digest(PLAN),'hardware':inspect_hardware(True),
             'source_identity':source_identity(),
             'data_audit_sha256':digest(OUT/'data_audit.json'),'config':config,'training_dates_only':True,
             'official_validation_scores_read':False,'passed':False,
+            'native_batch_sizes':{'xpatch':xpatch_batch_size or batch_size,'patchtst':patchtst_batch_size or batch_size},
             'measurements':{'scaler_fit_seconds':scaler_seconds,
                             'scaler_training_calendar_days':len(np.unique(panel.dates[panel.dates<='2022-12-30']))}}
     path=OUT/'performance_admission.json';write_json(path,report)
@@ -162,13 +174,27 @@ def run(batch_size=64,stress_seconds=900,precision='fp32'):
         ids=[sampler.sample(batch_size) for _ in range(24)]
         report['measurements']['frozen_inference']=inference_timing(model,panel,ids[:8],scalers,config)
         model.load_state_dict(initial,strict=False);restore_rng(rng)
+        reference_e2e=end_to_end(model,panel,ids,scalers,{**config,'prefetch_batches':0})
+        report['measurements']['end_to_end_without_prefetch']=reference_e2e
+        model.load_state_dict(initial,strict=False);restore_rng(rng)
         report['measurements']['end_to_end_raw']=end_to_end(model,panel,ids,scalers,config)
+        checks['prefetch_training_losses_equal']=reference_e2e['losses']==report['measurements']['end_to_end_raw']['losses']
         representation_cache=RepresentationCache(panel,model.foundation,config,allowed_end='2022-12-30')
         model.load_state_dict(initial,strict=False);restore_rng(rng)
         report['measurements']['end_to_end_cache_population']=end_to_end(model,panel,ids,scalers,config,representation_cache)
         model.load_state_dict(initial,strict=False);restore_rng(rng)
         report['measurements']['end_to_end_cache_reuse']=end_to_end(model,panel,ids,scalers,config,representation_cache)
         del representation_cache
+        fp32_config={**config,'precision':'fp32'}
+        model.load_state_dict(initial,strict=False);restore_rng(rng)
+        report['measurements']['end_to_end_raw_fp32']=end_to_end(model,panel,ids,scalers,fp32_config)
+        fp32_cache=RepresentationCache(panel,model.foundation,fp32_config,allowed_end='2022-12-30')
+        model.load_state_dict(initial,strict=False);restore_rng(rng)
+        report['measurements']['end_to_end_cache_population_fp32']=end_to_end(model,panel,ids,scalers,fp32_config,fp32_cache)
+        model.load_state_dict(initial,strict=False);restore_rng(rng)
+        report['measurements']['end_to_end_cache_reuse_fp32']=end_to_end(model,panel,ids,scalers,fp32_config,fp32_cache)
+        report['measurements']['frozen_inference_fp32']=inference_timing(model,panel,ids[:8],scalers,fp32_config)
+        del fp32_cache
         # Exercise a real optimizer interruption with the maximum-shape fusion network.
         model.load_state_dict(initial,strict=False);restore_rng(rng);model.train()
         opt=optimizer_for(model,config,'cuda')
@@ -193,22 +219,27 @@ def run(batch_size=64,stress_seconds=900,precision='fp32'):
         model.market=MarketBranch(12*len(panel.background),32,'tcn').to('cuda')
         report['measurements']['frozen_tcn_end_to_end']=end_to_end(model,panel,ids[:8],scalers,config)
         report['measurements']['frozen_tcn_inference']=inference_timing(model,panel,ids[:8],scalers,config)
+        report['measurements']['frozen_tcn_end_to_end_fp32']=end_to_end(model,panel,ids[:8],scalers,fp32_config)
+        report['measurements']['frozen_tcn_inference_fp32']=inference_timing(model,panel,ids[:8],scalers,fp32_config)
         del model,opt,initial,expected,actual;gc.collect();torch.cuda.empty_cache()
         for family in ('xpatch','patchtst'):
-            native_config={**config,'family':family,'patch':8,'stride':4,'d_model':64}
+            native_size=report['native_batch_sizes'][family]
+            native_config={**config,'family':family,'patch':8,'stride':4,'d_model':64,'batch_size':native_size}
+            native_ids=[sampler.sample(native_size) for _ in range(24)]
+            native_batches=[panel.windows(stocks,rows,native_config,scalers,device='cuda') for stocks,rows in native_ids[:8]]
             native=NativeExpert(native_config,12*(1+len(panel.background)),len(panel.stocks)).to('cuda')
             native_initial=changing_state(native);native_rng=capture_rng()
-            native_fp32=benchmark(native,batches,{**native_config,'precision':'fp32'})
+            native_fp32=benchmark(native,native_batches,{**native_config,'precision':'fp32'})
             native.load_state_dict(native_initial,strict=False);restore_rng(native_rng)
-            measured=benchmark(native,batches,native_config)
+            measured=benchmark(native,native_batches,native_config)
             report['measurements'][family]=measured
             if precision=='bf16':
                 a=np.asarray(native_fp32['predictions']);b=np.asarray(measured['predictions'])
                 checks['bf16_'+family+'_prediction_rmse']=float(np.sqrt(np.mean((a-b)**2))/unit)<.05
                 checks['bf16_'+family+'_loss_difference']=bool(np.allclose(native_fp32['losses'],measured['losses'],rtol=.05,atol=.001))
-            report['measurements'][family+'_end_to_end']=end_to_end(native,panel,ids,scalers,native_config)
-            report['measurements'][family+'_inference']=inference_timing(native,panel,ids[:8],scalers,native_config)
-            del native,native_initial;gc.collect();torch.cuda.empty_cache();guard.check();usage.record()
+            report['measurements'][family+'_end_to_end']=end_to_end(native,panel,native_ids,scalers,native_config)
+            report['measurements'][family+'_inference']=inference_timing(native,panel,native_ids[:8],scalers,native_config)
+            del native,native_initial,native_batches;gc.collect();torch.cuda.empty_cache();guard.check();usage.record()
         # Maximum LoRA rank, largest context, all market variables, multistock batch.
         lora_config={**config,'foundation_mode':'lora'}
         model=NeuralFusion(lora_config,12,len(panel.background)*12,len(panel.stocks),'cuda').to('cuda')
@@ -260,6 +291,8 @@ def run(batch_size=64,stress_seconds=900,precision='fp32'):
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('--batch-size',type=int,choices=(32,64,128,256,512,1024),default=64)
     parser.add_argument('--precision',choices=('fp32','bf16'),default='fp32')
+    parser.add_argument('--xpatch-batch-size',type=int,choices=(256,512,1024))
+    parser.add_argument('--patchtst-batch-size',type=int,choices=(256,512,1024))
     parser.add_argument('--cpu-only',action='store_true')
     parser.add_argument('--stress-seconds',type=int,default=900);args=parser.parse_args()
-    cpu_admission() if args.cpu_only else run(args.batch_size,args.stress_seconds,args.precision)
+    cpu_admission() if args.cpu_only else run(args.batch_size,args.stress_seconds,args.precision,args.xpatch_batch_size,args.patchtst_batch_size)
