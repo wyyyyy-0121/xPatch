@@ -8,6 +8,8 @@
 
 F1 的逐股票覆盖、排除原因、共同预测起点和开盘时间轴见 [DATA_ADMISSION.md](DATA_ADMISSION.md)，该记录不含原始行情。
 
+针对 RTX 5090 负载的追加安排见 [PERFORMANCE_OPTIMIZATION_PLAN.md](PERFORMANCE_OPTIMIZATION_PLAN.md)：先比较 64/128/256/512 批量的真实吞吐与资源，再对选定批量重新准入并核算预算。
+
 大型神经网络训练指定在用户的 AutoDL 单卡实例执行。本地负责数据、审计、打包和最终推理。当前云端连接及实际硬件已经核验；实例重启后须复核连接地址。GPU 暂不需要时由用户关闭实例，本工具不会创建或付费租赁实例。
 
 ## 已实现的入口
