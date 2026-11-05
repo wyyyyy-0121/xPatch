@@ -15,20 +15,34 @@ from .cache import RepresentationCache
 
 
 class ExpertStore:
-    def __init__(self,panel,information='ohlcv'):
+    def __init__(self,panel,information='ohlcv',training_scope='multistock',market_information=True):
         self.arrays={};self.available={};self.sources={}
+        from .experts import scope_key
+        self.key=scope_key(information,training_scope,market_information)
         import pandas as pd
         for quarter in pd.period_range('2023Q1','2026Q1',freq='Q'):
-            receipt=read_json(OUT/'oof'/information/(str(quarter)+'.json'))
+            receipt=read_json(OUT/'oof'/self.key/(str(quarter)+'.json'))
             f=receipt['fold']
             if not f['fit_end']<f['purged_full_session']<f['score_start']:
                 raise ValueError('OOF training/purge separation invalid')
-            if set(receipt['stocks'])!=set(panel.stocks):raise ValueError('Completed OOF quarter lacks admitted stocks')
+            required=panel.stocks if training_scope=='multistock' else ['AAPL']
+            if set(receipt['stocks'])!=set(required):raise ValueError('Completed OOF quarter lacks admitted stocks')
             for name,row in receipt['stocks'].items():
-                if digest(OUT/'oof'/information/row['quarter_file'])!=row['sha256']:
+                path=OUT/'oof'/self.key/row['quarter_file']
+                if digest(path)!=row['sha256']:
                     raise ValueError('Saved OOF quarter prediction identity differs')
+                with np.load(path) as saved:
+                    origins=panel.origins[name]
+                    expected=origins[(panel.dates[origins]>=f['score_start'])&(panel.dates[origins]<=f['score_end'])]
+                    if not np.array_equal(expected,saved['rows']):raise ValueError('OOF quarter omitted eligible origins')
+                    aggregate=np.load(OUT/'oof'/self.key/(name+'.npy'),mmap_mode='r')
+                    if not np.array_equal(aggregate[expected],saved['predictions']):
+                        raise ValueError('OOF aggregate differs from immutable quarter receipt')
         for sid,name in enumerate(panel.stocks):
-            path=OUT/'oof'/information/f'{name}.npy'
+            if training_scope=='aapl' and name!='AAPL':
+                self.available[sid]=np.zeros(len(panel.dates),dtype=bool)
+                continue
+            path=OUT/'oof'/self.key/f'{name}.npy'
             if not path.exists():raise ValueError('OOF expert predictions are not ready for '+name)
             array=np.load(path,mmap_mode='r')
             if array.shape!=(len(panel.dates),4):raise ValueError('OOF array shape differs from development calendar')
@@ -59,6 +73,8 @@ def optimizer_for(model,config,device):
 
 def loss_for(output,batch,config,pretrain=False):
     prediction=output['auxiliary_prediction'] if pretrain else output['prediction']
+    if 'early_history_mask' in batch:
+        prediction=torch.where(batch['early_history_mask'],output['auxiliary_prediction'],prediction)
     if config.get('loss')=='step_mse':
         if pretrain or 'steps' not in output:raise ValueError('Step loss requires a supervised 12-step expert')
         return ((output['steps']-batch['step_targets'])/config['raw_loss_unit']).square().mean()
@@ -68,6 +84,8 @@ def loss_for(output,batch,config,pretrain=False):
     loss=((prediction-batch['target'])/unit).square().mean()
     if not pretrain and 'weights' in output:
         rows=batch['row'];same=(batch['stock'][1:]==batch['stock'][:-1])&(rows[1:]==rows[:-1]+1)
+        if 'session_id' in batch:same&=batch['session_id'][1:]==batch['session_id'][:-1]
+        if 'early_history_mask' in batch:same&=~batch['early_history_mask'][1:]&~batch['early_history_mask'][:-1]
         if same.any():loss=loss+config.get('gate_smooth_penalty',1e-4)*(output['weights'][1:][same]-output['weights'][:-1][same]).square().mean()
     return loss
 
@@ -79,15 +97,14 @@ class Trainer:
         self.config['raw_loss_unit']=self.scalers['AAPL']['target_std']
         only=config.get('training_scope','multistock')=='aapl'
         fusion=config.get('family')=='fusion'
-        total=int(config['total_updates']);self.pretrain_updates=(total+4)//5 if fusion else 0
+        total=int(config['total_updates']);self.fusion=fusion
         self.samplers={}
         if fusion:
             if experts is None:raise ValueError('Fusion training requires real earlier-quarter OOF experts')
-            self.samplers['pretrain']=BalancedSampler(panel,min(fit_end,'2022-12-31'),seed+1,only)
-            self.samplers['main']=BalancedSampler(panel,fit_end,seed+2,only,fit_start='2023-01-01',available=experts.available)
+            available={sid:(experts.available[sid]|(panel.dates<'2023-01-01')) for sid in range(len(panel.stocks))}
+            self.samplers['main']=BalancedSampler(panel,fit_end,seed+2,only,available=available)
             if config.get('adaptation_fraction',0)>0:
-                self.samplers['adapt_pretrain']=BalancedSampler(panel,min(fit_end,'2022-12-31'),seed+3,True)
-                self.samplers['adapt_main']=BalancedSampler(panel,fit_end,seed+4,True,fit_start='2023-01-01',available=experts.available)
+                self.samplers['adapt_main']=BalancedSampler(panel,fit_end,seed+4,True,available=available)
         else:self.samplers['main']=BalancedSampler(panel,fit_end,seed+2,only)
         self.optimizer=optimizer_for(self.model,config,device);self.step=0
         self.cache=None
@@ -98,7 +115,8 @@ class Trainer:
         self.recipe={'config':config,'fit_end':fit_end,'seed':seed,'plan_sha256':digest(PLAN),
                      'source_identity':source_identity(),'scalers_identity':identity({name:{k:v.tolist() if isinstance(v,np.ndarray) else v for k,v in row.items()} for name,row in self.scalers.items()}),
                      'expert_sources':experts.sources if experts is not None else {},
-                     'pretrain_updates':self.pretrain_updates,'total_updates':total}
+                     'early_history_objective':'auxiliary readout on pre-2023 rows; same uniform stock/day sampler',
+                     'total_updates':total}
         if fusion and model.use_foundation:self.recipe['foundation_weights']=model.foundation.receipt
         self.guard=ResourceGuard(device);self.wall_seconds=0.;self.last_loss=None
 
@@ -112,18 +130,22 @@ class Trainer:
                          'stocks':self.panel.stocks,'background':self.panel.background,
                          'scalers':{name:{key:value.tolist() if isinstance(value,np.ndarray) else value for key,value in row.items()} for name,row in self.scalers.items()}})
 
-    def run_until(self,updates):
+    def run_until(self,updates,usage=None):
         if not self.step<=updates<=self.config['total_updates']:raise ValueError('Halving must advance a continuous update prefix')
         if not self.path.exists():self.save()
         self.model.train();start=time.perf_counter()
         try:
             while self.step<updates:
-                pretrain=self.pretrain_updates>0 and self.step%5==0
-                adapting=self.pretrain_updates>0 and self.step>=self.config['total_updates']*(1-self.config.get('adaptation_fraction',0))
-                sampler=self.samplers[('adapt_' if adapting else '')+('pretrain' if pretrain else 'main')]
+                adapting=self.fusion and self.step>=self.config['total_updates']*(1-self.config.get('adaptation_fraction',0))
+                sampler=self.samplers['adapt_main' if adapting else 'main']
                 stocks,rows=sampler.sample(self.config['batch_size'])
-                predictions=None if pretrain or self.experts is None else self.experts.predict(stocks,rows)
+                predictions=None;early=None
+                if self.fusion:
+                    early=self.panel.dates[rows]<'2023-01-01'
+                    predictions=np.zeros((len(rows),4),dtype=np.float32)
+                    if np.any(~early):predictions[~early]=self.experts.predict(stocks[~early],rows[~early])
                 batch=self.panel.windows(stocks,rows,self.config,self.scalers,predictions,self.device)
+                if early is not None:batch['early_history_mask']=torch.as_tensor(early,device=self.device)
                 if self.cache is not None:batch['foundation_cached']=self.cache.get(batch)
                 fraction=self.step/self.config['total_updates']
                 ratio=self.config.get('adapt_lr_ratio',1.) if adapting else 1.
@@ -131,12 +153,14 @@ class Trainer:
                 self.optimizer.zero_grad(set_to_none=True)
                 bf16=self.config.get('precision','fp32')=='bf16'
                 with torch.autocast(device_type=self.device,dtype=torch.bfloat16,enabled=bf16):
-                    output=self.model(batch);loss=loss_for(output,batch,self.config,pretrain)
+                    output=self.model(batch);loss=loss_for(output,batch,self.config)
                 if not torch.isfinite(loss):raise FloatingPointError('Nonfinite training loss')
                 loss.backward();norm=torch.nn.utils.clip_grad_norm_([p for p in self.model.parameters() if p.requires_grad],1.)
                 if not torch.isfinite(norm):raise FloatingPointError('Nonfinite gradient norm')
                 self.optimizer.step();self.step+=1;self.last_loss=float(loss.detach())
-                if self.step%20==0:self.guard.check()
+                if self.step%20==0:
+                    self.guard.check()
+                    if usage is not None:usage.record()
                 if self.step%100==0:
                     elapsed=time.perf_counter()-start;self.wall_seconds+=elapsed;start=time.perf_counter();self.save()
         except BaseException as exc:
@@ -156,7 +180,7 @@ class Trainer:
         return result
 
     @torch.inference_mode()
-    def predict(self,stocks,rows,expert_predictions=None):
+    def predict(self,stocks,rows,expert_predictions=None,usage=None):
         self.model.eval();results=[]
         for start in range(0,len(rows),self.config['batch_size']):
             stop=start+self.config['batch_size']
@@ -167,6 +191,7 @@ class Trainer:
                                 enabled=self.config.get('precision')=='bf16'):
                 value=self.model(batch)['prediction'].float()
             results.append(value.cpu().numpy())
+            if usage is not None and (start//self.config['batch_size'])%20==0:usage.record()
         values=np.concatenate(results)
         if not np.isfinite(values).all():raise FloatingPointError('Nonfinite inference prediction')
         return values

@@ -11,7 +11,7 @@
 在项目根目录运行本地检查：
 
 ```bash
-AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m pytest fusion/next/tests_data.py fusion/next/tests_models.py fusion/next/tests_training.py fusion/next/tests_evaluation.py -q
+AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m pytest fusion/next/tests_data.py fusion/next/tests_models.py fusion/next/tests_training.py fusion/next/tests_evaluation.py fusion/next/tests_experiment.py fusion/next/tests_stream.py fusion/next/tests_budget.py -q
 AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m fusion.next.audit
 ```
 
@@ -58,11 +58,30 @@ Bootstrap 检查真实 CUDA 矩阵运算，建立隔离环境并记录依赖版�
 
 F2 包括冻结骨干、最大形状监督基线、真实 LoRA、缓存数值对比、精度对比、保存恢复及至少 15 分钟连续压力运行。端到端计时包含取窗、设备传输和缓存读写。该 GPU 检查完成后，仍须加入 CPU 树模型计时，以及所有季度、种子、机制、重训和部署工作的总时长投影；加入 50% 余量后符合预算，才能锁定正式搜索。
 
+CPU 性能准入可在数据审计完成后先在本地执行，不读取正式验证分数：
+
+```bash
+AAPL_CPU_THREADS=8 AAPL_CPU_IDS=0-7 bash scripts/python.sh -m fusion.next.performance --cpu-only
+```
+
+如果最终在云端执行 CPU 树模型，必须在云端重新执行同一 CPU 准入，不能把不同机器的吞吐直接用于云端总时长投影。完成云端 GPU 与 CPU 实测后，运行：
+
+```bash
+bash cloud/run.sh -m fusion.next.budget
+bash cloud/run.sh -m fusion.next.experiment F3
+bash cloud/run.sh -m fusion.next.experiment F4
+bash cloud/run.sh -m fusion.next.experiment F5
+```
+
+预算入口先根据实际速度确定固定更新预算，再依次减少宽度和配置数。它列入全部信息范围的 OOF、三种子、七组机制及条件式最终重训，不符合包级预算时拒绝冻结搜索。正式实验入口只接受通过 F2 且与冻结代码身份一致的配置。
+
+`freeze` 提供 F6 前的候选系统、最强单模型、简单融合及统计阈值冻结入口；`stream` 提供完成柱验证、延迟重放时间标记、重复与缺失输入处理和状态恢复；`inference` 提供固定四专家及三种子均值的加载接口。这些代码存在不表示已完成实际重放、延迟或预测验收。
+
 ## 实现细节与仍待实测的项目
 
 - 历史窗口为 48/96/240，所有主比较使用共同合格起点；开盘可接前一交易日历史，隔夜跳空单列。
 - 缺失只向前填充，保留显式掩码；未来 12 根标签柱必须均被观测，且不跨收盘。
-- 联合训练按股票、交易日均衡采样。融合训练每五次更新中一次使用 2021—2022 年的辅助监督，其余使用此前季度的 OOF 专家输入。这个顺序在 10%/30%/100% 训练前缀之间保持连续。
+- 联合训练按股票、交易日均衡采样，统一覆盖 2021 年起的历史。同一批次中，2021—2022 年样本使用联合分支的辅助读出；此后样本接入此前季度的真实 OOF 专家。早期历史不设固定百分比，避免改变各交易日的权重。采样和更新顺序在 10%/30%/100% 训练前缀之间保持连续。
 - 多股训练的末段可按冻结配置适配 AAPL；只训练 AAPL 的配对对照使用相同更新预算。
 - 检查点保存可训练权重、持久缓冲、优化器、全部随机数流、采样器和训练段缩放器。冻结骨干通过固定权重身份重建；LoRA 不回退为全参数训练。前向计算中途失败时保留上一个完整检查点。
 - 冻结表示缓存按权重、预处理与代码、股票、时间边界和输入范围分开。LoRA、随机骨干不能使用预训练骨干缓存；低精度存储必须先通过数值准入。

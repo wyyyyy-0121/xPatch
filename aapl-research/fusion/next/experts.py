@@ -14,6 +14,12 @@ from .hardware import ResourceGuard
 NAMES=('ridge','lightgbm','xpatch','patchtst')
 
 
+def scope_key(information='ohlcv',training_scope='multistock',market_information=True):
+    if information not in ('ohlcv','close') or training_scope not in ('multistock','aapl'):
+        raise ValueError('Expert scope outside prescribed comparison')
+    return information+'_'+training_scope+('_market' if market_information else '_no_market')
+
+
 def balanced_rows(panel,fit_end,seed,per_day=16,only_aapl=False):
     rng=np.random.default_rng(seed);stocks=[];rows=[];weights=[]
     chosen=[(i,s) for i,s in enumerate(panel.stocks) if not only_aapl or s=='AAPL']
@@ -73,6 +79,8 @@ def fit_cpu(panel,config,fit_end,directory,seed=2026):
             'fit_seconds':time.perf_counter()-start,'model_sha256':digest(model_path),'target_unit':unit,
             'resources':guard.check(),'created_at_utc':utc_now()}
     write_json(directory/'summary.json',report)
+    write_json(directory/'scalers.json',{name:{key:value.tolist() if isinstance(value,np.ndarray) else value for key,value in row.items()}
+                                        for name,row in scalers.items()})
     return predict,scalers,report
 
 
@@ -86,11 +94,13 @@ def predict_cpu(predict,panel,stock,rows,config,scalers,batch_size=1024):
     return values
 
 
-def write_oof(panel,information,fold,predictions,configurations):
+def write_oof(panel,information,fold,predictions,configurations,training_scope='multistock',market_information=True):
     """Predictions keyed by stock, with four columns in NAMES order; never in-sample."""
     if fold['quarter']=='2026Q2':raise ValueError('Q2 confirmation must not enter development OOF storage')
-    if set(predictions)!=set(panel.stocks):raise ValueError('OOF quarter missing an admitted training stock')
-    root=OUT/'oof'/information;root.mkdir(parents=True,exist_ok=True)
+    required=panel.stocks if training_scope=='multistock' else ['AAPL']
+    if set(predictions)!=set(required):raise ValueError('OOF quarter missing an admitted training stock')
+    key=scope_key(information,training_scope,market_information)
+    root=OUT/'oof'/key;root.mkdir(parents=True,exist_ok=True)
     receipt_path=root/(fold['quarter']+'.json')
     if receipt_path.exists():raise ValueError('Completed OOF quarter is immutable')
     files={}

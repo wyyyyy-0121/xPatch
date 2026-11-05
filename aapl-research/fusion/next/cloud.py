@@ -71,6 +71,7 @@ def bundle(include_data=False):
     export=OUT/'cloud';export.mkdir(parents=True,exist_ok=True)
     for name in ('bootstrap.sh','run.sh','requirements.txt'):
         items['cloud/'+name]=ROOT/'fusion/next/cloud_assets'/name
+        items['fusion/next/cloud_assets/'+name]=ROOT/'fusion/next/cloud_assets'/name
     receipt={'created_at_utc':utc_now(),'plan_sha256':digest(PLAN),'contains_development_data':include_data,
              'credentials_included':False,'sealed_data_included':False,
              'files':{name:{'sha256':digest(path),'bytes':path.stat().st_size} for name,path in items.items()}}
@@ -115,16 +116,20 @@ for name in names:
  module=importlib.import_module(name)
  assert pathlib.Path(module.__file__).is_relative_to(root)
 from fusion.next.foundation import manifest
+from fusion.next.common import source_identity
 receipt=manifest()
 assert receipt['revision']
-print(json.dumps({'isolated_modules_imported':len(names),'foundation_manifest_portable':True}))
+print(json.dumps({'isolated_modules_imported':len(names),'foundation_manifest_portable':True,'source_identity':source_identity()}))
 """
         env=dict(os.environ,PYTHONPATH=str(isolated),PYTHONDONTWRITEBYTECODE='1')
         result=subprocess.run([sys.executable,'-c',program],cwd=isolated,env=env,capture_output=True,text=True,timeout=60)
         if result.returncode:raise RuntimeError('Isolated bundle import failed: '+result.stderr[-3000:])
+        from .common import source_identity
+        imported=json.loads(result.stdout)
+        if imported['source_identity']!=source_identity():raise ValueError('Packaged source identity differs from local source')
         verification={'archive_sha256':digest(path),'files_hash_verified':len(receipt['files']),
                       'no_model_instantiated':True,'no_remote_connection':True,
-                      'isolated_import':json.loads(result.stdout),'verified_at_utc':utc_now(),
+                      'isolated_import':imported,'verified_at_utc':utc_now(),
                       'contains_development_data':receipt['contains_development_data']}
     write_json(OUT/'cloud/bundle_verification.json',verification)
     return verification

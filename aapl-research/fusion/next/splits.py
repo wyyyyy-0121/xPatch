@@ -27,8 +27,9 @@ def manifest(dates):
     value={'plan_sha256':digest(PLAN),'folds':records,'main_validation':list(VALIDATION),
            'early_history':{'start':'2021-01-04','end':'2022-12-31',
                'expert_use':'All supervised expert fits include the available 2021 onward history',
-               'fusion_use':'One in five updates trains an auxiliary readout on 2021-2022; other updates use earlier-quarter OOF experts only, including in the first 10% halving prefix',
-               'pretraining_budget_fraction':.2,'fabricated_or_in_sample_expert_inputs':False},
+               'fusion_use':'One common uniform stock/day sampler covers 2021 onward; pre-2023 rows train an auxiliary readout of the shared branches, later rows use earlier-quarter OOF experts; both can appear in the same batch',
+               'pretraining_budget_fraction':'determined by the number of eligible days, without a fixed age weight',
+               'fabricated_or_in_sample_expert_inputs':False},
            'Q2':'blocked until system/process/control freeze; known process-confirmation status',
            'Q3':'blocked for every symbol; unavailable to this module'}
     value['identity']=identity(value)
@@ -37,10 +38,10 @@ def manifest(dates):
         previous=read_json(path)
         if previous['folds']!=records or (OUT/'search_manifest.json').exists():
             raise ValueError('Fixed time-split specification changed after freeze')
-        write_json(OUT/'pre_score_recipe_correction.json',{
+        write_json(OUT/('pre_score_recipe_correction_'+previous['identity'][:12]+'.json'),{
             'previous_time_splits_sha256':digest(path),'previous_early_history_recipe':previous['early_history'],
             'corrected_early_history_recipe':value['early_history'],
-            'reason':'A front-loaded 20% warm-up would leave the first 10% halving score without main gate updates; interleave 1 in 5 auxiliary updates instead',
+            'reason':'Use the same uniform stock/day sampler for early and OOF periods; a fixed early-history percentage would change relative day weights',
             'new_scope_validation_scores_exist':False,'search_frozen':False})
     write_json(path,value)
     return value

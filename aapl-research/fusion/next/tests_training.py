@@ -16,6 +16,8 @@ from .splits import fold
 from .common import OUT,digest
 from .expert_models import NativeExpert
 from .trainer import Trainer
+from .trainer import loss_for
+from .models import NeuralFusion
 from .tests_data import two_sessions
 
 
@@ -125,3 +127,42 @@ def test_actual_trainer_halving_and_mid_forward_failure_preserve_exact_resume():
         restored.resume();assert restored.step==2
         restored.run_until(4)
         for name,value in expected.items():torch.testing.assert_close(value,checkpoint.changing_state(restored.model)[name],rtol=0,atol=0)
+        from .inference import checkpoint_model
+        loaded,scalers,recipe=checkpoint_model(panel,restored.path,config,'cpu')
+        batch=panel.windows([0,0],[430,700],config,scalers,include_labels=False)
+        restored.model.eval()
+        torch.testing.assert_close(loaded(batch)['prediction'],restored.model(batch)['prediction'],rtol=0,atol=0)
+
+
+def test_fusion_uses_one_day_balanced_sampler_for_early_and_OOF_history():
+    frame,starts,ends=two_sessions()
+    later=frame.copy();later.index=later.index+pd.DateOffset(years=2)
+    all_frame=pd.concat([frame,later]);all_starts=np.tile(starts,2);all_ends=np.r_[ends,ends+780]
+    panel=make_panel(all_frame,all_starts,all_ends)
+    class Experts:
+        available={0:panel.dates>='2023-01-01'}
+        sources={'test':'known causal OOF'}
+        def predict(self,stocks,rows):
+            assert np.all(panel.dates[rows]>='2023-01-01')
+            return np.full((len(rows),4),.0001,dtype=np.float32)
+    config={'family':'fusion','lookback':48,'hidden':32,'projection':64,'market_encoder':'tcn',
+            'residual_cap':.25,'foundation':False,'market':True,'lr':.001,'batch_size':32,'total_updates':2,'loss':'raw'}
+    parent=OUT/'training';parent.mkdir(parents=True,exist_ok=True)
+    with TemporaryDirectory(prefix='unit_balance_',dir=parent) as directory:
+        from pathlib import Path
+        net=NeuralFusion(config,12,12,1,device='cpu')
+        trainer=Trainer(panel,net,config,'2023-01-05',Path(directory).name,experts=Experts(),device='cpu')
+        sampler=trainer.samplers['main'];_,rows=sampler.sample(20000)
+        assert np.mean(panel.dates[rows]<'2023-01-01')==pytest.approx(.5,abs=.025)
+        seen=[]
+        hook=net.register_forward_pre_hook(lambda module,args:seen.append(args[0]['early_history_mask'].clone()))
+        trainer.run_until(2);hook.remove()
+        assert any(mask.any() and (~mask).any() for mask in seen)
+
+
+def test_early_history_objective_routes_gradients_to_auxiliary_readout_only():
+    main=torch.tensor([2.,2.],requires_grad=True);aux=torch.tensor([3.,3.],requires_grad=True)
+    batch={'early_history_mask':torch.tensor([True,False]),'target':torch.zeros(2),'target_scale':torch.ones(2)}
+    loss=loss_for({'prediction':main,'auxiliary_prediction':aux},batch,{'loss':'raw','raw_loss_unit':1.})
+    loss.backward()
+    torch.testing.assert_close(main.grad,torch.tensor([0.,2.]));torch.testing.assert_close(aux.grad,torch.tensor([3.,0.]))

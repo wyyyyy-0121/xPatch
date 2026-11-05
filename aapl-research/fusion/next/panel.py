@@ -22,6 +22,7 @@ class Panel:
     def __post_init__(self):
         clock=self.stamps.tz_convert('America/New_York')
         self.clock_minute=(clock.hour.to_numpy()*60+clock.minute.to_numpy()-570).astype(np.int16)
+        self.session_ids=np.cumsum(np.r_[True,self.dates[1:]!=self.dates[:-1]])-1
 
     @classmethod
     def load(cls):
@@ -101,21 +102,21 @@ class Panel:
                 np.sin(2*np.pi*phase[select]),np.cos(2*np.pi*phase[select]),phase[select],
                 np.where(raw[:,-1,7]>0,raw[:,-1,11],0.) if close_only else raw[:,-1,8],raw[:,:,9].mean(1)])
         background=[]
-        for name in self.background:
+        for name in (self.background if config.get('market_information',True) else []):
             s=scalers[name];raw=np.asarray(self.features[name][idx],dtype=np.float32)
             minute=self.clock_minute[idx]
             raw[:,:,4]-=s['volume_seasonal'][minute]
             background.append(np.clip((raw-s['center'])/s['std'],-10,10))
-        market=np.concatenate(background,axis=2)
+        market=np.concatenate(background,axis=2) if background else np.empty((len(rows),length,0),dtype=np.float32)
         if close_only:
             local=local[:,:,[11,7,9]]
-            market=np.concatenate([m[:,:,[11,7,9]] for m in np.split(market,len(self.background),axis=2)],axis=2)
+            if background:market=np.concatenate([m[:,:,[11,7,9]] for m in np.split(market,len(self.background),axis=2)],axis=2)
             # Same close history only; do not quietly retain volume in the FM branch.
             foundation=np.stack([self.features[self.stocks[int(s)]][idx[i],11] for i,s in enumerate(stock_ids)])[:,:,None]
         if experts is None:experts=np.zeros((len(rows),4),dtype=np.float32)
         batch={'local':local,'market':market,'foundation_context':foundation,'sigma12':sigma,
                'state':state,'stock':stock_ids,'experts':np.asarray(experts,dtype=np.float32),
-               'target_scale':target_scale,'row':rows}
+               'target_scale':target_scale,'row':rows,'session_id':self.session_ids[rows]}
         if include_labels:batch.update(target=labels,step_targets=steps)
         if cached is not None:batch['foundation_cached']=np.asarray(cached,dtype=np.float32)
         if not all(np.isfinite(v).all() for k,v in batch.items() if k!='target'):

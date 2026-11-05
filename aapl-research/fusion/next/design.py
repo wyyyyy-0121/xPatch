@@ -3,7 +3,7 @@ from itertools import product
 import math
 import numpy as np
 
-from .common import OUT, ROOT, PLAN, digest, identity, read_json, write_json, utc_now
+from .common import OUT, ROOT, PLAN, digest, identity, read_json, write_json, utc_now,source_identity
 from .splits import VALIDATION
 
 
@@ -86,7 +86,7 @@ def freeze(specification,projection):
     if not projection.get('all_required_work_included'):raise ValueError('OOF/seeds/mechanisms/retraining/deployment must all be budgeted')
     path=OUT/'search_manifest.json'
     if path.exists():raise ValueError('Search is already frozen; do not silently replace it')
-    value={**specification,'frozen':True,'frozen_at_utc':utc_now(),'projection':projection,
+    value={**specification,'source_identity':source_identity(),'frozen':True,'frozen_at_utc':utc_now(),'projection':projection,
            'performance_admission_sha256':digest(OUT/'performance_admission.json')}
     value['identity']=identity(value);write_json(path,value)
     return value

@@ -120,6 +120,11 @@ class NeuralFusion(nn.Module):
         self.plain=nn.Linear(hidden,1)
         # Early-history pretraining is supervised without inventing in-sample expert predictions.
         self.auxiliary=nn.Linear(hidden,1)
+        inactive=(self.gate,self.shrink,self.residual) if config.get('fusion_type','gate')=='plain_mlp' else (self.plain,)
+        for head in inactive:
+            for parameter in head.parameters():parameter.requires_grad=False
+        if config.get('fusion_type','gate')!='plain_mlp' and config['residual_cap']==0:
+            for parameter in self.residual.parameters():parameter.requires_grad=False
         nn.init.zeros_(self.residual.weight);nn.init.zeros_(self.residual.bias)
         nn.init.zeros_(self.gate.weight);nn.init.zeros_(self.gate.bias)
         with torch.no_grad():self.gate.bias[-1]=1.5

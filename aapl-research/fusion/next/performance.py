@@ -16,6 +16,7 @@ from .trainer import optimizer_for, loss_for
 from .checkpoint import changing_state, capture_rng, restore_rng, save, load
 from .accounting import Usage
 from .cache import RepresentationCache
+from .experts import fit_cpu,predict_cpu
 
 
 BASE={'family':'fusion','lookback':240,'projection':128,'hidden':64,'market_encoder':'transformer',
@@ -65,6 +66,40 @@ def end_to_end(model,panel,ids,scalers,config,representation_cache=None):
             'includes_sampling_windows_transfer_cache_IO_optimizer':True}
 
 
+@torch.inference_mode()
+def inference_timing(model,panel,ids,scalers,config):
+    model.eval();torch.cuda.synchronize();start=time.perf_counter();count=0
+    for stocks,rows in ids:
+        batch=panel.windows(stocks,rows,config,scalers,device='cuda',include_labels=False)
+        batch['experts']=primitive_experts(batch)
+        with torch.autocast('cuda',dtype=torch.bfloat16,enabled=config.get('precision')=='bf16'):
+            prediction=model(batch)['prediction']
+        if not torch.isfinite(prediction).all():raise FloatingPointError('F2 nonfinite inference')
+        count+=len(rows)
+    torch.cuda.synchronize();elapsed=time.perf_counter()-start
+    return {'seconds':elapsed,'origins':count,'seconds_per_origin':elapsed/count,'includes_windows_transfer':True}
+
+
+def cpu_admission():
+    if (OUT/'search_manifest.json').exists():raise ValueError('CPU admission must precede score/search freeze')
+    if not read_json(OUT/'data_audit.json')['passed']:raise ValueError('Complete F1 audit required')
+    panel=Panel.load();config={'lookback':240,'information':'ohlcv','training_scope':'multistock','rows_per_day':16,
+        'family':'lightgbm','trees':1000,'num_leaves':31,'max_depth':-1,'min_child_samples':100,
+        'learning_rate':.03,'reg_lambda':10.,'colsample_bytree':1.,'cpu_threads':min(8,len(__import__('os').sched_getaffinity(0)))}
+    report={'started_at_utc':utc_now(),'source_identity':source_identity(),'plan_sha256':digest(PLAN),
+            'training_data_only':True,'official_validation_scores_read':False,'measurements':{}}
+    with Usage('performance','F2 CPU tree/ridge end-to-end',gpu=False):
+        for family in ('lightgbm','ridge'):
+            cfg={**config,'family':family,'alpha':1000.}
+            predict,scalers,measurement=fit_cpu(panel,cfg,'2022-12-30',OUT/'performance/cpu'/family)
+            rows=panel.origins['AAPL'];rows=rows[(panel.dates[rows]>='2022-10-01')&(panel.dates[rows]<='2022-12-30')][:4096]
+            start=time.perf_counter();predict_cpu(predict,panel,np.zeros(len(rows),dtype=np.int64),rows,cfg,scalers)
+            measurement['prediction_seconds_per_origin']=(time.perf_counter()-start)/len(rows)
+            measurement['training_calendar_days']=int(len(np.unique(panel.dates[panel.dates<='2022-12-30'])))
+            report['measurements'][family]=measurement
+    report['completed_at_utc']=utc_now();write_json(OUT/'performance_cpu.json',report);return report
+
+
 def run(batch_size=64,stress_seconds=900):
     if stress_seconds<900:raise ValueError('F2 continuous stress must last at least 15 minutes')
     device=runtime(2026)
@@ -79,7 +114,9 @@ def run(batch_size=64,stress_seconds=900):
             'official_validation_scores_read':False,'passed':False,'measurements':{}}
     path=OUT/'performance_admission.json';write_json(path,report)
     with Usage('performance','F2 maximum-shape and numerical/resume admission') as usage:
-        guard=ResourceGuard('cuda');model=NeuralFusion(config,12,12*len(panel.background),len(panel.stocks),'cuda').to('cuda')
+        guard=ResourceGuard('cuda');initialization=time.perf_counter()
+        model=NeuralFusion(config,12,12*len(panel.background),len(panel.stocks),'cuda').to('cuda')
+        report['measurements']['fusion_initialization_seconds']=time.perf_counter()-initialization
         batches=[]
         for _ in range(8):
             stocks,rows=sampler.sample(batch_size)
@@ -118,6 +155,7 @@ def run(batch_size=64,stress_seconds=900):
             rounded=model(half)['prediction']
         checks['fp16_cache_prediction_rmse']=float(((full-rounded).square().mean().sqrt()/unit).cpu())<.001
         ids=[sampler.sample(batch_size) for _ in range(24)]
+        report['measurements']['frozen_inference']=inference_timing(model,panel,ids[:8],scalers,config)
         model.load_state_dict(initial,strict=False);restore_rng(rng)
         report['measurements']['end_to_end_raw']=end_to_end(model,panel,ids,scalers,config)
         representation_cache=RepresentationCache(panel,model.foundation,config,allowed_end='2022-12-30')
@@ -150,6 +188,8 @@ def run(batch_size=64,stress_seconds=900):
             native_config={**config,'family':family,'patch':16,'stride':8,'d_model':64}
             native=NativeExpert(native_config,12*(1+len(panel.background)),len(panel.stocks)).to('cuda')
             report['measurements'][family]=benchmark(native,batches,native_config)
+            report['measurements'][family+'_end_to_end']=end_to_end(native,panel,ids,scalers,native_config)
+            report['measurements'][family+'_inference']=inference_timing(native,panel,ids[:8],scalers,native_config)
             del native;gc.collect();torch.cuda.empty_cache();guard.check();usage.record()
         # Maximum LoRA rank, largest context, all market variables, multistock batch.
         lora_config={**config,'foundation_mode':'lora','precision':'fp32'}
@@ -181,6 +221,8 @@ def run(batch_size=64,stress_seconds=900):
         report['measurements']['lora_stress']={'seconds':elapsed,'updates':steps,'seconds_per_update':elapsed/steps,
              'resources':guard.check(),'adapter_parameter_names':adapters,
              'new_trainable_parameters':sum(p.numel() for p in model.parameters() if p.requires_grad)}
+        report['measurements']['lora_inference']=inference_timing(model,panel,ids[:8],scalers,lora_config)
+        report['measurements']['lora_end_to_end']=end_to_end(model,panel,ids[:8],scalers,lora_config)
         # FP32 can remain the admitted policy when optional lower precision fails.
         optional={k for k in checks if k.startswith('bf16_')}|{'fp16_cache_prediction_rmse'}
         report.update(checks=checks,numerical_and_resource_checks_passed=all(v for k,v in checks.items() if k not in optional),
@@ -192,5 +234,6 @@ def run(batch_size=64,stress_seconds=900):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('--batch-size',type=int,choices=(32,64),default=64)
+    parser.add_argument('--cpu-only',action='store_true')
     parser.add_argument('--stress-seconds',type=int,default=900);args=parser.parse_args()
-    run(args.batch_size,args.stress_seconds)
+    cpu_admission() if args.cpu_only else run(args.batch_size,args.stress_seconds)
