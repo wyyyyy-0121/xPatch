@@ -8,7 +8,7 @@ import numpy as np
 import torch
 
 from .common import OUT, PLAN, digest, read_json, write_json, utc_now,source_identity
-from .hardware import runtime, inspect_hardware, ResourceGuard
+from .hardware import runtime, inspect_hardware, ResourceGuard,gpu_telemetry
 from .panel import Panel, BalancedSampler
 from .models import NeuralFusion,MarketBranch
 from .expert_models import NativeExpert
@@ -217,18 +217,23 @@ def run(batch_size=64,stress_seconds=900):
         model.load_state_dict(initial,strict=False);restore_rng(rng)
         del initial
         model.train();opt=optimizer_for(model,lora_config,'cuda');torch.cuda.synchronize();start=time.perf_counter();steps=0
+        telemetry=[{'elapsed_seconds':0.,**gpu_telemetry()}];last_telemetry=start
         while time.perf_counter()-start<stress_seconds:
             batch={k:v for k,v in batches[steps%len(batches)].items() if k!='foundation_cached'}
             train_batch(model,opt,batch,lora_config);steps+=1
             if steps%10==0:
                 resources=guard.check();usage.record()
-                write_json(OUT/'performance_stress_progress.json',{'seconds':time.perf_counter()-start,'updates':steps,'resources':resources,'Q3_accessed':False})
+                if time.perf_counter()-last_telemetry>=60:
+                    telemetry.append({'elapsed_seconds':time.perf_counter()-start,**gpu_telemetry()});last_telemetry=time.perf_counter()
+                write_json(OUT/'performance_stress_progress.json',{'seconds':time.perf_counter()-start,'updates':steps,
+                           'resources':resources,'gpu_telemetry':telemetry,'Q3_accessed':False})
         torch.cuda.synchronize();elapsed=time.perf_counter()-start
         adapters=[name for name,p in model.named_parameters() if p.requires_grad and 'lora_' in name]
         checks['real_LoRA_parameters_attached']=bool(adapters)
         checks['maximum_shape_continuous_15min']=elapsed>=900 and steps>0
         report['measurements']['lora_stress']={'seconds':elapsed,'updates':steps,'seconds_per_update':elapsed/steps,
              'resources':guard.check(),'adapter_parameter_names':adapters,
+             'gpu_telemetry':telemetry+[{'elapsed_seconds':elapsed,**gpu_telemetry()}],
              'new_trainable_parameters':sum(p.numel() for p in model.parameters() if p.requires_grad)}
         report['measurements']['lora_inference']=inference_timing(model,panel,ids[:8],scalers,lora_config)
         report['measurements']['lora_end_to_end']=end_to_end(model,panel,ids[:8],scalers,lora_config)

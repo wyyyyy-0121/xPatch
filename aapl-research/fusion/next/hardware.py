@@ -36,6 +36,20 @@ def runtime(seed=2026):
     return 'cpu'  # Large neural experiments have explicitly moved to the user's cloud GPU.
 
 
+def gpu_telemetry():
+    sample={'recorded_at_utc':utc_now(),'query_fields':'temperature.gpu,clocks.sm,power.draw,utilization.gpu,memory.used,memory.total'}
+    try:
+        sample['values_csv']=subprocess.check_output(['nvidia-smi','--query-gpu='+sample['query_fields'],
+              '--format=csv,noheader'],text=True,timeout=10).strip()
+    except (OSError,subprocess.SubprocessError):return {**sample,'available':False}
+    sample['available']=True
+    try:
+        sample['clock_event_reasons']=subprocess.check_output(['nvidia-smi','--query-gpu=clocks_event_reasons.active',
+              '--format=csv,noheader'],text=True,stderr=subprocess.DEVNULL,timeout=5).strip()
+    except (OSError,subprocess.SubprocessError):sample['clock_event_reasons']=None
+    return sample
+
+
 def inspect_hardware(require_cuda=False):
     packages={}
     for name in ('torch','numpy','pandas','scipy','scikit-learn','lightgbm',
