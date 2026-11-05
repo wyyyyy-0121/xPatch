@@ -1,0 +1,127 @@
+"""Resume the actual optimizer/RNG/sampler stream, and audit information boundaries."""
+from types import SimpleNamespace
+import random
+from tempfile import TemporaryDirectory
+
+import numpy as np
+import pandas as pd
+import pytest
+import torch
+from torch import nn
+
+from . import checkpoint
+from .data import CHANNELS, causal_transform, eligible_origins
+from .panel import Panel, BalancedSampler
+from .splits import fold
+from .common import OUT,digest
+from .expert_models import NativeExpert
+from .trainer import Trainer
+from .tests_data import two_sessions
+
+
+def seed():
+    torch.manual_seed(19);random.seed(19);np.random.seed(19)
+
+
+def toy_sampler():
+    panel=SimpleNamespace(stocks=['AAPL','MSFT'],dates=np.array(['2021-01-04']*20+['2021-01-05']*20),
+                          origins={'AAPL':np.arange(40),'MSFT':np.arange(40)})
+    return BalancedSampler(panel,'2021-01-05',83)
+
+
+def model():
+    net=nn.Sequential(nn.Linear(3,8),nn.BatchNorm1d(8),nn.Dropout(.3),nn.Linear(8,1))
+    # An immutable parameter must be reconstructed, not duplicated in each checkpoint.
+    net.register_parameter('fixed',nn.Parameter(torch.ones(1),requires_grad=False))
+    return net
+
+
+def update(net,opt,sampler):
+    stocks,rows=sampler.sample(8)
+    x=torch.column_stack([torch.as_tensor(rows).float()/40,torch.as_tensor(stocks).float(),torch.randn(8)])
+    x=x+random.random()*.01+float(np.random.random())*.01
+    opt.zero_grad();loss=(net(x)[:,0]-torch.sin(x[:,0])).square().mean();loss.backward();opt.step()
+    return float(loss.detach())
+
+
+def test_interrupted_training_matches_continuous_including_batchnorm_and_dropout(tmp_path):
+    seed();a=model();oa=torch.optim.AdamW(a.parameters(),lr=.01);sa=toy_sampler()
+    expected=[update(a,oa,sa) for _ in range(12)]
+    seed();b=model();ob=torch.optim.AdamW(b.parameters(),lr=.01);sb=toy_sampler()
+    for _ in range(6):update(b,ob,sb)
+    path=tmp_path/'resume.pt';recipe={'seed':19,'total_updates':12,'base':'frozen identity'}
+    checkpoint.save(path,b,ob,{'main':sb},6,recipe)
+    assert 'fixed' not in checkpoint.changing_state(b)
+    # New model initialization intentionally consumes RNG before restore.
+    c=model();oc=torch.optim.AdamW(c.parameters(),lr=.01);sc=toy_sampler()
+    step,_=checkpoint.load(path,c,oc,{'main':sc},recipe);assert step==6
+    actual=[update(c,oc,sc) for _ in range(6)]
+    np.testing.assert_array_equal(actual,expected[6:])
+    for name,value in a.state_dict().items():torch.testing.assert_close(value,c.state_dict()[name],rtol=0,atol=0)
+    with pytest.raises(ValueError,match='recipe'):
+        checkpoint.load(path,c,oc,{'main':sc},{**recipe,'total_updates':13})
+
+
+def test_full_trading_day_is_purged_and_Q2_Q3_have_no_development_entry():
+    dates=np.array(['2022-12-28','2022-12-29','2022-12-30','2023-01-03'])
+    value=fold(dates,'2023Q1')
+    assert value['fit_end']=='2022-12-29' and value['purged_full_session']=='2022-12-30'
+    with pytest.raises(ValueError,match='confirmation'):fold(dates,'2026Q2')
+    with pytest.raises(ValueError,match='Q3'):fold(dates,'2026Q3')
+
+
+def make_panel(frame,starts,ends):
+    features,observed,close,_=causal_transform(frame,starts);origins=eligible_origins(observed,ends)
+    y=np.full(len(frame),np.nan,dtype=np.float32);y[origins]=np.log(close[origins+12]/close[origins])
+    return Panel(['AAPL'],['SPY'],frame.index.strftime('%Y-%m-%d').to_numpy(),frame.index,
+                 {n:features.copy() for n in ('AAPL','SPY')},{n:observed.copy() for n in ('AAPL','SPY')},
+                 {n:origins.copy() for n in ('AAPL','SPY')},{n:y.copy() for n in ('AAPL','SPY')})
+
+
+def test_close_only_path_does_not_retain_open_high_low_or_volume():
+    frame,starts,ends=two_sessions();first=make_panel(frame,starts,ends)
+    changed=frame.copy();changed['high']*=1.05;changed['low']*=.95;changed['open']*=1.01;changed['volume']*=99
+    second=make_panel(changed,starts,ends)
+    config={'lookback':240,'information':'close'};rows=np.array([390,430,700]);stocks=np.zeros(3,dtype=np.int64)
+    a=first.windows(stocks,rows,config,first.scaler('2021-01-05'))
+    b=second.windows(stocks,rows,config,second.scaler('2021-01-05'))
+    for field in ('local','market','foundation_context','state','sigma12','target'):
+        torch.testing.assert_close(a[field],b[field],rtol=0,atol=0)
+
+
+def test_prediction_window_never_reads_targets_or_future_rows():
+    frame,starts,ends=two_sessions();panel=make_panel(frame,starts,ends);scalers=panel.scaler('2021-01-04')
+    class NoTargets:
+        def __getitem__(self,key):raise AssertionError('Inference read a future target')
+    class PastOnly:
+        def __init__(self,array):self.array=array
+        def __getitem__(self,index):
+            assert np.max(index)<=450,'Inference read a future feature'
+            return self.array[index]
+    panel.targets=NoTargets();panel.features={k:PastOnly(v) for k,v in panel.features.items()}
+    result=panel.windows([0],[450],{'lookback':240},scalers,include_labels=False)
+    assert 'target' not in result and 'step_targets' not in result
+    with pytest.raises(ValueError,match='history'):panel.windows([0],[5],{'lookback':48},scalers,include_labels=False)
+
+
+def test_actual_trainer_halving_and_mid_forward_failure_preserve_exact_resume():
+    frame,starts,ends=two_sessions();panel=make_panel(frame,starts,ends)
+    config={'family':'xpatch','lookback':48,'lr':.001,'batch_size':4,'total_updates':4,'loss':'raw'}
+    parent=OUT/'training';parent.mkdir(parents=True,exist_ok=True)
+    with TemporaryDirectory(prefix='unit_resume_',dir=parent) as directory:
+        from pathlib import Path
+        prefix=Path(directory).name
+        torch.manual_seed(31)
+        continuous=Trainer(panel,NativeExpert(config,24,1),config,'2021-01-05',prefix+'/continuous',device='cpu')
+        continuous.run_until(4);expected=checkpoint.changing_state(continuous.model)
+        torch.manual_seed(31)
+        first=Trainer(panel,NativeExpert(config,24,1),config,'2021-01-05',prefix+'/resumed',device='cpu')
+        first.run_until(2);before=digest(first.path)
+        def fault(*args):raise RuntimeError('injected after forward changed BatchNorm buffers')
+        hook=first.model.register_forward_hook(fault)
+        with pytest.raises(RuntimeError,match='injected'):first.run_until(4)
+        hook.remove();assert digest(first.path)==before
+        restored=Trainer(panel,NativeExpert(config,24,1),config,'2021-01-05',prefix+'/resumed',device='cpu')
+        restored.resume();assert restored.step==2
+        restored.run_until(4)
+        for name,value in expected.items():torch.testing.assert_close(value,checkpoint.changing_state(restored.model)[name],rtol=0,atol=0)
