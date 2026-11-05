@@ -4,6 +4,7 @@ import pandas as pd
 
 from .budget import work_items
 from .design import draft,halving_units,halving_survivors
+from .experiment import lora_configs
 from . import budget
 from .common import OUT,write_json
 from pathlib import Path
@@ -33,6 +34,18 @@ def test_budget_reduced_search_keeps_two_full_budget_finalists():
     assert halving_survivors(24)==8 and halving_survivors(16)==6
     assert halving_survivors(2)==halving_survivors(3)==2
     assert halving_units(2)==2.
+
+
+def test_actual_lora_search_preserves_promoted_structure_and_matches_its_separate_f2_budget():
+    spec=draft();spec['updates']={'xpatch':2000,'patchtst':2000,'fusion':4000,'lora':1000}
+    top=[{**cfg,'total_updates':4000,'early_stopping_patience_updates':4000} for cfg in spec['groups']['fusion'][:2]]
+    actual=lora_configs(top,spec)
+    for index,config in enumerate(actual):
+        assert config['total_updates']==config['early_stopping_patience_updates']==1000
+        assert config['lookback']==top[index%2]['lookback'] and config['projection']==top[index%2]['projection']
+        assert not config['representation_cache'] and config['foundation_mode']=='lora'
+    assert {config['rank'] for config in actual}>={8,16}
+    assert all(config['total_updates']==4000 for config in top)
 
 
 def test_projection_counts_scaler_fits_and_slower_market_encoder(monkeypatch):

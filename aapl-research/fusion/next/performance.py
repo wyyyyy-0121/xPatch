@@ -87,7 +87,7 @@ def cpu_admission():
         'family':'lightgbm','trees':1000,'num_leaves':31,'max_depth':-1,'min_child_samples':100,
         'learning_rate':.03,'reg_lambda':10.,'colsample_bytree':1.,'cpu_threads':min(8,len(__import__('os').sched_getaffinity(0)))}
     report={'started_at_utc':utc_now(),'source_identity':source_identity(),'plan_sha256':digest(PLAN),
-            'training_data_only':True,'official_validation_scores_read':False,'measurements':{}}
+            'training_data_only':True,'official_validation_scores_read':False,'hardware':inspect_hardware(False),'measurements':{}}
     with Usage('performance','F2 CPU tree/ridge end-to-end',gpu=False):
         for family in ('lightgbm','ridge'):
             cfg={**config,'family':family,'alpha':1000.}

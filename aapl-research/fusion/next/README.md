@@ -96,7 +96,13 @@ F6 完成后，在云端生成回传包，保留本地复核所需的原始开�
 bash cloud/run.sh -m fusion.next.cloud --return-results
 ```
 
-将 `outputs/fusion_next/cloud/return_bundle.tar` 和单独的 `return_receipt.json` 带回本地，先核验整包与 `return_manifest.json` 的逐文件 SHA，再恢复到相同项目目录。仅复制部署权重不足以执行 F7 的独立放行复核。回传包不含 Q3 或原始开发行情；本地原有 F1 数据保持原身份。
+将 `outputs/fusion_next/cloud/return_bundle.tar` 和单独的 `return_receipt.json` 带回本地，执行：
+
+```bash
+AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m fusion.next.restore --archive outputs/fusion_next/cloud/return_bundle.tar --receipt outputs/fusion_next/cloud/return_receipt.json
+```
+
+恢复入口先在隔离目录核验整包、全部成员、逐文件 SHA、代码和计划身份，再写入结果。已有不同模型或预测时拒绝整次恢复，保留冲突清单；完全相同的结果支持重复执行。云端 CPU 计时用于云端预算，本地预检计时另存哈希命名的原始副本。仅复制部署权重不足以执行 F7 的独立放行复核。回传包不含 Q3 或原始开发行情；本地原有 F1 数据保持原身份。
 
 只有新开发门槛和固定 Q2 确认均通过后，才能在本地运行一次全天最终检验：
 

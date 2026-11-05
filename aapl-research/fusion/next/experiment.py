@@ -234,6 +234,19 @@ def mechanism_configs(top,variant):
     return result
 
 
+def lora_configs(top,spec):
+    # F2 can assign the slower adapter a different update budget. Preserve the
+    # promoted architecture, but bind the actual fit to the LoRA work projection.
+    result=[]
+    for index,adapter in enumerate(spec['groups']['lora']):
+        base=top[index%len(top)]
+        config={**base,'foundation_mode':'lora','rank':adapter['rank'],'backbone_lr':adapter['backbone_lr'],
+                'representation_cache':False,'total_updates':spec['updates']['lora'],
+                'early_stopping_patience_updates':spec['updates']['lora']}
+        config['candidate_id']='lora_'+identity(config)[:12];result.append(config)
+    return result
+
+
 def execute(stage):
     spec=admitted();panel=Panel.load()
     if stage=='F3':
@@ -257,11 +270,7 @@ def execute(stage):
         if not (OUT/'F4_complete.json').exists():raise ValueError('F4 core fusion and paired transfer runs must complete first')
         top=read_json(OUT/'selections/fusion.json')['top_two']
         # LoRA starts from a reproducible fixed recipe; every promoted configuration is retrained.
-        lora=[]
-        for index,adapter in enumerate(spec['groups']['lora']):
-            base=top[index%len(top)];cfg={**base,'foundation_mode':'lora','rank':adapter['rank'],
-                'backbone_lr':adapter['backbone_lr'],'representation_cache':False}
-            cfg['candidate_id']='lora_'+identity(cfg)[:12];lora.append(cfg)
+        lora=lora_configs(top,spec)
         selected_lora=search(panel,lora,'lora',store,'adaptation_and_mechanisms')
         frozen_seed=verify_seeds(panel,top,'fusion',store)
         lora_seed=verify_seeds(panel,selected_lora['top_two'],'lora',store)

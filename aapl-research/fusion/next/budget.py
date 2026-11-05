@@ -148,6 +148,8 @@ def admit_search():
     if not gpu.get('numerical_and_resource_checks_passed'):raise ValueError('Actual GPU numerical/resource admission has not passed')
     if gpu['source_identity']!=source_identity() or cpu['source_identity']!=source_identity():
         raise ValueError('Performance evidence was collected with different source; re-admit changed behavior')
+    if cpu.get('hardware',{}).get('profile')!='autodl' or gpu.get('hardware',{}).get('profile')!='autodl':
+        raise ValueError('Cloud budget requires both GPU and CPU timings from the cloud execution profile')
     panel=Panel.load();base=draft();attempts=[];counts=dict(base['counts'])
     measured=gpu['measurements']
     # Update budgets are a speed-based choice made before candidate counts/search.
