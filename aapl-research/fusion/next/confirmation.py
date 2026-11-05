@@ -46,7 +46,7 @@ def fit_frozen(panel,spec,frozen,fit_end,namespace):
             with Usage('final_and_deployment',namespace+'/'+name) as usage:
                 model=model_for(panel,cfg,device)
                 trainer=Trainer(panel,model,cfg,fit_end,'frozen_fits/'+namespace+'/'+name,device=device)
-                if trainer.path.exists():trainer.resume()
+                if trainer.path.with_suffix('.pt.json').exists():trainer.resume()
                 trainer.run_until(cfg['total_updates'],usage)
                 references[name]={'config':cfg,'checkpoint':str(trainer.path)}
                 del trainer,model
@@ -59,7 +59,7 @@ def fit_frozen(panel,spec,frozen,fit_end,namespace):
         with Usage('final_and_deployment',namespace+f'/system/seed_{seed}') as usage:
             model=model_for(panel,cfg,device)
             trainer=Trainer(panel,model,cfg,fit_end,'frozen_fits/'+namespace+'/system',seed,store,device)
-            if trainer.path.exists():trainer.resume()
+            if trainer.path.with_suffix('.pt.json').exists():trainer.resume()
             trainer.run_until(cfg['total_updates'],usage)
             systems.append({'config':cfg,'checkpoint':str(trainer.path)});del trainer,model
         gc.collect();torch.cuda.empty_cache()

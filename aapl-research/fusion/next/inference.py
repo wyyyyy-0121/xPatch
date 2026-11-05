@@ -5,14 +5,13 @@ import numpy as np
 import torch
 
 from .common import OUT,ROOT,digest,read_json,write_json,utc_now,identity
-from .checkpoint import changing_state
+from .checkpoint import changing_state,resolve_checkpoint
 from .experiment import model_for
 from .experts import NAMES,scope_key
 
 
 def checkpoint_model(panel,path,config,device):
-    path=Path(path);receipt=read_json(path.with_suffix(path.suffix+'.json'))
-    if digest(path)!=receipt['sha256']:raise ValueError('Frozen checkpoint hash changed')
+    path,receipt=resolve_checkpoint(path)
     state=torch.load(path,map_location='cpu',weights_only=True);recipe=state['recipe']
     if receipt['recipe']!=recipe or recipe['config']!=config:raise ValueError('Frozen model recipe differs')
     if state['step']!=config['total_updates']:raise ValueError('Cannot export an unfinished training prefix')
@@ -106,7 +105,8 @@ def export(destination,stocks,background,experts,systems,freeze_sha256):
     def neural(path,relative,config):
         # Retain the exact checkpoint here so recipe/hash verification uses the same
         # recovery artifact; optional optimizer stripping requires a separate schema.
-        copy(path,relative);copy(Path(path).with_suffix('.pt.json'),relative+'.json')
+        committed,_=resolve_checkpoint(path)
+        copy(committed,relative);copy(Path(path).with_suffix('.pt.json'),relative+'.json')
         return {'checkpoint':relative,'config':config}
     for name,entry in experts.items():
         if name in ('xpatch','patchtst'):

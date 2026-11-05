@@ -132,7 +132,7 @@ class Trainer:
 
     def run_until(self,updates,usage=None):
         if not self.step<=updates<=self.config['total_updates']:raise ValueError('Halving must advance a continuous update prefix')
-        if not self.path.exists():self.save()
+        if not self.path.with_suffix('.pt.json').exists():self.save()
         self.model.train();start=time.perf_counter()
         try:
             while self.step<updates:

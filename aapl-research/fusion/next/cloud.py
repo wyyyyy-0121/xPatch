@@ -143,13 +143,13 @@ def return_bundle():
     if totals()['active_jobs']:raise RuntimeError('Do not snapshot while an accounted training or CPU job is running')
     if not (OUT/'confirmation.json').exists():raise ValueError('The fixed F6 export/confirmation must finish before returning final artifacts')
     fixed=('search_manifest.json','budget_projection.json','performance_admission.json','performance_cpu.json',
-           'hardware_cloud.json','F3_complete.json','F4_complete.json','F5_complete.json','system_freeze.json',
+           'hardware_cloud.json','environment_setup.json','F3_complete.json','F4_complete.json','F5_complete.json','system_freeze.json',
            'confirmation_started.json','confirmation.json','confirmation_predictions.npz','usage_summary.json')
     items={str((OUT/name).relative_to(ROOT)):OUT/name for name in fixed if (OUT/name).is_file()}
     # Include raw predictions as well as fitted weights: local final entry rechecks
     # control rankings and three-seed results rather than trusting cloud summaries.
     for folder in ('training','trials','selections','seed_verification','oof','frozen_fits',
-                   'deployment','usage_events','performance','search_progress'):
+                   'deployment','usage_events','performance','search_progress','environment_setup_events'):
         for path in (OUT/folder).rglob('*'):
             if path.is_file() and path.suffix in ('.json','.npz','.npy','.pt','.txt'):
                 if not path.resolve().is_relative_to(OUT):raise ValueError('Result file leaves its dedicated tree')

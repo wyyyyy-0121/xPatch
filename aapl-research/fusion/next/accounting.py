@@ -39,7 +39,20 @@ def recover_interrupted():
 def totals():
     jobs=[read_json(p) for p in (OUT/'usage_events').glob('*.json')]
     gpu=sum(j['gpu_card_hours'] for j in jobs)
+    cpu_intervals={}
+    for job in jobs:
+        if 'process_cpu_start_seconds' not in job:continue
+        key=(job['boot_id'],job['pid'],job['process_created_unix'])
+        cpu_intervals.setdefault(key,[]).append((job['process_cpu_start_seconds'],job['process_cpu_end_seconds']))
+    cpu_seconds=0.
+    for intervals in cpu_intervals.values():
+        end=-1.
+        for start,stop in sorted(intervals):
+            cpu_seconds+=max(0.,stop-max(start,end));end=max(end,stop)
     return {'gpu_card_hours':gpu,'jobs':len(jobs),
+            'accounted_process_CPU_seconds':cpu_seconds,
+            'CPU_policy':'union of process CPU-time intervals per PID creation/boot; overlapping CPU/GPU jobs in one process are not double-counted',
+            'CPU_jobs_without_measurements':sum('process_cpu_start_seconds' not in job for job in jobs),
             'by_category':{name:sum(j['gpu_card_hours'] for j in jobs if j['category']==name) for name in LIMITS},
             'active_jobs':[j['id'] for j in jobs if j['status']=='running'],
             'active_gpu_jobs':[j['id'] for j in jobs if j['status']=='running' and j.get('gpu',False)],
@@ -58,15 +71,20 @@ class Usage(AbstractContextManager):
         if self.gpu and (current['gpu_card_hours']>=24 or current['by_category'][self.category]>=LIMITS[self.category]):
             raise RuntimeError('Prespecified GPU budget exhausted')
         if self.gpu and current['active_gpu_jobs']:raise RuntimeError('An accounted GPU job is already active; inspect it before starting another')
+        process=psutil.Process();cpu=process.cpu_times();self.cpu_start=cpu.user+cpu.system;self.sampled_peak_rss=0
         self.start=time.monotonic();self.started=utc_now();self.record('running');return self
 
     def record(self,status='running',error=None):
         elapsed=time.monotonic()-self.start
+        process=psutil.Process();cpu=process.cpu_times();self.sampled_peak_rss=max(self.sampled_peak_rss,process.memory_info().rss)
         row={'id':self.id,'category':self.category,'description':self.description,'pid':os.getpid(),
              'process_created_unix':psutil.Process().create_time(),
              'boot_id':Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
              'started_at_utc':self.started,'updated_at_utc':utc_now(),'status':status,
              'wall_seconds':elapsed,'gpu':self.gpu,'gpu_card_hours':elapsed/3600 if self.gpu else 0.,'error':error}
+        row.update(process_cpu_start_seconds=self.cpu_start,process_cpu_end_seconds=cpu.user+cpu.system,
+                   process_CPU_seconds=cpu.user+cpu.system-self.cpu_start,sampled_peak_rss_bytes=self.sampled_peak_rss,
+                   cpu_affinity=sorted(process.cpu_affinity()),sampled_process_threads=process.num_threads())
         write_json(OUT/'usage_events'/f'{self.id}.json',row)
         current=totals();write_json(OUT/'usage_summary.json',current)
         if status=='running' and self.gpu and (current['gpu_card_hours']>24 or current['by_category'][self.category]>LIMITS[self.category]):

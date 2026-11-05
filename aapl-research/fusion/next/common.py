@@ -26,6 +26,10 @@ def write_json(path,value):
         except BaseException:
             temporary.unlink(missing_ok=True);raise
     os.replace(temporary,path)
+    # Persist the atomic name change as well as the file contents on Linux/WSL.
+    directory_fd=os.open(path.parent,os.O_RDONLY|os.O_DIRECTORY)
+    try:os.fsync(directory_fd)
+    finally:os.close(directory_fd)
 
 
 def source_identity():

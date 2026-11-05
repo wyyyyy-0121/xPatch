@@ -171,3 +171,43 @@ def test_early_history_objective_routes_gradients_to_auxiliary_readout_only():
     loss=loss_for({'prediction':main,'auxiliary_prediction':aux},batch,{'loss':'raw','raw_loss_unit':1.})
     loss.backward()
     torch.testing.assert_close(main.grad,torch.tensor([0.,2.]));torch.testing.assert_close(aux.grad,torch.tensor([3.,0.]))
+
+
+def test_checkpoint_commit_survives_interruption_between_receipt_and_alias(monkeypatch):
+    from pathlib import Path
+    with TemporaryDirectory(prefix='unit_checkpoint_commit_',dir=OUT) as temporary:
+        path=Path(temporary)/'resume.pt';recipe={'seed':19};seed()
+        net=model();optimizer=torch.optim.AdamW(net.parameters(),lr=.01);sampler=toy_sampler()
+        for _ in range(2):update(net,optimizer,sampler)
+        checkpoint.save(path,net,optimizer,{'main':sampler},2,recipe)
+        update(net,optimizer,sampler);expected=checkpoint.changing_state(net)
+        replace=checkpoint.os.replace
+        def interrupt_alias(source,destination):
+            if Path(destination)==path:raise OSError('injected after atomic receipt commit')
+            return replace(source,destination)
+        monkeypatch.setattr(checkpoint.os,'replace',interrupt_alias)
+        with pytest.raises(OSError,match='receipt commit'):checkpoint.save(path,net,optimizer,{'main':sampler},3,recipe)
+        restored=model();new_optimizer=torch.optim.AdamW(restored.parameters(),lr=.01);new_sampler=toy_sampler()
+        step,_=checkpoint.load(path,restored,new_optimizer,{'main':new_sampler},recipe)
+        assert step==3
+        for name,value in expected.items():torch.testing.assert_close(value,checkpoint.changing_state(restored)[name],rtol=0,atol=0)
+        monkeypatch.setattr(checkpoint.os,'replace',replace)
+        checkpoint.save(path,restored,new_optimizer,{'main':new_sampler},3,recipe)
+        checkpoint.save(path,restored,new_optimizer,{'main':new_sampler},3,recipe)
+        assert len(list((path.parent/('.'+path.stem+'.checkpoints')).glob('*.pt')))==2
+
+
+def test_failed_checkpoint_receipt_publication_keeps_previous_prefix(monkeypatch):
+    from pathlib import Path
+    with TemporaryDirectory(prefix='unit_checkpoint_old_prefix_',dir=OUT) as temporary:
+        path=Path(temporary)/'resume.pt';recipe={'seed':19};seed()
+        net=model();optimizer=torch.optim.AdamW(net.parameters(),lr=.01);sampler=toy_sampler()
+        checkpoint.save(path,net,optimizer,{'main':sampler},0,recipe);before=checkpoint.changing_state(net)
+        update(net,optimizer,sampler)
+        def fail(*args,**kwargs):raise OSError('injected receipt publication failure')
+        monkeypatch.setattr(checkpoint,'write_json',fail)
+        with pytest.raises(OSError):checkpoint.save(path,net,optimizer,{'main':sampler},1,recipe)
+        restored=model();new_optimizer=torch.optim.AdamW(restored.parameters(),lr=.01);new_sampler=toy_sampler()
+        step,_=checkpoint.load(path,restored,new_optimizer,{'main':new_sampler},recipe)
+        assert step==0
+        for name,value in before.items():torch.testing.assert_close(value,checkpoint.changing_state(restored)[name],rtol=0,atol=0)

@@ -72,7 +72,7 @@ def neural_trial(panel,config,quarter,seed,prefix,namespace,store=None,category=
     with Usage(category,trial+f'/seed_{seed}/updates_{updates}') as usage:
         cfg={**config,'seed':seed};model=model_for(panel,cfg,device)
         trainer=Trainer(panel,model,cfg,f['fit_end'],trial,seed,experts=store,device=device)
-        if trainer.path.exists():trainer.resume()
+        if trainer.path.with_suffix('.pt.json').exists():trainer.resume()
         trainer.run_until(updates,usage)
         experts=store.predict(np.zeros(len(rows),dtype=np.int64),rows) if store is not None else None
         prediction=trainer.predict(np.zeros(len(rows),dtype=np.int64),rows,experts,usage)
@@ -164,7 +164,7 @@ def build_oof(panel,configs,category='experts_and_cache'):
                 with Usage(category,namespace) as usage:
                     model=model_for(panel,cfg,device)
                     trainer=Trainer(panel,model,cfg,f['fit_end'],namespace,device=device)
-                    if trainer.path.exists():trainer.resume()
+                    if trainer.path.with_suffix('.pt.json').exists():trainer.resume()
                     trainer.run_until(cfg['total_updates'],usage)
                     for name,(rows,values) in predictions.items():
                         sid=panel.stocks.index(name);values[:,column]=trainer.predict(np.full(len(rows),sid),rows,usage=usage)
@@ -222,7 +222,7 @@ def verify_seeds(panel,configs,namespace,store,category='adaptation_and_mechanis
 def mechanism_configs(top,variant):
     result=[]
     for cfg in top:
-        copy={**cfg}
+        copy={**cfg,'paired_base_id':cfg['candidate_id']}
         if variant=='plain_mlp':copy['fusion_type']='plain_mlp'
         elif variant=='no_foundation':copy.update(foundation=False,representation_cache=False)
         elif variant=='random_frozen':copy.update(foundation_mode='random_frozen',representation_cache=False)

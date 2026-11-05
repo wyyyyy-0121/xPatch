@@ -11,7 +11,7 @@
 在项目根目录运行本地检查：
 
 ```bash
-AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m pytest fusion/next/tests_data.py fusion/next/tests_models.py fusion/next/tests_training.py fusion/next/tests_evaluation.py fusion/next/tests_experiment.py fusion/next/tests_stream.py fusion/next/tests_budget.py fusion/next/tests_confirmation.py fusion/next/tests_inference.py fusion/next/tests_freeze.py fusion/next/tests_final_test.py fusion/next/tests_cloud.py -q
+AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m pytest fusion/next/tests_data.py fusion/next/tests_models.py fusion/next/tests_training.py fusion/next/tests_evaluation.py fusion/next/tests_experiment.py fusion/next/tests_stream.py fusion/next/tests_budget.py fusion/next/tests_confirmation.py fusion/next/tests_inference.py fusion/next/tests_freeze.py fusion/next/tests_final_test.py fusion/next/tests_cloud.py fusion/next/tests_delivery.py fusion/next/tests_accounting.py -q
 AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m fusion.next.audit
 ```
 
@@ -111,7 +111,23 @@ AAPL_CPU_THREADS=4 AAPL_CPU_IDS=0-3 bash scripts/python.sh -m fusion.next.delive
 AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m fusion.next.delivery --score-file outputs/fusion_next/confirmation_predictions.npz
 ```
 
-第二条命令只有在一次 Q2 确认确实运行并生成预测文件后才有输入。重放的接收/生成时间是显式模拟时间，实际输出的墙钟另存；不能据此声称预测在历史当时及时发出。任何缺失预测都会使验收失败，不选择性丢弃。
+第二条命令只有在一次 Q2 确认确实运行并生成预测文件后才有输入。默认重放命令先在子进程中完成前半段并退出，再用另一个进程重新加载模型、恢复状态和完成后半段；冷启动计入实际输入准备与首次输出，温启动计入当前柱接入、窗口、推理及持久化。进程 ID、各阶段耗时、CPU 时间和逐起点计时保存于验收记录。异常退出后可在同一条重放命令上加 `--resume` 恢复；已有完成报告不能被覆盖。
+
+重放的接收/生成时间是显式模拟时间，实际输出的墙钟另存；不能据此声称预测在历史当时及时发出。任何缺失预测都会使验收失败，不选择性丢弃。流式状态的数据与校验信息一次原子发布；训练检查点以原子收据提交完整版本，即使在收据与便利路径更新之间退出也能恢复。最多保留当前和前一个完整版本，旧版本的删除数量、字节及哈希逐项留存。
+
+汇总已经存在的研究、工程、成本和清理证据：
+
+```bash
+AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m fusion.next.research_report
+```
+
+报告保存在 `outputs/fusion_next/research_report.json` 和 `.md`；缺少的阶段明确标为未完成，不将单元测试替代真实模型验收。环境安装及失败重试另计耗时；CPU 时间按进程区间合并，避免同一进程的 CPU/GPU 并发被重复计数。费用仅按记录的计算时间与报价估算，实际租赁账单须另行核对。
+
+若一次最终检验确实完成，可只读取保存的预测，独立重算并核对全部预定统计，不重新读取行情或运行模型：
+
+```bash
+AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m fusion.next.research_report --recompute-final
+```
 
 ## 实现细节与仍待实测的项目
 

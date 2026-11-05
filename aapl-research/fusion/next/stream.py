@@ -68,9 +68,21 @@ class Stream:
                 records.append([record['values'][field] for field in FIELDS] if record else [np.nan]*len(FIELDS))
                 if record:received.append(pd.Timestamp(record['received_at']))
             frame=pd.DataFrame(records,index=index,columns=FIELDS)
-            values,obs,_,_=causal_transform(frame,starts)
+            # The predecessor may itself be missing in an otherwise admissible
+            # 240-bar context. Seed its causal fill with the last older received
+            # close, just as the full-history batch transform does.
+            older=[k for k in self.bars[name] if pd.Timestamp(k)<index[0]]
+            if older:
+                anchor_key=max(older);anchor=self.bars[name][anchor_key]
+                anchor_time=pd.Timestamp(anchor_key)
+                prefix=pd.DataFrame([[anchor['values'][field] for field in FIELDS]],index=[anchor_time],columns=FIELDS)
+                extended=pd.concat([prefix,frame]);extended_dates=extended.index.tz_convert('America/New_York').date
+                extended_start=np.r_[True,extended_dates[1:]!=extended_dates[:-1]]
+                values,obs,close,_=causal_transform(extended,extended_start)
+                values=values[1:];obs=obs[1:];close=close[1:];received.append(pd.Timestamp(anchor['received_at']))
+            else:values,obs,close,_=causal_transform(frame,starts)
             missing[name]=int(np.sum(~obs[-240:]))
-            if not obs[-1] or missing[name]>POLICY['maximum_missing_context_bars'] or not obs[0]:
+            if not obs[-1] or missing[name]>POLICY['maximum_missing_context_bars'] or not np.isfinite(close[0]):
                 raise ValueError('Missing current input, predecessor, or excessive missing history for '+name)
             features[name]=values;observed[name]=obs
         # Inference Panel never reads these placeholders; labels do not exist in this engine.
@@ -114,20 +126,23 @@ class Stream:
                     'latest_required_input_received_at':last_received.isoformat(),
                     'generated_at':generated.isoformat(),'mode':mode,
                     'input_integrity':{'missing_context_bars_by_symbol':missing},'expert_weights':weights.tolist()}
-        except ValueError as exc:
+        except Exception as exc:
             output={'status':'input_or_model_failure','symbol':'AAPL','bar_start':key,'input_cutoff':decision.isoformat(),
-                    'generated_at':generated.isoformat(),'mode':mode,'model_identity':self.model_identity,'reason':str(exc)}
+                    'generated_at':generated.isoformat(),'mode':mode,'model_identity':self.model_identity,
+                    'error_type':type(exc).__name__,'reason':str(exc)}
         # Keep the full prediction journal, including failures; never silently drop failed origins.
         output['emitted_at_wall_clock_utc']=utc_now()
         self.outputs[key]=output;self.save();return output
 
     def save(self):
-        write_json(self.state_path,{'schema':1,'recipe':self.recipe,'bars':self.bars,'outputs':self.outputs})
-        write_json(self.state_path.with_suffix('.receipt.json'),{'sha256':digest(self.state_path),'model_identity':self.model_identity})
+        body={'schema':2,'recipe':self.recipe,'bars':self.bars,'outputs':self.outputs}
+        # One atomic publication commits data and integrity together. There is no
+        # separate receipt update in which an interrupted write can split them.
+        write_json(self.state_path,{**body,'integrity':identity(body)})
 
     def resume(self):
-        receipt=read_json(self.state_path.with_suffix('.receipt.json'))
-        if receipt['sha256']!=digest(self.state_path):raise ValueError('Replay-state checksum differs')
         state=read_json(self.state_path)
+        if state.get('schema')!=2 or state.get('integrity')!=identity({k:v for k,v in state.items() if k!='integrity'}):
+            raise ValueError('Replay-state checksum or schema differs')
         if state['recipe']!=self.recipe:raise ValueError('Cannot resume replay with a changed model/configuration/calendar')
         self.bars=state['bars'];self.outputs=state['outputs']

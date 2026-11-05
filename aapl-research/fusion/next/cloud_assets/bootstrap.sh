@@ -2,6 +2,29 @@
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 python - <<'PY'
+import json,time
+from datetime import datetime,timezone
+from pathlib import Path
+directory=Path('outputs/fusion_next');directory.mkdir(parents=True,exist_ok=True)
+(directory/'environment_setup_started.json').write_text(json.dumps({'attempt_id':str(time.time_ns()),'started_at_utc':datetime.now(timezone.utc).isoformat(),
+ 'started_unix':time.time(),'purpose':'environment installation and actual CUDA compatibility probe; separate from formal computation'}))
+PY
+finish_setup() {
+  python - "$1" <<'PY'
+import json,os,sys,time
+from datetime import datetime,timezone
+from pathlib import Path
+directory=Path('outputs/fusion_next');started=json.loads((directory/'environment_setup_started.json').read_text())
+receipt={**started,'completed_at_utc':datetime.now(timezone.utc).isoformat(),'wall_seconds':time.time()-started['started_unix'],
+ 'exit_code':int(sys.argv[1]),'passed':sys.argv[1]=='0','provider_billed_cost_unknown':True}
+temporary=directory/'environment_setup.json.tmp';temporary.write_text(json.dumps(receipt,indent=2)+'\n')
+os.replace(temporary,directory/'environment_setup.json')
+events=directory/'environment_setup_events';events.mkdir(exist_ok=True)
+(events/(receipt['attempt_id']+'.json')).write_text(json.dumps(receipt,indent=2)+'\n')
+PY
+}
+trap 'finish_setup "$?"' EXIT
+python - <<'PY'
 import torch
 if not torch.cuda.is_available():raise SystemExit('CUDA is unavailable in the chosen image')
 print('PyTorch:',torch.__version__,'runtime CUDA:',torch.version.cuda)
