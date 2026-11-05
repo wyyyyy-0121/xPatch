@@ -24,6 +24,30 @@ def inspect(evidence_root=OUT):
         if not allowed('outputs/fusion_next/'+str(artifact.relative_to(root))):
             raise ValueError('Scope provenance cannot pass the formal return allowlist')
     stages={}
+    numerical=None
+    numerical_path=root/'performance/portable_inference_policy.json'
+    if numerical_path.exists():
+        numerical=read_json(numerical_path)
+        if (numerical['identity']!=identity({k:v for k,v in numerical.items() if k!='identity'}) or
+            numerical['scope_identity']!=scope['identity'] or numerical['base_engine_source_identity']!=source_identity() or
+            numerical['inference_precision']!='float32' or numerical['training_precision_changed']):
+            raise ValueError('Portable inference policy differs')
+        for field,name in [('runtime_sha256','portable_inference_runtime.py'),('CPU_entrypoint_sha256','portable_cpu_run.py'),
+                           ('launcher_sha256','start_portable_fusion.py'),('rescore_script_sha256','prepare_portable_inference.py')]:
+            artifact=root/'performance'/('portable_'+name+'.txt')
+            if digest(artifact)!=numerical[field]:raise ValueError('Portable inference implementation changed: '+name)
+            provenance.append(artifact)
+        provenance.append(numerical_path)
+        rescored=root/'performance/portable_inference_rescore_complete.json'
+        if rescored.exists():
+            receipt=read_json(rescored)
+            if receipt['numerical_policy_identity']!=numerical['identity'] or not receipt['all_trained_checkpoint_hashes_unchanged']:
+                raise ValueError('FP32 rescore receipt differs')
+            for row in receipt['rescored_full_quarter_results']:
+                path=root/row['result'].removeprefix('outputs/fusion_next/')
+                if digest(path)!=row['sha256'] or read_json(path)['details']['numerical_policy_identity']!=numerical['identity']:
+                    raise ValueError('FP32 rescored prediction receipt changed')
+            provenance.append(rescored)
     for name in ('F3','F4','F5'):
         artifact=root/(name+'_complete.json')
         stages[name]={'completed':False}
@@ -34,6 +58,8 @@ def inspect(evidence_root=OUT):
             row.get('source_identity')!=scope['source_identity'] or
             row.get('original_complete_scope_claimed') is not False):
             raise ValueError('Stage completion does not bind the amended scope: '+name)
+        if numerical is not None and (row.get('numerical_policy_identity')!=numerical['identity'] or row.get('evaluation_precision')!='float32'):
+            raise ValueError('Stage completion lacks the portable inference policy: '+name)
         stages[name]={'completed':True,'receipt_sha256':digest(artifact)};provenance.append(artifact)
     return {'generated_at_utc':utc_now(),'scope_identity':scope['identity'],
         'source_identity':scope['source_identity'],'authorization':scope['authorization'],
@@ -43,6 +69,7 @@ def inspect(evidence_root=OUT):
         'epochs':scope['training_budget_policy']['total_coverage_equivalent_epochs'],
         'mechanisms_retained':scope['mechanisms_retained'],'mechanisms_deferred':scope['mechanisms_deferred'],
         'projection':scope['projection'],'stages':stages,
+        'portable_inference_policy':numerical,
         'original_complete_scope_claimed':False,'Q3_values_read_by_this_report':False,
         'claim_limits':['Omitted mechanisms do not provide evidence of foundation, market, feature or transfer contributions',
             'Search and seed reviews use the reduced scope, not all original configurations',

@@ -50,3 +50,23 @@ def test_scope_report_rejects_modified_parent_runner_or_time_limit(monkeypatch,a
         root=Path(temporary);fixture(root);monkeypatch.setattr(report,'source_identity',lambda:'source')
         (root/artifact).write_text('{}\n')
         with pytest.raises(ValueError):report.inspect(root)
+
+
+def test_portable_stage_requires_the_declared_policy(monkeypatch):
+    with TemporaryDirectory(prefix='unit_scope_report_',dir=OUT) as temporary:
+        root=Path(temporary);scope=fixture(root);monkeypatch.setattr(report,'source_identity',lambda:'source')
+        policy={'scope_identity':scope['identity'],'base_engine_source_identity':'source',
+            'inference_precision':'float32','training_precision_changed':False}
+        for field,name in [('runtime_sha256','portable_inference_runtime.py'),('CPU_entrypoint_sha256','portable_cpu_run.py'),
+                           ('launcher_sha256','start_portable_fusion.py'),('rescore_script_sha256','prepare_portable_inference.py')]:
+            path=root/'performance'/('portable_'+name+'.txt');path.write_text(name);policy[field]=digest(path)
+        policy['identity']=identity(policy);write_json(root/'performance/portable_inference_policy.json',policy)
+        stage={'scope_identity':scope['identity'],'source_identity':'source',
+            'scope_amendment_sha256':digest(root/'performance/scope_100h.json'),'original_complete_scope_claimed':False}
+        write_json(root/'F3_complete.json',stage)
+        with pytest.raises(ValueError,match='lacks the portable inference policy'):report.inspect(root)
+        stage.update(numerical_policy_identity=policy['identity'],evaluation_precision='float32')
+        write_json(root/'F3_complete.json',stage)
+        assert report.inspect(root)['stages']['F3']['completed']
+        (root/'performance/portable_portable_inference_runtime.py.txt').write_text('changed')
+        with pytest.raises(ValueError,match='implementation changed'):report.inspect(root)

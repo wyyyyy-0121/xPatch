@@ -43,6 +43,7 @@ def alive(receipt):
 limiter=read('cloud/hard_time_limit_state.json')
 print(json.dumps({'dispatch':dispatch,'state':read('cloud/bounded_run_state.json'),
  'limit':read('cloud/hard_time_limit.json'),'limiter':limiter,
+ 'numerical_policy':read('performance/portable_inference_policy.json'),
  'receipt':read('cloud/return_receipt.json'),'runner_alive':alive(dispatch),'limiter_alive':alive(limiter)}))
 """
 
@@ -58,6 +59,9 @@ def check_binding(snapshot, binding):
             raise ValueError('Cloud execution identity changed: '+key)
     if snapshot['limit'] != binding['limit']:
         raise ValueError('Cloud time limit changed')
+    if binding.get('numerical_policy_identity') is not None:
+        if not snapshot.get('numerical_policy') or snapshot['numerical_policy']['identity']!=binding['numerical_policy_identity']:
+            raise ValueError('Cloud inference policy changed')
     state = snapshot['state']
     if state['scope_identity'] != binding['scope_identity'] or state['source_identity'] != binding['source_identity']:
         raise ValueError('Cloud state belongs to another scope or engine')
@@ -186,6 +190,10 @@ class Completion:
         return archive
 
     def local_steps(self, archive, receipt):
+        if self.binding.get('numerical_policy_identity') is not None:
+            from scripts.portable_inference_runtime import checked_policy, _installed
+            if not _installed or checked_policy()['identity']!=self.binding['numerical_policy_identity']:
+                raise ValueError('Local inference adapter is missing or changed')
         preflight_archive(archive, receipt, self.binding)
         self.state('restoring_verified_return')
         with return_compatibility() as restore:
@@ -256,6 +264,7 @@ class Completion:
         lines = ['# 100 小时核心融合执行结果', '',
             '范围：两轮、三个验证季度、三个种子；压缩搜索及部分机制对照。', '',
             f'- 范围身份：`{self.binding["scope_identity"]}`。',
+            f'- 推理数值策略：`{self.binding.get("numerical_policy_identity", "original")}`。',
             f'- 系统身份：`{manifest["identity"]}`。',
             f'- 研究状态：`{report["research_status"]}`。',
             f'- 开发门槛通过：`{read_json(OUT/"system_freeze.json")["development_gate_passed"]}`。',

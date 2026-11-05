@@ -53,6 +53,15 @@ def test_observer_stops_on_failure_or_changed_deadline():
     snapshot, binding = records();snapshot['state']['stage'] = 'stopped_for_inspection'
     with pytest.raises(RuntimeError, match='stopped for inspection'):
         finish.check_binding(snapshot, binding)
+
+
+def test_observer_rejects_changed_numerical_policy():
+    snapshot,binding=records();binding['numerical_policy_identity']='fp32-policy'
+    snapshot['numerical_policy']={'identity':'other-policy'}
+    with pytest.raises(ValueError,match='inference policy changed'):
+        finish.check_binding(snapshot,binding)
+    snapshot['numerical_policy']['identity']='fp32-policy'
+    assert finish.check_binding(snapshot,binding) is False
     snapshot, binding = records();snapshot['limit']['total_wall_hours'] = 101
     with pytest.raises(ValueError, match='time limit changed'):
         finish.check_binding(snapshot, binding)
