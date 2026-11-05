@@ -44,6 +44,9 @@ def test_pooled_ranking_uses_observation_counts():
 
 def test_real_cpu_expert_fits_early_history_and_preserves_balanced_weights():
     frame,starts,ends=two_sessions();panel=make_panel(frame,starts,ends)
+    # Production dates are memory-mapped U10 arrays; NumPy cannot reduce them
+    # with minimum, unlike the object-string dates in the small panel fixture.
+    panel.dates=np.asarray(panel.dates,dtype='U10')
     config={'family':'ridge','lookback':48,'alpha':1000.,'rows_per_day':8,'information':'ohlcv'}
     with TemporaryDirectory(prefix='unit_cpu_',dir=OUT) as path:
         forecast,scalers,report=fit_cpu(panel,config,'2021-01-04',path)

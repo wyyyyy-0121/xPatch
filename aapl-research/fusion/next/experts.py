@@ -74,7 +74,7 @@ def fit_cpu(panel,config,fit_end,directory,seed=2026):
         model.fit(x,y,sample_weight=weight);model_path=directory/'lightgbm.txt';model.booster_.save_model(str(model_path))
         predict=lambda values:model.booster_.predict(values,num_threads=config.get('cpu_threads',8))*unit
     else:raise ValueError('CPU family must be Ridge or LightGBM')
-    report={'family':config['family'],'config':config,'fit_end':fit_end,'fit_start':str(panel.dates[rows].min()),
+    report={'family':config['family'],'config':config,'fit_end':fit_end,'fit_start':str(panel.dates[int(rows.min())]),
             'seed':seed,'training_rows':len(rows),'stock_count':len(np.unique(stock)),
             'balanced_stock_day_weights':True,'scaler_seconds':scaler_seconds,'feature_seconds':features_seconds,
             'fit_seconds':time.perf_counter()-start,'model_sha256':digest(model_path),'target_unit':unit,

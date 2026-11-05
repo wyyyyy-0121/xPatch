@@ -4,6 +4,8 @@
 
 用户已授权后续研究变更持续推送 GitHub，取代计划书末尾原先的“不推送”限制；计划正文与哈希保持原身份。同步分支为 [`codex/aapl-return12-implementation`](https://github.com/wyyyyy-0121/xPatch/tree/codex/aapl-return12-implementation/aapl-research)。代码、计划和运行说明随完成的提交推送；行情、基础权重、账户凭据及本地输出不进入 Git。
 
+阶段证据摘要见 [STATUS.md](STATUS.md)。当前 F1 全量独立审计、本地 CPU 预检和训练包验证已完成，下一项为云端 F2。下文命令按阶段列出，不应据此重复启动已经完成的下载或预检。
+
 大型神经网络训练指定在用户的 AutoDL 单卡实例执行。本地继续数据下载、审计和打包。当前 SSH 地址只用于记录；实例重启后须确认实际连接地址。GPU 暂不需要时由用户关闭实例，本工具不会创建或付费租赁实例。
 
 ## 已实现的入口
