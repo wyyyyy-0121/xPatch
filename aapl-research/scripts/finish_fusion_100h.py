@@ -141,22 +141,33 @@ class Completion:
         if remaining <= 0:
             raise TimeoutError('The original 100-hour deadline has elapsed')
         log = HERE/'logs'/(label+'.log');log.parent.mkdir(parents=True, exist_ok=True)
+        managed = os.environ.get('AAPL_COMPLETION_MANAGED_GROUP') == '1'
         with log.open('ab') as output:
             process = subprocess.Popen(command, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT,
-                start_new_session=True, **kwargs)
+                start_new_session=not managed, **kwargs)
             try:
                 returncode = process.wait(timeout=remaining)
             except BaseException:
                 # Include delivery's replay children; a parent-only timeout can
                 # otherwise leave local inference alive beyond the wall cap.
-                try:os.killpg(process.pid, signal.SIGTERM)
+                try:
+                    if managed:process.terminate()
+                    else:os.killpg(process.pid, signal.SIGTERM)
                 except ProcessLookupError:pass
                 try:process.wait(timeout=5)
                 except subprocess.TimeoutExpired:
-                    try:os.killpg(process.pid, signal.SIGKILL)
+                    try:
+                        if managed:process.kill()
+                        else:os.killpg(process.pid, signal.SIGKILL)
                     except ProcessLookupError:pass
                     process.wait()
                 raise
+            finally:
+                if not managed:
+                    # Clean up descendants even when a worker exits before its
+                    # children. Nested finish-local commands share this group.
+                    try:os.killpg(process.pid, signal.SIGKILL)
+                    except ProcessLookupError:pass
         if returncode:
             raise RuntimeError('Completion command failed; inspect '+str(log.relative_to(ROOT)))
 
@@ -340,7 +351,8 @@ def run():
                 if ready:
                     completion.state('downloading_completed_return')
                     archive = completion.fetch(snapshot['receipt'])
-                    completion.command([sys.executable, str(Path(__file__).resolve()), '--finish-local'], 'local_steps')
+                    completion.command([sys.executable, str(Path(__file__).resolve()), '--finish-local'], 'local_steps',
+                        env={**os.environ, 'AAPL_COMPLETION_MANAGED_GROUP':'1'})
                     return
                 completion.state('waiting_for_cloud', cloud_stage=snapshot['state']['stage'])
                 time.sleep(min(60, max(0, seconds_left(binding['limit']))))

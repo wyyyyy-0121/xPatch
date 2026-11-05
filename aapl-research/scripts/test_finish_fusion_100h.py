@@ -1,11 +1,14 @@
 """Guard against wrong-run downloads, accidental Q3 entry and orphaned CPU work."""
 import copy
 from datetime import datetime, timedelta, timezone
+import hashlib
+import io
 import json
 import os
 from pathlib import Path
 import subprocess
 import sys
+import tarfile
 import tempfile
 
 import psutil
@@ -111,3 +114,71 @@ def test_local_deadline_terminates_replay_children(monkeypatch):
             assert process.status() == psutil.STATUS_ZOMBIE
         except psutil.NoSuchProcess:
             pass
+
+
+def test_nested_completion_deadline_keeps_grandchildren_in_outer_group(monkeypatch):
+    with tempfile.TemporaryDirectory(dir=finish.ROOT/'tmp') as temporary:
+        directory = Path(temporary);monkeypatch.setattr(finish, 'HERE', directory)
+        deadline = datetime.now(timezone.utc)+timedelta(seconds=2)
+        binding = {'limit':{'deadline_utc':deadline.isoformat()}}
+        pidfile = directory/'grandchild.json'
+        program = '''import json,sys,pathlib,os
+from scripts import finish_fusion_100h as finish
+finish.HERE=pathlib.Path(sys.argv[1])
+binding=json.loads(sys.argv[2])
+inner="import subprocess,sys,time,json,pathlib; p=subprocess.Popen([sys.executable,'-c','import time; time.sleep(30)']); pathlib.Path(sys.argv[1]).write_text(json.dumps({'pid':p.pid,'group':__import__('os').getpgid(p.pid)})); time.sleep(30)"
+finish.Completion(binding).command([sys.executable,'-c',inner,sys.argv[3]],'nested')
+'''
+        with pytest.raises(subprocess.TimeoutExpired):
+            finish.Completion(binding).command([sys.executable, '-c', program, str(directory), json.dumps(binding), str(pidfile)],
+                'outer', env={**os.environ, 'AAPL_COMPLETION_MANAGED_GROUP':'1'})
+        assert pidfile.exists()
+        pid = json.loads(pidfile.read_text())['pid']
+        try:
+            process = psutil.Process(pid)
+            assert process.status() == psutil.STATUS_ZOMBIE
+        except psutil.NoSuchProcess:
+            pass
+
+
+def archive_fixture(directory, mode=None):
+    payloads = {'outputs/fusion_next/confirmation.json':b'{"evaluated":false}',
+        'outputs/fusion_next/batch_scaling.json':b'{"diagnostic":true}'}
+    binding = {'source_identity':'source', 'plan_sha256':'plan', 'scope_identity':'scope'}
+    manifest = {'source_identity':'source', 'plan_sha256':'plan', 'Q3_data_included':False,
+        'credentials_included':False, 'raw_development_market_data_included':False,
+        'files':{name:{'bytes':len(data), 'sha256':hashlib.sha256(data).hexdigest()} for name,data in payloads.items()}}
+    if mode == 'changed_member':payloads['outputs/fusion_next/confirmation.json'] = b'{"evaluated":true}'
+    if mode == 'unknown_member':payloads['outputs/fusion_next/private.json'] = b'{}'
+    payloads['outputs/fusion_next/cloud/return_manifest.json'] = json.dumps(manifest).encode()
+    archive = directory/'return.tar'
+    with tarfile.open(archive, 'w') as stream:
+        for name,data in payloads.items():
+            member = tarfile.TarInfo(name);member.size = len(data);stream.addfile(member, io.BytesIO(data))
+        if mode == 'duplicate':
+            name,data = next(iter(payloads.items()))
+            member = tarfile.TarInfo(name);member.size = len(data);stream.addfile(member, io.BytesIO(data))
+    receipt = {'sha256':finish.digest(archive), 'bytes':archive.stat().st_size}
+    return archive, receipt, binding
+
+
+def test_archive_preflight_accepts_exported_diagnostic_without_restoring(monkeypatch):
+    from scripts import report_fusion_scope
+    with tempfile.TemporaryDirectory(dir=finish.ROOT/'tmp') as temporary:
+        directory = Path(temporary);monkeypatch.setattr(finish, 'HERE', directory)
+        monkeypatch.setattr(report_fusion_scope, 'inspect', lambda _: {
+            'scope_identity':'scope', 'stages':{stage:{'completed':True} for stage in ('F3','F4','F5')}})
+        archive,receipt,binding = archive_fixture(directory)
+        finish.preflight_archive(archive,receipt,binding)
+        assert (directory/'archive_preflight.json').exists()
+        assert not (directory/'outputs').exists()
+
+
+@pytest.mark.parametrize('mode', ['changed_member', 'unknown_member', 'duplicate'])
+def test_archive_preflight_rejects_invalid_members_before_restoring(monkeypatch, mode):
+    with tempfile.TemporaryDirectory(dir=finish.ROOT/'tmp') as temporary:
+        directory = Path(temporary);monkeypatch.setattr(finish, 'HERE', directory)
+        archive,receipt,binding = archive_fixture(directory, mode)
+        with pytest.raises(ValueError, match='(member identity|Unexpected or duplicate)'):
+            finish.preflight_archive(archive,receipt,binding)
+        assert not (directory/'archive_preflight.json').exists()
