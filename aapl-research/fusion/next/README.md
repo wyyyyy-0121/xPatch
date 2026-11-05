@@ -11,7 +11,7 @@
 在项目根目录运行本地检查：
 
 ```bash
-AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m pytest fusion/next/tests_data.py fusion/next/tests_models.py fusion/next/tests_training.py fusion/next/tests_evaluation.py fusion/next/tests_experiment.py fusion/next/tests_stream.py fusion/next/tests_budget.py fusion/next/tests_confirmation.py fusion/next/tests_inference.py -q
+AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m pytest fusion/next/tests_data.py fusion/next/tests_models.py fusion/next/tests_training.py fusion/next/tests_evaluation.py fusion/next/tests_experiment.py fusion/next/tests_stream.py fusion/next/tests_budget.py fusion/next/tests_confirmation.py fusion/next/tests_inference.py fusion/next/tests_freeze.py fusion/next/tests_final_test.py fusion/next/tests_cloud.py -q
 AAPL_CPU_THREADS=2 AAPL_CPU_IDS=12,13 bash scripts/python.sh -m fusion.next.audit
 ```
 
@@ -73,7 +73,9 @@ bash cloud/run.sh -m fusion.next.experiment F4
 bash cloud/run.sh -m fusion.next.experiment F5
 ```
 
-预算入口先根据实际速度确定固定更新预算，再依次减少宽度和配置数。它列入全部信息范围的 OOF、三种子、七组机制及条件式最终重训，不符合包级预算时拒绝冻结搜索。正式实验入口只接受通过 F2 且与冻结代码身份一致的配置。
+预算入口先根据实际速度确定固定更新预算，再依次减少宽度和配置数。它列入全部信息范围的 OOF、三种子、七组机制及最终拟合，不符合包级预算时拒绝冻结搜索。预算还保守保留第二次拟合额度，但最终检验明确使用 Q2 已确认的同一模型，不在 Q2 后重训。正式实验入口只接受通过 F2 且与冻结代码身份一致的配置。
+
+标准组按前 1/3、再前 2 个晋级。若评分前的预算削减仅剩 2—3 个起始配置，则首轮至少保留 2 个，以满足两个完整预算候选和三种子复核；这项小组规则同时写入搜索清单和预算计算。性能投影包含训练段缩放器拟合，并对 TCN 与 Transformer 实测取较慢速度；LoRA 的正式 FP32 计算不能用 BF16 的试跑速度估价。
 
 `freeze` 提供 F6 前的候选系统、最强单模型、简单融合及统计阈值冻结入口；`stream` 提供完成柱验证、延迟重放时间标记、重复与缺失输入处理和状态恢复；`inference` 提供固定四专家及三种子均值的加载接口。这些代码存在不表示已完成实际重放、延迟或预测验收。
 
@@ -84,7 +86,23 @@ bash cloud/run.sh -m fusion.next.freeze
 bash cloud/run.sh -m fusion.next.confirmation
 ```
 
-开发门槛未通过时，确认入口仍按固定流程拟合和导出可运行系统，但不计算 Q2 分数，不开启 Q3。已完成的确认报告不能被新系统替换。Q3 的受控读取与最终检验另设入口；上述命令均不授权访问 Q3。
+冻结入口重新核验共同起点、真实标签、原始预测、三种子均值及最终单模型/简单融合排名，摘要与原始记录不一致时拒绝放行。开发门槛未通过时，确认入口仍按固定流程拟合和导出可运行系统，但不计算 Q2 分数，不开启 Q3。已完成的确认报告不能被新系统替换。上述命令均不授权访问 Q3。
+
+F6 完成后，在云端生成回传包，保留本地复核所需的原始开发预测、OOF、检查点、冻结部署与预算记录：
+
+```bash
+bash cloud/run.sh -m fusion.next.cloud --return-results
+```
+
+将 `outputs/fusion_next/cloud/return_bundle.tar` 和单独的 `return_receipt.json` 带回本地，先核验整包与 `return_manifest.json` 的逐文件 SHA，再恢复到相同项目目录。仅复制部署权重不足以执行 F7 的独立放行复核。回传包不含 Q3 或原始开发行情；本地原有 F1 数据保持原身份。
+
+只有新开发门槛和固定 Q2 确认均通过后，才能在本地运行一次全天最终检验：
+
+```bash
+AAPL_CPU_THREADS=4 AAPL_CPU_IDS=0-3 bash scripts/python.sh -m fusion.next.final_test --deployment outputs/fusion_next/deployment/pre_Q2
+```
+
+该入口独立复算开发与 Q2 放行条件，核对冻结代码、模型和对照身份，再使用已知 Q2 样本验证真实本地模型加载及 CPU/云端输出数值一致性，全部通过后才获取 Q3 输入。旧下午封存 CSV 和旧负结果准入规则保持原身份；新入口不打开旧 CSV，按固定范围另行下载全天 AAPL 及已冻结的背景输入，所有数据留在本地。若旧访问记录显示已被模型使用，则拒绝声称独立最终检验。最终检验只能恢复同一模型、同一起点的已完成分片；技术失败保留记录，完成后拒绝替换系统或再次评分。没有通过门槛时不得运行本命令。
 
 将固定部署产物带回本地后，可执行开发期延迟历史重放、恢复和延迟测量：
 

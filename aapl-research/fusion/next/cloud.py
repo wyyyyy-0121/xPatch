@@ -135,9 +135,44 @@ print(json.dumps({'isolated_modules_imported':len(names),'foundation_manifest_po
     return verification
 
 
+def return_bundle():
+    """Retain cloud fits and raw development evidence needed for local F7/F8."""
+    from .accounting import totals
+    from .common import source_identity
+    if os.environ.get('FUSION_EXECUTION_PROFILE')!='autodl':raise RuntimeError('Create the result return bundle on the training host')
+    if totals()['active_jobs']:raise RuntimeError('Do not snapshot while an accounted training or CPU job is running')
+    if not (OUT/'confirmation.json').exists():raise ValueError('The fixed F6 export/confirmation must finish before returning final artifacts')
+    fixed=('search_manifest.json','budget_projection.json','performance_admission.json','performance_cpu.json',
+           'hardware_cloud.json','F3_complete.json','F4_complete.json','F5_complete.json','system_freeze.json',
+           'confirmation_started.json','confirmation.json','confirmation_predictions.npz','usage_summary.json')
+    items={str((OUT/name).relative_to(ROOT)):OUT/name for name in fixed if (OUT/name).is_file()}
+    # Include raw predictions as well as fitted weights: local final entry rechecks
+    # control rankings and three-seed results rather than trusting cloud summaries.
+    for folder in ('training','trials','selections','seed_verification','oof','frozen_fits',
+                   'deployment','usage_events','performance','search_progress'):
+        for path in (OUT/folder).rglob('*'):
+            if path.is_file() and path.suffix in ('.json','.npz','.npy','.pt','.txt'):
+                if not path.resolve().is_relative_to(OUT):raise ValueError('Result file leaves its dedicated tree')
+                items[str(path.relative_to(ROOT))]=path
+    receipt={'created_at_utc':utc_now(),'source_identity':source_identity(),'plan_sha256':digest(PLAN),
+             'Q3_data_included':False,'raw_development_market_data_included':False,'credentials_included':False,
+             'files':{name:{'sha256':digest(path),'bytes':path.stat().st_size} for name,path in items.items()}}
+    directory=OUT/'cloud';directory.mkdir(exist_ok=True)
+    manifest=directory/'return_manifest.json';write_json(manifest,receipt)
+    archive=directory/'return_bundle.tar'
+    with tarfile.open(archive,'w',dereference=True) as stream:
+        for name,path in items.items():stream.add(path,arcname=name,recursive=False)
+        stream.add(manifest,arcname='outputs/fusion_next/cloud/return_manifest.json',recursive=False)
+    summary={'archive':str(archive.relative_to(ROOT)),'sha256':digest(archive),'bytes':archive.stat().st_size,
+             'files':len(items),'source_identity':source_identity(),'created_at_utc':utc_now()}
+    write_json(directory/'return_receipt.json',summary);return summary
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--include-data',action='store_true');p.add_argument('--profile-only',action='store_true');p.add_argument('--verify',action='store_true');a=p.parse_args()
-    write_profile()
-    if not a.profile_only:
+    p=argparse.ArgumentParser();p.add_argument('--include-data',action='store_true');p.add_argument('--profile-only',action='store_true');p.add_argument('--verify',action='store_true')
+    p.add_argument('--return-results',action='store_true');a=p.parse_args()
+    if a.return_results:print(return_bundle())
+    else:write_profile()
+    if not a.profile_only and not a.return_results:
         path=bundle(a.include_data)
         print(verify_bundle(path) if a.verify else path)

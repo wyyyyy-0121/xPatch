@@ -58,7 +58,9 @@ def test_real_fitted_four_experts_and_three_seeds_export_load_exactly():
         output=loaded.predict_origin(panel,rows)
         np.testing.assert_array_equal(output['expert_predictions'],experts)
         np.testing.assert_array_equal(output['seed_predictions'],np.stack(expected))
-        np.testing.assert_array_equal(output['prediction'],np.mean(expected,axis=0))
+        from .evaluation import seed_system
+        _,development_ensemble=seed_system(panel.targets['AAPL'][rows],np.stack(expected))
+        np.testing.assert_array_equal(output['prediction'],development_ensemble)
         assert loaded.model_identity==manifest['identity']
         # Temporary training checkpoints are test artifacts, not research results.
         import shutil

@@ -67,15 +67,22 @@ def simple_candidates():
             +[{'family':'shrink_best','factor':a} for a in (0.,.25,.5,1.)])
 
 
+def halving_survivors(count):
+    # A budget-reduced group of 2..3 still needs two full-budget finalists and
+    # seed reviews. This small-group exception is fixed before any new score.
+    return min(count,max(2,math.ceil(count/3)))
+
+
 def halving_units(count):
-    return .1*count+.2*math.ceil(count/3)+.7*min(2,math.ceil(count/3))
+    return .1*count+.2*halving_survivors(count)+.7*min(2,halving_survivors(count))
 
 
 def draft():
     return {'counts':MAX_COUNTS,'validation':list(VALIDATION),'seeds':[2026,2027,2028],
             'groups':{f:candidates(f,MAX_COUNTS[f]) for f in ('lightgbm','xpatch','patchtst','fusion','lora')},
             'simple':simple_candidates(),'transfer_pairs':8,
-            'halving':{'prefix_fractions':[.1,.3,1.],'first_survivors':'ceil(n/3)','final_survivors':2,
+            'halving':{'prefix_fractions':[.1,.3,1.],'first_survivors':'min(n,max(2,ceil(n/3)))','final_survivors':2,
+                       'small_group_rule':'Keep two finalists when pre-score budget reduction leaves only 2..3 configurations',
                        'resume_optimizer_rng_sampler':True},
             'mechanism_pairs':[['gate','plain_mlp'],['foundation','no_foundation'],
                  ['pretrained_frozen','random_frozen'],['frozen','lora'],['aapl','multistock_then_adapt'],

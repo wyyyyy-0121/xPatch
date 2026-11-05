@@ -24,6 +24,8 @@ def checked_freeze():
         raise ValueError('Fixed system freeze identity differs')
     if frozen['source_identity']!=source_identity() or frozen['plan_sha256']!=digest(PLAN):
         raise ValueError('Code or user plan changed after system freeze')
+    for name,key in [('search_manifest.json','search_manifest_sha256'),('F5_complete.json','F5_sha256')]:
+        if digest(OUT/name)!=frozen[key]:raise ValueError('Pre-confirmation selection artifact changed: '+name)
     return spec,frozen
 
 
@@ -131,7 +133,8 @@ def run():
     report={'evaluated':True,'Q2_status':frozen['Q2_status'],'scores':scores,'seed_report':seed_report,
             'checks':checks,'proceed_to_final_test':all(checks.values()),'Q3_opened':False,
             'system_freeze_sha256':digest(OUT/'system_freeze.json'),'prediction_sha256':digest(prediction_path),
-            'deployment_directory':str(destination),'completed_at_utc':utc_now()}
+            'deployment_directory':str(destination),'deployment_identity':read_json(destination/'deployment.json')['identity'],
+            'fixed_simple_fit':simple_fit,'completed_at_utc':utc_now()}
     write_json(path,report);return report
 
 

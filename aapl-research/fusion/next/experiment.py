@@ -19,6 +19,7 @@ from .experts import NAMES,fit_cpu,predict_cpu,scope_key,write_oof
 from .trainer import Trainer,ExpertStore
 from .evaluation import point_scores,seed_system,minimum_detectable_improvement
 from .accounting import Usage,totals
+from .design import halving_survivors
 from . import simple
 
 
@@ -115,7 +116,7 @@ def search(panel,configs,namespace,store=None,category='fusion_search'):
         rankings.sort(key=lambda r:(r['mse'],r['config']['candidate_id']))
         rungs.append({'prefix':prefix,'rankings':rankings})
         write_json(OUT/'search_progress'/(namespace+'.json'),{'rungs':rungs,'source':source_identity()})
-        count=math.ceil(len(configs)/3) if prefix==.1 else min(2,len(current))
+        count=halving_survivors(len(configs)) if prefix==.1 else min(2,len(current))
         current=[r['config'] for r in rankings[:count]]
     value={'namespace':namespace,'selected':rungs[-1]['rankings'][0]['config'],
            'top_two':[r['config'] for r in rungs[-1]['rankings'][:2]],'rungs':rungs,
@@ -201,16 +202,19 @@ def simple_controls(panel,spec,store):
 def verify_seeds(panel,configs,namespace,store,category='adaptation_and_mechanisms'):
     reports=[]
     for cfg in configs:
-        targets=[];seed_predictions=[[] for _ in range(3)];quarters=[]
+        targets=[];seed_predictions=[[] for _ in range(3)];quarters=[];origin_rows=[]
         for quarter in VALIDATION:
-            _,rows=score_rows(panel,quarter);targets.append(panel.targets['AAPL'][rows]);quarters.extend([quarter]*len(rows))
+            _,rows=score_rows(panel,quarter);targets.append(panel.targets['AAPL'][rows]);quarters.extend([quarter]*len(rows));origin_rows.append(rows)
             for i,seed in enumerate((2026,2027,2028)):
                 _,pred=neural_trial(panel,cfg,quarter,seed,1.,namespace,store,category);seed_predictions[i].append(pred)
         target=np.concatenate(targets);predictions=np.stack([np.concatenate(parts) for parts in seed_predictions])
         report,ensemble=seed_system(target,predictions)
-        report.update(config=cfg,quarter_scores={q:point_scores(target[np.asarray(quarters)==q],ensemble[np.asarray(quarters)==q]) for q in VALIDATION})
+        report.update(config=cfg,prediction_namespace=namespace,
+                      quarter_scores={q:point_scores(target[np.asarray(quarters)==q],ensemble[np.asarray(quarters)==q]) for q in VALIDATION})
         path=OUT/'seed_verification'/namespace/cfg['candidate_id'];path.mkdir(parents=True,exist_ok=True)
-        np.savez_compressed(path/'predictions.npz',target=target,predictions=predictions,ensemble=ensemble,quarters=np.asarray(quarters))
+        rows=np.concatenate(origin_rows)
+        np.savez_compressed(path/'predictions.npz',rows=rows,timestamps_ns=panel.stamps[rows].as_unit('ns').asi8,
+                            target=target,predictions=predictions,ensemble=ensemble,quarters=np.asarray(quarters))
         report['prediction_sha256']=digest(path/'predictions.npz');write_json(path/'report.json',report);reports.append(report)
     reports.sort(key=lambda r:(r['system']['mse'],r['config']['candidate_id']));return reports
 
@@ -302,7 +306,7 @@ def paired_search(panel,configs,multistock,spec):
                 sides[side]={'mse':pooled_score(results),'fold_scores':[r['scores'] for r in results]}
             rankings.append({'config':config,'sides':sides,'mse':sides['multi']['mse']})
         rankings.sort(key=lambda r:(r['mse'],r['config']['candidate_id']));rungs.append({'prefix':prefix,'rankings':rankings})
-        count=math.ceil(len(configs)/3) if prefix==.1 else min(2,len(current));current=[r['config'] for r in rankings[:count]]
+        count=halving_survivors(len(configs)) if prefix==.1 else min(2,len(current));current=[r['config'] for r in rankings[:count]]
         write_json(OUT/'search_progress/transfer.json',{'rungs':rungs})
     result={'rungs':rungs,'selected':rankings[0]['config'],'top_two':[r['config'] for r in rankings[:2]],
             'promotion_rule':'multistock MSE; both sides always advance together','completed_at_utc':utc_now()}

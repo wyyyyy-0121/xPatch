@@ -84,7 +84,9 @@ class FrozenSystem:
             with torch.autocast(self.device,dtype=torch.bfloat16,enabled=cfg.get('precision')=='bf16'):
                 output=model(batch)
             seeds.append(output['prediction'].float().cpu().numpy());weights.append(output['weights'].float().cpu().numpy())
-        prediction=np.mean(seeds,axis=0);weight=np.mean(weights,axis=0)
+        # Use the same float64 seed mean as development seed_system(), including
+        # local deployment and the two fixed confirmation/final evaluations.
+        prediction=np.asarray(seeds,dtype=np.float64).mean(axis=0);weight=np.mean(weights,axis=0)
         if not np.isfinite(prediction).all():raise FloatingPointError('Nonfinite frozen ensemble output')
         return {'prediction':prediction,'weights':weight,'seed_predictions':np.stack(seeds),'expert_predictions':experts}
 

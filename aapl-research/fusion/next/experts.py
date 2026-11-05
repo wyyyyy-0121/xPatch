@@ -51,7 +51,8 @@ def matrix(panel,stocks,rows,config,scalers,batch_size=256,with_labels=True):
 
 def fit_cpu(panel,config,fit_end,directory,seed=2026):
     directory=Path(directory);directory.mkdir(parents=True,exist_ok=True)
-    scalers=panel.scaler(fit_end);unit=scalers['AAPL']['target_std']
+    start=time.perf_counter();scalers=panel.scaler(fit_end);scaler_seconds=time.perf_counter()-start
+    unit=scalers['AAPL']['target_std']
     stock,rows,weight=balanced_rows(panel,fit_end,seed,config.get('rows_per_day',16),
                                     config.get('training_scope')=='aapl')
     start=time.perf_counter();x,y=matrix(panel,stock,rows,config,scalers);features_seconds=time.perf_counter()-start
@@ -75,7 +76,7 @@ def fit_cpu(panel,config,fit_end,directory,seed=2026):
     else:raise ValueError('CPU family must be Ridge or LightGBM')
     report={'family':config['family'],'config':config,'fit_end':fit_end,'fit_start':str(panel.dates[rows].min()),
             'seed':seed,'training_rows':len(rows),'stock_count':len(np.unique(stock)),
-            'balanced_stock_day_weights':True,'feature_seconds':features_seconds,
+            'balanced_stock_day_weights':True,'scaler_seconds':scaler_seconds,'feature_seconds':features_seconds,
             'fit_seconds':time.perf_counter()-start,'model_sha256':digest(model_path),'target_unit':unit,
             'resources':guard.check(),'created_at_utc':utc_now()}
     write_json(directory/'summary.json',report)

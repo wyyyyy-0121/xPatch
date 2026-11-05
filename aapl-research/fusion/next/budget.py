@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from .common import OUT,PLAN,digest,read_json,write_json,utc_now,source_identity,identity
-from .design import draft,halving_units,freeze
+from .design import draft,halving_units,halving_survivors,freeze
 from .panel import Panel
 from .splits import VALIDATION
 from .accounting import LIMITS,totals
@@ -28,7 +28,7 @@ def work_items(panel,spec):
     def add(category,family,fits,updates=0,predict_rows=0,description=''):
         work.append({'category':category,'family':family,'fit_equivalents':float(fits),'updates':float(updates),
                      'predict_rows':int(predict_rows),'description':description})
-    def halving_calls(count):return count+math.ceil(count/3)+min(2,math.ceil(count/3))
+    def halving_calls(count):return count+halving_survivors(count)+min(2,halving_survivors(count))
     for family in ('ridge','lightgbm','xpatch','patchtst'):
         configs=spec['groups'][family];n=len(configs)
         if family in ('ridge','lightgbm'):
@@ -62,10 +62,10 @@ def work_items(panel,spec):
         family='fusion_random' if variant=='random_frozen' else 'fusion'
         add('adaptation_and_mechanisms',family,2*3*nfold,2*3*nfold*updates,2*3*all_main,
             'mechanism '+variant+' (no speed discount for removed modules)')
-    # Worst conditional path: separate Q2 fits and Q3 fits, three system seeds,
-    # and all four potential experts for strongest control / simple fusion.
+    # Preserve a conservative two-fit allowance even though the frozen final-fit
+    # policy now evaluates the exact pre-Q2 artifact without post-Q2 retraining.
     final_rows=3*64*378  # extra allowance for development replay and inference acceptance
-    add('final_and_deployment','lora',6,6*spec['updates']['lora'],6*final_rows,'Q2/Q3 system retrain and acceptance replay')
+    add('final_and_deployment','lora',6,6*spec['updates']['lora'],6*final_rows,'pre-Q2 system fits, conservative spare fit allowance and acceptance replay')
     for family in ('ridge','lightgbm','xpatch','patchtst'):
         u=spec['groups'][family][0].get('total_updates',0)
         add('final_and_deployment',family,2,2*u,2*final_rows,'two governed expert/control retrains')
@@ -79,13 +79,14 @@ def project(panel,spec,gpu,cpu):
     # The random frozen backbone cannot reuse the pretrained cache. Use raw timing.
     rates={'xpatch':m['xpatch_end_to_end']['seconds_per_update'],
            'patchtst':m['patchtst_end_to_end']['seconds_per_update'],
-           'fusion':max(m['end_to_end_cache_population']['seconds_per_update'],m['end_to_end_raw']['seconds_per_update']),
-           'fusion_random':m['end_to_end_raw']['seconds_per_update'],
-           'lora':max(m['lora_stress']['seconds_per_update'],m['lora_end_to_end']['seconds_per_update'])}
+           'fusion':max(m['end_to_end_cache_population']['seconds_per_update'],m['end_to_end_raw']['seconds_per_update'],m['frozen_tcn_end_to_end']['seconds_per_update']),
+           'fusion_random':max(m['end_to_end_raw']['seconds_per_update'],m['frozen_tcn_end_to_end']['seconds_per_update']),
+           'lora':max(m['lora_stress']['seconds_per_update'],m['lora_end_to_end']['seconds_per_update'],m['lora_tcn_end_to_end']['seconds_per_update'])}
     infer={family:m[family+'_inference']['seconds_per_origin'] for family in ('xpatch','patchtst','lora')}
-    infer['fusion']=infer['fusion_random']=m['frozen_inference']['seconds_per_origin']
+    infer['fusion']=infer['fusion_random']=max(m['frozen_inference']['seconds_per_origin'],m['frozen_tcn_inference']['seconds_per_origin'])
+    infer['lora']=max(infer['lora'],m['lora_tcn_inference']['seconds_per_origin'])
     current=totals();categories={name:0. for name in LIMITS};cpu_seconds=0.
-    init=m['fusion_initialization_seconds']
+    init=m['fusion_initialization_seconds']+m['scaler_fit_seconds']*counts['maximum_fit_calendar_days']/m['scaler_training_calendar_days']
     for item in work:
         family=item['family'];seconds=0.
         if family in rates:
@@ -93,7 +94,7 @@ def project(panel,spec,gpu,cpu):
         else:
             measure=c[family]
             factor=counts['maximum_fit_calendar_days']/measure['training_calendar_days']
-            seconds=item['fit_equivalents']*(measure['feature_seconds']+measure['fit_seconds'])*factor
+            seconds=item['fit_equivalents']*(measure['scaler_seconds']+measure['feature_seconds']+measure['fit_seconds'])*factor
             seconds+=item['predict_rows']*measure['prediction_seconds_per_origin']
             # Until measured overlap is implemented, count CPU time in the GPU reservation too.
             cpu_seconds+=seconds
