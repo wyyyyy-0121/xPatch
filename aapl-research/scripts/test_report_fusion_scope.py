@@ -68,5 +68,13 @@ def test_portable_stage_requires_the_declared_policy(monkeypatch):
         stage.update(numerical_policy_identity=policy['identity'],evaluation_precision='float32')
         write_json(root/'F3_complete.json',stage)
         assert report.inspect(root)['stages']['F3']['completed']
+        # A real FP32 rescore must not replace the scope path used by stage binding.
+        result=root/'trials/example/result.json'
+        write_json(result,{'details':{'numerical_policy_identity':policy['identity']}})
+        write_json(root/'performance/portable_inference_rescore_complete.json',{
+            'numerical_policy_identity':policy['identity'],'all_trained_checkpoint_hashes_unchanged':True,
+            'rescored_full_quarter_results':[{'result':'outputs/fusion_next/trials/example/result.json',
+                                             'sha256':digest(result)}]})
+        assert report.inspect(root)['stages']['F3']['completed']
         (root/'performance/portable_portable_inference_runtime.py.txt').write_text('changed')
         with pytest.raises(ValueError,match='implementation changed'):report.inspect(root)

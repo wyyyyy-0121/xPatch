@@ -44,10 +44,27 @@ def inspect(evidence_root=OUT):
             if receipt['numerical_policy_identity']!=numerical['identity'] or not receipt['all_trained_checkpoint_hashes_unchanged']:
                 raise ValueError('FP32 rescore receipt differs')
             for row in receipt['rescored_full_quarter_results']:
-                path=root/row['result'].removeprefix('outputs/fusion_next/')
-                if digest(path)!=row['sha256'] or read_json(path)['details']['numerical_policy_identity']!=numerical['identity']:
+                result_path=root/row['result'].removeprefix('outputs/fusion_next/')
+                if digest(result_path)!=row['sha256'] or read_json(result_path)['details']['numerical_policy_identity']!=numerical['identity']:
                     raise ValueError('FP32 rescored prediction receipt changed')
             provenance.append(rescored)
+    speed=None
+    speed_path=root/'performance/future_speed_policy.json'
+    if speed_path.exists():
+        speed=read_json(speed_path)
+        if (speed['identity']!=identity({k:v for k,v in speed.items() if k!='identity'}) or
+            speed['base_engine_source_identity']!=scope['source_identity'] or numerical is None or
+            speed['numerical_policy_identity']!=numerical['identity'] or
+            not speed['exact_input_parity_passed'] or speed['warm_speedup']<=1):
+            raise ValueError('Future speed policy differs')
+        for field,filename in [('runtime_sha256','future_speed_runtime.py.txt'),
+                               ('launcher_sha256','start_fast_fusion.py.txt'),
+                               ('local_benchmark_sha256','future_speed_local_benchmark.json'),
+                               ('cloud_benchmark_sha256','future_speed_cloud_benchmark.json')]:
+            artifact=root/'performance'/filename
+            if digest(artifact)!=speed[field]:raise ValueError('Future speed evidence changed: '+filename)
+            provenance.append(artifact)
+        provenance.append(speed_path)
     for name in ('F3','F4','F5'):
         artifact=root/(name+'_complete.json')
         stages[name]={'completed':False}
@@ -70,6 +87,7 @@ def inspect(evidence_root=OUT):
         'mechanisms_retained':scope['mechanisms_retained'],'mechanisms_deferred':scope['mechanisms_deferred'],
         'projection':scope['projection'],'stages':stages,
         'portable_inference_policy':numerical,
+        'future_speed_policy':speed,
         'original_complete_scope_claimed':False,'Q3_values_read_by_this_report':False,
         'claim_limits':['Omitted mechanisms do not provide evidence of foundation, market, feature or transfer contributions',
             'Search and seed reviews use the reduced scope, not all original configurations',
