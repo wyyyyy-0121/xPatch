@@ -130,6 +130,30 @@ def test_actual_256_origin_two_process_replay_input_contracts_and_standalone_pac
     # Identical weights may be reverified without rebuilding the immutable package.
     original_hash=digest(archive);phase(e,'package')
     assert digest(archive)==original_hash
+    # The handover consumes the real replay, package, contract and process-log
+    # artifacts above. Only the outer completed CPU guard is a test receipt.
+    from scripts import report_fusion_followup as handover
+    attempt=e.run/'attempts/CPU_delivery_test'
+    request=seal({'purpose':'delivery_cpu','limit':e.binding['limit'],'stage_seconds':7200,
+        'command':[sys.executable,str(deliver.ENTRY)]})
+    write_json(attempt/'guard_request.json',request)
+    write_json(attempt/'guard_state.json',{'request_identity':request['identity'],'stage':'completed',
+        'worker_returncode':0,'guard':{'pid':99999991,'created_unix':1.},'worker':None,
+        'updated_at_utc':pd.Timestamp.now(tz='UTC').isoformat()})
+    write_json(attempt/'launch_admission.json',seal({'binding':e.binding}))
+    completion={'stage':'followup_CPU_delivery_complete','manifest_identity':e.manifest['identity'],
+        'binding_identity':e.binding['identity'],'model_identity':checked['model_identity'],
+        'independent_research_success_claimed':False,'Q2_Q3_scored':False,
+        'actual_new_model_CPU_acceptance_passed':checked['engineering_acceptance_passed'],
+        'CPU_acceptance_report_sha256':digest(root/'report.json'),
+        'input_contracts_sha256':digest(e.local/'input_contracts.json'),
+        'package':str(archive.relative_to(ROOT)),'package_sha256':digest(archive),
+        'package_verification_sha256':digest(archive.with_suffix('.verification.json')),
+        'standalone_package_actually_executed':True}
+    write_json(e.local/'completion.json',seal(completion))
+    actual=handover.local_evidence(e.run,e.binding,{})
+    assert actual['origins']==256 and actual['standalone_package_actually_executed']
+    assert actual['package_sha256']==digest(archive) and actual['all_named_input_contracts_passed']
     original=read_json(root/'report.json');write_json(root/'report.json',{**original,'warm_single_origin_p95_seconds':.000001})
     with pytest.raises(ValueError,match='actual measurements'):deliver.checked_replay(e.local,e.binding)
 

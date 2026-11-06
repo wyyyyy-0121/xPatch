@@ -100,6 +100,7 @@ def prepare(snapshot):
              'engineering_fit_entry_sha256': digest(ROOT/'scripts/fit_fusion_followup.py'),
              'formal_return_entry_sha256': digest(ROOT/'scripts/return_fusion_followup.py'),
              'CPU_delivery_entry_sha256': digest(ROOT/'scripts/deliver_fusion_followup.py'),
+             'handover_report_entry_sha256': digest(ROOT/'scripts/report_fusion_followup.py'),
              'earliest_large_run': EARLIEST, 'reference': selected, 'candidates': proposed,
              'reference_status': 'provisional until original F5, F6 and actual F8 finish',
              'validation': list(QUARTERS), 'pilot_seeds': [2026], 'expanded_seeds': [2026,2027,2028],
