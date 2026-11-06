@@ -77,16 +77,32 @@ def test_stage_cap_stops_parent_and_child_with_grace_inside_the_cutoff(directory
         terminate_guard(process)
 
 
-def test_normal_worker_exits_successfully_without_a_stop_signal(directory):
+@pytest.mark.parametrize('purpose',['exploration','delivery_fit'])
+def test_normal_worker_exits_successfully_without_a_stop_signal(directory,purpose):
     process,_ = guard.start(directory,[sys.executable,'-c','pass'],LIMIT,4,
-                            checkpoint_grace=.5,termination_grace=.2)
+                            checkpoint_grace=.5,termination_grace=.2,purpose=purpose)
     assert process.wait(timeout=6) == 0
     state = read_json(directory/'guard_state.json')
     assert state['stage'] == 'completed' and state['worker_returncode'] == 0
+    assert state['purpose']==purpose and state['delivery_reserve_seconds']==guard.PURPOSE_RESERVES[purpose]
     assert state['signal_events'] == []
     with pytest.raises(RuntimeError,match='previous guard request'):
         guard.start(directory,[sys.executable,'-c','pass'],LIMIT,4,
                     checkpoint_grace=.5,termination_grace=.2)
+
+
+def test_exploration_and_delivery_fit_have_separate_cutoffs_without_moving_the_deadline():
+    from datetime import datetime
+    deadline = datetime.fromisoformat(guard.DEADLINE).timestamp()
+    exploration,reserve = guard.stage_cutoff(deadline-9*3600,6*3600)
+    assert exploration==deadline-8*3600 and reserve==8*3600
+    delivery,reserve = guard.stage_cutoff(deadline-7*3600,6*3600,'delivery_fit')
+    assert delivery==deadline-2*3600 and reserve==2*3600
+    too_late,_ = guard.stage_cutoff(deadline-3600,6*3600,'delivery_fit')
+    assert too_late<=deadline-3600  # A launcher must reject this expired window.
+    with pytest.raises(ValueError,match='Unknown'):guard.stage_cutoff(deadline,10,'unbounded')
+    with pytest.raises(ValueError,match='finite stage cap'):
+        guard.stage_cutoff(deadline,7*3600,'delivery_fit')
 
 
 def test_worker_exit_does_not_leave_a_background_child(directory):

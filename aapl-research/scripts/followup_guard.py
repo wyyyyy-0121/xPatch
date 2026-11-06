@@ -26,7 +26,9 @@ from fusion.next.common import ROOT, digest, identity, read_json, utc_now, write
 RUNS = ROOT/'outputs/fusion_followup/runs'
 DEADLINE = '2026-11-09T09:34:22.509412+00:00'
 RESERVE_SECONDS = 8*3600
+CPU_DELIVERY_RESERVE_SECONDS = 2*3600
 MAX_STAGE_SECONDS = 6*3600
+PURPOSE_RESERVES = {'exploration':RESERVE_SECONDS,'delivery_fit':CPU_DELIVERY_RESERVE_SECONDS}
 
 
 def process_identity(pid=None):
@@ -50,7 +52,22 @@ def checked_directory(directory):
     return directory
 
 
-def start(directory, command, limit, stage_seconds, *, checkpoint_grace=60., termination_grace=5.):
+def stage_cutoff(started,stage_seconds,purpose='exploration'):
+    """Keep exploration out of delivery time; delivery fits still leave CPU time.
+
+    This low-level choice does not admit a model fit. A future delivery launcher
+    must separately bind the fixed recipe, completed review and measured budget.
+    """
+    if purpose not in PURPOSE_RESERVES:
+        raise ValueError('Unknown follow-up guard purpose')
+    if (not math.isfinite(started) or not math.isfinite(stage_seconds)
+            or not 0 < stage_seconds <= MAX_STAGE_SECONDS):
+        raise ValueError('Use a finite stage cap <=6 hours')
+    reserve = PURPOSE_RESERVES[purpose]
+    return min(started+stage_seconds,datetime.fromisoformat(DEADLINE).timestamp()-reserve),reserve
+
+
+def start(directory, command, limit, stage_seconds, *, checkpoint_grace=60., termination_grace=5.,purpose='exploration'):
     """Start the guard, not an admitted GPU experiment. Never pass shell text.
 
     The caller must stay alive until the job finishes. Its disappearance is a
@@ -66,9 +83,9 @@ def start(directory, command, limit, stage_seconds, *, checkpoint_grace=60., ter
             or not all(isinstance(arg, str) and '\x00' not in arg for arg in command)):
         raise ValueError('Use an argument array without a shell')
     started = time.time()
-    stop_by = min(started+stage_seconds, datetime.fromisoformat(DEADLINE).timestamp()-RESERVE_SECONDS)
+    stop_by,reserve = stage_cutoff(started,stage_seconds,purpose)
     if stop_by <= started:
-        raise TimeoutError('Original deadline and delivery reserve leave no exploration time')
+        raise TimeoutError('Original deadline and delivery reserve leave no time for this purpose')
     directory.mkdir(parents=True,exist_ok=True)
     with (directory/'guard_launch.lock').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -78,7 +95,7 @@ def start(directory, command, limit, stage_seconds, *, checkpoint_grace=60., ter
         request = {'directory':str(directory), 'command':list(command), 'cwd':str(ROOT),
                    'owner':process_identity(), 'limit':limit, 'stage_seconds':stage_seconds,
                    'requested_at_unix':started, 'stop_by_unix':stop_by,
-                   'delivery_reserve_seconds':RESERVE_SECONDS,
+                   'purpose':purpose,'delivery_reserve_seconds':reserve,
                    'checkpoint_grace_seconds':checkpoint_grace,
                    'termination_grace_seconds':termination_grace,
                    'guard_sha256':digest(Path(__file__)),
@@ -128,19 +145,18 @@ def supervise(path):
     if path != directory/'guard_request.json':
         raise ValueError('Unexpected guard request path')
     request = read_json(path)
+    stop_by,reserve = stage_cutoff(request['requested_at_unix'],request['stage_seconds'],request['purpose'])
     if (request['identity'] != identity({k:v for k,v in request.items() if k != 'identity'})
             or request['guard_sha256'] != digest(Path(__file__))
             or request['directory'] != str(directory) or request['cwd'] != str(ROOT)
             or request['limit']['total_wall_hours'] != 100 or request['limit']['deadline_utc'] != DEADLINE
-            or request['delivery_reserve_seconds'] != RESERVE_SECONDS
-            or request['stop_by_unix'] != min(request['requested_at_unix']+request['stage_seconds'],
-                    datetime.fromisoformat(DEADLINE).timestamp()-RESERVE_SECONDS)
+            or request['delivery_reserve_seconds'] != reserve or request['stop_by_unix'] != stop_by
             or not 0 < request['stage_seconds'] <= MAX_STAGE_SECONDS
             or not 0 <= request['termination_grace_seconds'] <= request['checkpoint_grace_seconds'] < request['stage_seconds']):
         raise ValueError('Guard request identity or cutoff differs')
     state = {'request_identity':request['identity'], 'guard':process_identity(),
              'owner':request['owner'], 'worker':None, 'stop_by_unix':request['stop_by_unix'],
-             'absolute_deadline_utc':DEADLINE, 'delivery_reserve_seconds':RESERVE_SECONDS,
+             'absolute_deadline_utc':DEADLINE, 'purpose':request['purpose'],'delivery_reserve_seconds':reserve,
              'signal_events':[], 'stage':'starting', 'worker_started':False}
     def save(stage,**details):
         state.update(stage=stage,updated_at_utc=utc_now(),**details)

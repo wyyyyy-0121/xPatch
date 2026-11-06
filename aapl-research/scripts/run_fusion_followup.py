@@ -223,6 +223,8 @@ def bound_worker(attempt):
     request = identified(attempt/'guard_request.json')
     state = read_json(attempt/'guard_state.json')
     current = guard.process_identity()
+    if request['purpose'] != 'exploration' or request['delivery_reserve_seconds'] != guard.RESERVE_SECONDS:
+        raise RuntimeError('Research worker cannot use the reserved delivery-fit time')
     if (state.get('stage') != 'running' or state['request_identity'] != request['identity']
             or state['worker'] != current or state['guard']['pid'] != os.getppid()
             or not guard.exact_alive(state['guard']) or not guard.exact_alive(request['owner'])
@@ -500,7 +502,7 @@ def launch(manifest_path,mode,candidate_name=None):
                    '--attempt',str(attempt),'--destination',str(destination),'--mode',mode]
         if candidate_name is not None:command += ['--candidate',candidate_name]
         os.environ['PYTHONPATH'] = str(ROOT)
-        process,dispatch = guard.start(attempt,command,manifest['limit'],budget['stage_seconds'])
+        process,dispatch = guard.start(attempt,command,manifest['limit'],budget['stage_seconds'],purpose='exploration')
         try:
             timeout = max(1,dispatch['stop_by_unix']-time.time()+10)
             code = process.wait(timeout=timeout)

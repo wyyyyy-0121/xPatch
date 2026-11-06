@@ -166,16 +166,18 @@ def test_original_and_followup_locks_are_held_together_and_released(fixture,monk
     with run.execution_locks():pass
 
 
-def test_guard_bound_worker_passes_identity_check_before_refusing_an_absent_matrix(fixture):
+@pytest.mark.parametrize('purpose',['exploration','delivery_fit'])
+def test_guard_bound_worker_passes_identity_check_before_refusing_an_absent_matrix(fixture,purpose):
     directory,_ = fixture
     attempt = directory/'worker_identity'
     command = [sys.executable,str(run.ENTRY),'--worker','--manifest',str(run.FOLLOW/'preparation/no_such_matrix.json'),
                '--attempt',str(attempt),'--destination',str(attempt),'--mode','probe','--candidate','A']
-    process,_ = guard.start(attempt,command,LIMIT,10,checkpoint_grace=2,termination_grace=.2)
+    process,_ = guard.start(attempt,command,LIMIT,10,checkpoint_grace=2,termination_grace=.2,purpose=purpose)
     try:
         assert process.wait(timeout=12) == 1
         log = (attempt/'worker.log').read_text()
-        assert 'no_such_matrix.json' in log and 'FileNotFoundError' in log
+        if purpose=='exploration':assert 'no_such_matrix.json' in log and 'FileNotFoundError' in log
+        else:assert 'Research worker cannot use the reserved delivery-fit time' in log
         assert 'Worker is not bound' not in log and 'Worker arguments differ' not in log
         assert read_json(attempt/'guard_state.json')['reason'] == 'worker_failed'
     finally:
