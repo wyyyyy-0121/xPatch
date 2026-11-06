@@ -2,7 +2,9 @@
 
 下一阶段研发计划见 [基础模型与多专家神经融合计划书](FUSION_IMPLEMENTATION_PLAN.md)：覆盖全天预测、多股票联合训练、状态门控、基础模型适配、机制对照与部署验收。该文件是待执行计划，下面的结果描述属于已完成的上一轮比较实验。
 
-云端融合运行中的后续输入提速、实测范围和接入状态见 [速度优化修订](fusion/next/FUTURE_SPEED_AMENDMENT.md)。现有训练进程继续使用原实现；已验证的提速通过后续独立进程入口加载。
+云端融合运行中的后续输入提速、实测范围和接入状态见 [速度优化修订](fusion/next/FUTURE_SPEED_AMENDMENT.md)。F4 完成后已核验交接，后续 F5 使用优化入口，完整训练提速比例尚未测定。
+
+当前 Goal 的诊断与后续时间安排见 [11 月 8 日后续项目推进计划](FUSION_FOLLOWUP_PLAN.md)：11 月 6—7 日准备和小试，下一次大规模运算安排在 11 月 8 日，沿用原 100 小时绝对截止。开发诊断入口为 `scripts/review_fusion_development.py`，只读分析三个已知开发季度，不更改本轮正式选择。
 
 本研究按 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) 执行。主目标是未来 12 分钟累计 log 收益，不加入新闻、政治或舆情输入。主评价时点为 13:30–15:47 ET。
 
