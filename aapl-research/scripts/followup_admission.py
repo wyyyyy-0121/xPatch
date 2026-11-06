@@ -20,7 +20,15 @@ ENGINE = 'fb0a03b4841e9bde2b555440214b2b4308bc89e8ce2f3473b22a73b6ffd063cb'
 SCOPE = '2b93e6c04d1fe15f1fd9cb47f424846014b80d88f4f5c8679db0c918b6c60207'
 NUMERICAL = '9cf552a6c334bee8226411e1e989a25c11af89d8305bb29feb74ff2276098872'
 SPEED = '0c433a556af0a5d944c7a6afdfdbda35b9a7ac372610b7492295dcc487f06fab'
-IMPLEMENTATIONS = ('followup_runtime.py','followup_guard.py','followup_admission.py','run_fusion_followup.py')
+IMPLEMENTATIONS = ('followup_runtime.py','followup_guard.py','followup_admission.py',
+                   'run_fusion_followup.py','review_fusion_pilot.py')
+REVIEW_POLICY = {'version':'development_pilot_review_v1','pilot_seed':2026,
+                 'minimum_positive_quarters':2,'minimum_positive_time_segments':2,
+                 'segments':['opening_0931_1029','midday_1030_1429','closing_1430_1548'],
+                 'remove_top_positive_gain_days':5,
+                 'controls_for_exploratory_expansion':['zero','fixed_frozen_seed2026','original_selected_three_seed_mean'],
+                 'maximum_recipes_to_expand':1,'selection':'lowest pooled raw MSE among eligible fixed recipes; candidate name breaks ties',
+                 'role':'exploratory allocation only; no replacement of original research gates or final claims'}
 
 
 def identified(path):
@@ -229,6 +237,11 @@ def _freeze():
     from fusion.next import panel,trainer
     original_panel = panel.Panel.load()
     reference,proposed,quarters,files = fixed_reference(root,original_panel)
+    selected = read_json(root/'system_freeze.json')['selected_system']
+    incumbent = ('seed_verification/'+selected['prediction_namespace']+'/'+selected['config']['candidate_id']+'/predictions.npz')
+    if selected['prediction_sha256'] != digest(checked_file(root,incumbent)):
+        raise ValueError('Original selected development ensemble differs')
+    files[incumbent] = {'sha256':selected['prediction_sha256'],'bytes':(root/incumbent).stat().st_size}
     # These artifacts are present on both hosts. Local replay/package receipts
     # stay in the delivery prerequisite, while the cloud's original fits,
     # policies and freeze must still match their verified local counterparts.
@@ -261,6 +274,7 @@ def _freeze():
              'limit':delivery['limit'],'validation':list(QUARTERS),'pilot_seeds':[2026],
              'expanded_seeds':[2026,2027,2028],'total_coverage_equivalent_epochs':2,
              'pilot_full_fits':9,'pilot_GPU_hours_ceiling':6,'extension_GPU_hours_ceiling':6,
+             'review_policy':REVIEW_POLICY,'original_selected_predictions':incumbent,
              'training_admitted':False,'new_training_launched':False,'Q2_Q3_prediction_arrays_loaded':False,
              'interpretation':'prospective development comparison; independent future evidence still required'}
     value['identity'] = identity(value)
@@ -306,6 +320,7 @@ def check_frozen(path,root=BASE):
             or value['expanded_seeds'] != [2026,2027,2028] or value['total_coverage_equivalent_epochs'] != 2
             or value['pilot_full_fits'] != 9 or value['pilot_GPU_hours_ceiling'] != 6
             or value['extension_GPU_hours_ceiling'] != 6 or value['earliest_large_run'] != EARLIEST
+            or value['review_policy'] != REVIEW_POLICY
             or value['candidates'] != candidates(value['reference'])):
         raise ValueError('Frozen prospective matrix or original protocol differs')
     if set(value['implementation']) != set(IMPLEMENTATIONS):

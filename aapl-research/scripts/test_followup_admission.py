@@ -207,12 +207,12 @@ def test_portable_frozen_manifest_binds_inputs_recipe_code_and_the_original_prot
                  'source_identity':admit.ENGINE,'scope_identity':admit.SCOPE,'plan_sha256':digest(PLAN),
                  'followup_plan_sha256':digest(ROOT/'FUSION_FOLLOWUP_PLAN.md'),'delivery':admit.verify_delivery(root),
                  'reference':reference,'candidates':admit.candidates(reference),'original_inputs':files,
-                 'implementation':{name:digest(ROOT/'scripts'/name) for name in
-                      ('followup_runtime.py','followup_guard.py','followup_admission.py','run_fusion_followup.py')},
+                 'implementation':{name:digest(ROOT/'scripts'/name) for name in admit.IMPLEMENTATIONS},
                  'earliest_large_run':admit.EARLIEST,'limit':{'total_wall_hours':100,'deadline_utc':admit.DEADLINE},
                  'validation':list(admit.QUARTERS),'pilot_seeds':[2026],'expanded_seeds':[2026,2027,2028],
                  'total_coverage_equivalent_epochs':2,'pilot_full_fits':9,'pilot_GPU_hours_ceiling':6,
-                 'extension_GPU_hours_ceiling':6,'training_admitted':False,'new_training_launched':False,
+                 'extension_GPU_hours_ceiling':6,'review_policy':admit.REVIEW_POLICY,
+                 'training_admitted':False,'new_training_launched':False,
                  'folds':{q:{'fit_end':fold(dates,q)['fit_end'],
                              'score_origins':1,
                              'total_updates':for_fit(reference,fold(dates,q)['fit_end'])['total_updates']} for q in admit.QUARTERS}}
@@ -226,6 +226,7 @@ def test_portable_frozen_manifest_binds_inputs_recipe_code_and_the_original_prot
                      lambda v:v['folds']['2026Q1'].update(total_updates=1),
                      lambda v:v.update(folds={k:r for k,r in v['folds'].items() if k != '2026Q1'}),
                      lambda v:v['delivery'].update(engineering_acceptance_passed=False),
+                     lambda v:v.update(review_policy={**v['review_policy'],'remove_top_positive_gain_days':0}),
                      lambda v:v['candidates'].pop()]
         for mutate in mutations:
             altered = copy.deepcopy(value);mutate(altered);write_json(path,seal(altered))
