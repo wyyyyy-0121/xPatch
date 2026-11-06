@@ -7,6 +7,7 @@ import runpy
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
+import textwrap
 
 import psutil
 import pytest
@@ -25,23 +26,36 @@ def actual_replay():
         directory = Path(temporary)
         program = '''import time
 time.sleep(.3)  # Deliberate startup work before importing the engine/adapter.
-import sys
+import os
 from pathlib import Path
 from fusion.next.tests_delivery import configure_toy
+from fusion.next import common,delivery,inference,data
+from aapl import data as raw_data
 from scripts import original_delivery_timing_runtime as timing, portable_package_runtime as package
-deployment = configure_toy(Path(sys.argv[1]))
+deployment = configure_toy(Path(os.environ['AAPL_TOY_REPLAY_DIRECTORY']))
+common.OUT = delivery.OUT
+inference.FrozenSystem = delivery.FrozenSystem
+raw_data.read_source = delivery.read_source
+data.pages_frame = delivery.pages_frame
+common.write_json(deployment/'deployment.json',{'identity':'toy_process_recovery'})
 package._installed = True
 timing.checked_policy = lambda: {'identity':'synthetic_cold_policy','measurement_scope':timing.SCOPE,'cold_seconds_ceiling':60}
 timing.install()
-from fusion.next.delivery import replay
-print(replay(deployment,maximum_origins=6,stop_after=3) if sys.argv[2]=='first'
-      else replay(deployment,maximum_origins=6,resume=True))
 '''
-        for mode in ('first','resume'):
-            result = subprocess.run([sys.executable,'-c',program,str(directory),mode],cwd=ROOT,
-                env=dict(os.environ,PYTHONPATH=str(ROOT)),capture_output=True,text=True,timeout=60)
-            assert result.returncode == 0, result.stderr
+        bootstrap = directory/'bootstrap';bootstrap.mkdir()
+        (bootstrap/'sitecustomize.py').write_text('try:\n'+textwrap.indent(program,'    ')+
+            '\nexcept Exception as error:\n    raise SystemExit("Synthetic CLI setup failed: "+str(error)) from error\n')
+        result = subprocess.run([sys.executable,'-m','fusion.next.delivery',
+            '--deployment',str(directory/'deployment'),'--origins','6'],cwd=ROOT,
+            env=dict(os.environ,PYTHONPATH=str(bootstrap)+os.pathsep+str(ROOT),
+                     AAPL_TOY_REPLAY_DIRECTORY=str(directory),CUDA_VISIBLE_DEVICES=''),
+            capture_output=True,text=True,timeout=60)
+        assert result.returncode == 0, result.stderr
         saved = directory/'deployment_acceptance/toy_process_recovery'
+        logs = [read_json(path) for path in sorted((saved/'process_logs').glob('*.json'))]
+        assert len(logs) == 2 and all(row['returncode'] == 0 for row in logs)
+        assert '--stop-after' in logs[0]['arguments'] and '--resume' in logs[1]['arguments']
+        assert all(row['arguments'][0] == 'fusion.next.delivery' for row in logs)
         yield saved, read_json(saved/'report.json'), read_json(saved/'progress.json')
 
 
