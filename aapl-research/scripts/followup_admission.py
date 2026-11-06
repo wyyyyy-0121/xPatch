@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 
 import numpy as np
+import psutil
 
 from fusion.next.common import ROOT, OUT as BASE, PLAN, digest, identity, read_json, source_identity, utc_now, write_json
 from scripts.followup_runtime import FOLLOW, DEADLINE, EARLIEST, candidates
@@ -70,6 +71,16 @@ def verify_delivery(root=BASE):
     receiver = read_json(root/'cloud/local_completion/handoff_receiver_dispatch.json')
     if exact_alive(receiver):
         raise RuntimeError('Original local receiver is still alive; wait for its natural exit')
+    # Linux reports creation epochs relative to the current boot epoch, which
+    # can move after a WSL wall-clock correction. A mismatched epoch is not
+    # evidence of exit. Refuse any still-live holder of this legacy PID rather
+    # than admitting a new run while the original receiver may still finish.
+    try:
+        process = psutil.Process(receiver['pid'])
+        if process.is_running() and process.status() != psutil.STATUS_ZOMBIE:
+            raise RuntimeError('Original receiver PID is still live despite its creation-time mismatch; wait for actual exit')
+    except psutil.NoSuchProcess:
+        pass
     limit = binding['limit']
     if limit['total_wall_hours'] != 100 or limit['deadline_utc'] != DEADLINE:
         raise ValueError('Original absolute deadline changed')

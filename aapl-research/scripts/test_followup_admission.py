@@ -1,6 +1,8 @@
 """Receipt-chain fixtures test admission, not a claim of real model delivery."""
 import copy
 from pathlib import Path
+import subprocess
+import sys
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
@@ -42,10 +44,14 @@ def evidence(monkeypatch):
         save('cloud/local_completion/binding.json',{'source_identity':admit.ENGINE,'scope_identity':admit.SCOPE,
              'plan_sha256':digest(PLAN),'numerical_policy_identity':admit.NUMERICAL,
              'speed_policy_identity':admit.SPEED,'limit':limit})
-        # The current PID with an intentionally different creation identity is
-        # not a live receiver. The exact identity is tested separately below.
-        save('cloud/local_completion/handoff_receiver_dispatch.json',
-             {**process_identity(),'created_unix':process_identity()['created_unix']-100})
+        # Establish a real exited process rather than spoofing the creation
+        # epoch of a live process; WSL clock changes can cause that mismatch.
+        receiver = subprocess.Popen([sys.executable,'-c','import time; time.sleep(60)'])
+        try:
+            ended = process_identity(receiver.pid)
+        finally:
+            receiver.terminate();receiver.wait(timeout=5)
+        save('cloud/local_completion/handoff_receiver_dispatch.json',ended)
         scope_sha = save('performance/scope_100h.json',scope)
         save('performance/portable_inference_policy.json',numerical)
         save('performance/future_speed_policy.json',speed)
@@ -183,6 +189,16 @@ def test_exact_reference_requires_all_eligible_rows_and_recomputed_raw_scores(ev
     row = read_json(path);row['scores']['mse'] *= .9;write_json(path,row)
     with pytest.raises(ValueError,match='local development targets'):
         admit.fixed_reference(root,panel)
+
+
+@pytest.mark.parametrize('epoch_shift',[-1491,1491])
+def test_live_receiver_with_shifted_wall_clock_epoch_does_not_prove_exit(evidence,epoch_shift):
+    receiver = process_identity()
+    receiver['created_unix'] += epoch_shift
+    evidence.save('cloud/local_completion/handoff_receiver_dispatch.json',receiver)
+    assert admit.exact_alive(receiver) is False
+    with pytest.raises(RuntimeError,match='still live despite its creation-time mismatch'):
+        admit.verify_delivery(evidence.root)
 
 
 def test_portable_frozen_manifest_binds_inputs_recipe_code_and_the_original_protocol(evidence):
