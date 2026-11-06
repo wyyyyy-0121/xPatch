@@ -6,6 +6,8 @@
 
 当前 Goal 的诊断与后续时间安排见 [11 月 8 日后续项目推进计划](FUSION_FOLLOWUP_PLAN.md)：11 月 6—7 日准备和小试，下一次大规模运算安排在 11 月 8 日，沿用原 100 小时绝对截止。开发诊断入口为 `scripts/review_fusion_development.py`，只读分析三个已知开发季度，不更改本轮正式选择。
 
+本地准备、云端迁移和实际回传的操作顺序见 [后续运行交接步骤](FUSION_FOLLOWUP_OPERATIONS.md)。源码包已通过隔离导入、三项策略和命令入口检查；它仍需原实际交付、正式候选冻结及云端输入核验，不能作为 GPU 或部署通过证据。
+
 下一轮的候选草案、隔离缓存与恢复组件在 `scripts/followup_runtime.py`，独立进程组截止组件在 `scripts/followup_guard.py`。草案仍为 `draft_not_runnable`；云端部署和 GPU 实测准入待本轮交付后完成。
 
 本轮交付后，用 `scripts/followup_admission.py --freeze` 核验原阶段、正式回传与实际 CPU 验收，再冻结下一轮候选。该入口仍不启动训练；原运行、推理包或截止条件不符时拒绝冻结。
