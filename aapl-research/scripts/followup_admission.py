@@ -24,7 +24,7 @@ SPEED = '0c433a556af0a5d944c7a6afdfdbda35b9a7ac372610b7492295dcc487f06fab'
 IMPLEMENTATIONS = ('followup_runtime.py','followup_guard.py','followup_admission.py',
                    'run_fusion_followup.py','review_fusion_pilot.py','review_fusion_extension.py','fit_fusion_followup.py',
                    'return_fusion_followup.py','deliver_fusion_followup.py','portable_package_runtime.py',
-                   'report_fusion_followup.py')
+                   'report_fusion_followup.py','original_delivery_timing_runtime.py','original_cpu_package_entry.py')
 REVIEW_POLICY = {'version':'development_pilot_review_v1','pilot_seed':2026,
                  'minimum_positive_quarters':2,'minimum_positive_time_segments':2,
                  'segments':['opening_0931_1029','midday_1030_1429','closing_1430_1548'],
@@ -156,6 +156,11 @@ def verify_delivery(root=BASE):
     accept = 'deployment_acceptance/'+model+'/'
     acceptance = read_json(note(accept+'report.json'))
     progress = read_json(note(accept+'progress.json'))
+    from scripts.original_delivery_timing_runtime import POLICY_NAME, specification, validate_measurements
+    cold_policy = identified(note('performance/'+POLICY_NAME))
+    if cold_policy != specification():
+        raise ValueError('Original full-process cold-start timing policy changed')
+    validate_measurements(acceptance,progress,cold_policy)
     if (acceptance['model_identity'] != model or acceptance['engineering_acceptance_passed'] is not True
             or report['engineering_acceptance'] != acceptance or acceptance['origins'] != 256
             or acceptance['timing_complete'] is not True or acceptance['timed_origins'] != 256
@@ -192,6 +197,7 @@ def verify_delivery(root=BASE):
              'deployment_identity':model,'limit':limit,'original_receiver_observed_exited':True,
              'research_status':report['research_status'],'original_final_evaluated':proceed,
              'engineering_acceptance_passed':True,'files':files,
+             'cold_timing_policy_identity':cold_policy['identity'],
              'Q2_Q3_prediction_arrays_loaded':False,'new_training_launched':False}
     value['identity'] = identity(value)
     return value
@@ -380,6 +386,9 @@ def check_frozen(path,root=BASE):
             or value['delivery']['original_receiver_observed_exited'] is not True
             or value['delivery']['limit'] != value['limit']):
         raise ValueError('Original actual-delivery prerequisite differs')
+    from scripts.original_delivery_timing_runtime import specification
+    if value['delivery'].get('cold_timing_policy_identity') != specification()['identity']:
+        raise ValueError('Original full-process cold-start prerequisite differs')
     for name,row in value['original_inputs'].items():
         p = checked_file(Path(root),name)
         if digest(p) != row['sha256'] or p.stat().st_size != row['bytes']:

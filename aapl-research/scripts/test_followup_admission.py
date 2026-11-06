@@ -55,6 +55,11 @@ def evidence(monkeypatch):
         scope_sha = save('performance/scope_100h.json',scope)
         save('performance/portable_inference_policy.json',numerical)
         save('performance/future_speed_policy.json',speed)
+        from scripts import original_delivery_timing_runtime as timing
+        cold = seal({'fixture':'synthetic full-process timing policy','measurement_scope':timing.SCOPE,
+                     'cold_seconds_ceiling':60})
+        monkeypatch.setattr(timing,'specification',lambda:cold)
+        save('performance/'+timing.POLICY_NAME,cold)
         sources = {}
         for stage in ('F3','F4','F5'):
             sources[stage+'_complete.json'] = save(stage+'_complete.json',{
@@ -80,8 +85,16 @@ def evidence(monkeypatch):
                   'distinct_exit_and_resume_processes':True,'cold_load_seconds':12.,
                   'warm_single_origin_p95_seconds':.4,'batch_stream_max_prediction_difference':0.,
                   'batch_stream_tolerance':1e-8,'Q3_accessed':False}
+        processes = [{'pid':pid,'kernel_process_birth':{'pid':pid,'boot_id':'synthetic_boot',
+                         'start_ticks':100*pid,'ticks_per_second':100},
+                      'cold_timing_policy_identity':cold['identity'],
+                      'full_process_to_first_output_seconds':12.,
+                      'first_durable_output_boottime_seconds':pid+12.} for pid in (111,222)]
+        accept.update(cold_timing_policy_identity=cold['identity'],cold_scope=cold['measurement_scope'],
+                      cold_timing_complete=True,engine_cold_load_seconds=10.,
+                      cold_load_measurements_by_process=processes)
         progress = {'recipe':{'source_identity':admit.ENGINE,'system_freeze_sha256':frozen_sha,
-                             'model_identity':model},'processes':[{'pid':111},{'pid':222}]}
+                             'model_identity':model},'processes':processes}
         save('deployment_acceptance/'+model+'/report.json',accept)
         save('deployment_acceptance/'+model+'/progress.json',progress)
         save('research_report.json',{'source_identity':admit.ENGINE,'plan_sha256':digest(PLAN),
@@ -118,6 +131,7 @@ def test_complete_receipt_chain_is_required_even_for_a_negative_research_result(
     'running','live_receiver','late_deadline','stage_scope','freeze_bytes','model_bytes',
     'missing_package_check','same_replay_process','short_replay','unopened_final_violation',
     'changed_package','return_not_verified','source_missing',
+    'legacy_cold_timing','cold_policy_changed','missing_full_process','cold_over_60',
 ])
 def test_partial_stale_or_inconsistent_original_delivery_is_never_admitted(evidence,mutation):
     root,save,model = evidence.root,evidence.save,evidence.model
@@ -132,6 +146,27 @@ def test_partial_stale_or_inconsistent_original_delivery_is_never_admitted(evide
     elif mutation == 'stage_scope':
         row = read_json(root/'F5_complete.json');row['scope_identity'] = 'another_run'
         save('F5_complete.json',row)
+    elif mutation == 'cold_policy_changed':
+        row = read_json(root/'performance/original_delivery_timing_policy.json');row['fixture'] = 'changed'
+        save('performance/original_delivery_timing_policy.json',seal({k:v for k,v in row.items() if k!='identity'}))
+    elif mutation in ('legacy_cold_timing','missing_full_process','cold_over_60'):
+        name = 'deployment_acceptance/'+model+'/report.json'
+        row = read_json(root/name)
+        if mutation == 'legacy_cold_timing':
+            row.pop('cold_timing_policy_identity')
+        elif mutation == 'missing_full_process':
+            row['cold_load_measurements_by_process'][0].pop('full_process_to_first_output_seconds')
+        else:
+            row['cold_load_seconds'] = 61.
+            for process in row['cold_load_measurements_by_process']:
+                process['full_process_to_first_output_seconds'] = 61.
+                process['first_durable_output_boottime_seconds'] = process['pid']+61.
+            progress = read_json(root/('deployment_acceptance/'+model+'/progress.json'))
+            progress['processes'] = row['cold_load_measurements_by_process']
+            save('deployment_acceptance/'+model+'/progress.json',progress)
+        save(name,row)
+        research = read_json(root/'research_report.json');research['engineering_acceptance'] = row
+        save('research_report.json',research)
     elif mutation == 'freeze_bytes':
         row = read_json(root/'system_freeze.json');row['F5_sha256'] = 'wrong'
         save('system_freeze.json',row)
