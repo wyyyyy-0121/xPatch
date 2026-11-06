@@ -1,4 +1,5 @@
 import copy
+import gc
 from contextlib import ExitStack
 from datetime import datetime
 from pathlib import Path
@@ -17,6 +18,7 @@ from fusion.next.panel import CoverageSampler
 from fusion.next.tests_data import two_sessions
 from fusion.next.tests_training import make_panel
 from scripts import followup_runtime as follow
+from scripts.run_fusion_followup import clone_prefix,state_hash
 
 
 @pytest.fixture
@@ -110,8 +112,13 @@ def test_warm_latents_are_exact_and_original_cache_bytes_never_change(paths,monk
     old.get({name:value[:1] for name,value in batch.items()})
     hashes = {str(p.relative_to(read)):digest(p) for p in read.rglob('*') if p.is_file()}
     before_calls = branch.calls
-    with follow.isolated_outputs(write,read):
+    with follow.isolated_outputs(write,read) as binding:
         local = cache.RepresentationCache(panel,branch,config,storage_dtype='float16')
+        via_trainer = trainer.RepresentationCache(panel,branch,config,storage_dtype='float16')
+        ref = binding.caches[-1]
+        assert ref() is via_trainer
+        del via_trainer;gc.collect()
+        assert ref() is None  # Do not retain a finished fit's CUDA backbone.
         warm = follow.ReadOnlyWarmCache(local,read/'representation_cache')
         actual = warm.get(batch)
         expected = branch.latent(batch['foundation_context']).half().float()
@@ -152,8 +159,17 @@ def test_actual_no_foundation_fusion_resumes_exactly_in_the_new_namespace(paths,
         torch.manual_seed(91)
         uninterrupted=make('uninterrupted');uninterrupted.run_until(5)
         expected_rng=torch.random.get_rng_state().clone()
+        expected_hash=state_hash(uninterrupted)
         torch.manual_seed(91)
         first=make('resumed');first.run_until(3)
+        paired=make('paired_probe_recovery')
+        clone_prefix(first.path,paired.path)
+        paired.resume();paired.run_until(5)
+        assert state_hash(paired) == expected_hash
+        with pytest.raises(ValueError,match='Preserve'):
+            clone_prefix(first.path,paired.path)
+        with pytest.raises(ValueError,match='new training namespace'):
+            clone_prefix(first.path,read/'forbidden.pt')
         restored=make('resumed');restored.resume();restored.run_until(5)
         assert restored.last_loss == uninterrupted.last_loss
         assert torch.equal(torch.random.get_rng_state(),expected_rng)

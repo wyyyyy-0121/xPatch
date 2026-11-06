@@ -11,6 +11,7 @@ import fcntl
 from pathlib import Path
 import shutil
 from types import SimpleNamespace
+import weakref
 
 import numpy as np
 import torch
@@ -92,7 +93,8 @@ def prepare(snapshot):
              'followup_plan_sha256': digest(ROOT/'FUSION_FOLLOWUP_PLAN.md'),
              'runtime_sha256': digest(Path(__file__)),
              'guard_sha256': digest(ROOT/'scripts/followup_guard.py'),
-             'admission_sha256': digest(ROOT/'scripts/followup_admission.py'), 'limit': limit,
+             'admission_sha256': digest(ROOT/'scripts/followup_admission.py'),
+             'training_entry_sha256': digest(ROOT/'scripts/run_fusion_followup.py'), 'limit': limit,
              'earliest_large_run': EARLIEST, 'reference': selected, 'candidates': proposed,
              'reference_status': 'provisional until original F5, F6 and actual F8 finish',
              'validation': list(QUARTERS), 'pilot_seeds': [2026], 'expanded_seeds': [2026,2027,2028],
@@ -240,7 +242,9 @@ def isolated_outputs(destination, read_root=BASE):
         original_cache = trainer.RepresentationCache
         def warm(*args,**kwargs):
             value = ReadOnlyWarmCache(original_cache(*args,**kwargs), read_root/'representation_cache')
-            caches.append(value)
+            # Cache wrappers own a frozen CUDA backbone. Keep only weak
+            # references so completed fits release those weights immediately.
+            caches.append(weakref.ref(value))
             return value
         set_value(trainer,'RepresentationCache',warm)
         binding = {'base_source_identity':source_identity(), 'read_root':str(read_root),

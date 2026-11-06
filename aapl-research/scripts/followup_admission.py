@@ -20,6 +20,7 @@ ENGINE = 'fb0a03b4841e9bde2b555440214b2b4308bc89e8ce2f3473b22a73b6ffd063cb'
 SCOPE = '2b93e6c04d1fe15f1fd9cb47f424846014b80d88f4f5c8679db0c918b6c60207'
 NUMERICAL = '9cf552a6c334bee8226411e1e989a25c11af89d8305bb29feb74ff2276098872'
 SPEED = '0c433a556af0a5d944c7a6afdfdbda35b9a7ac372610b7492295dcc487f06fab'
+IMPLEMENTATIONS = ('followup_runtime.py','followup_guard.py','followup_admission.py','run_fusion_followup.py')
 
 
 def identified(path):
@@ -212,6 +213,7 @@ def fixed_reference(root=BASE,panel=None):
         for path in (result_path,pred_path):
             files[str(path.relative_to(root))] = {'sha256':digest(path),'bytes':path.stat().st_size}
         quarters[quarter] = {'fit_end':spec['fit_end'],'total_updates':effective['total_updates'],
+                             'score_origins':len(expected),
                              'reference_result':str(result_path.relative_to(root)),
                              'reference_prediction':str(pred_path.relative_to(root))}
     path = checked_file(root,'selections/fusion.json')
@@ -249,8 +251,7 @@ def _freeze():
     for path in sorted((root/'oof'/store.key).glob('*')):
         if path.suffix in ('.npy','.npz','.json'):
             files[str(path.relative_to(root))] = {'sha256':digest(path),'bytes':path.stat().st_size}
-    implementation = {name:digest(ROOT/'scripts'/name) for name in
-                      ('followup_runtime.py','followup_guard.py','followup_admission.py')}
+    implementation = {name:digest(ROOT/'scripts'/name) for name in IMPLEMENTATIONS}
     value = {'schema':1,'status':'matrix_frozen_benchmark_and_launch_admission_pending',
              'frozen_at_utc':utc_now(),'source_identity':ENGINE,'scope_identity':SCOPE,
              'plan_sha256':digest(PLAN),'followup_plan_sha256':digest(ROOT/'FUSION_FOLLOWUP_PLAN.md'),
@@ -307,6 +308,8 @@ def check_frozen(path,root=BASE):
             or value['extension_GPU_hours_ceiling'] != 6 or value['earliest_large_run'] != EARLIEST
             or value['candidates'] != candidates(value['reference'])):
         raise ValueError('Frozen prospective matrix or original protocol differs')
+    if set(value['implementation']) != set(IMPLEMENTATIONS):
+        raise ValueError('Frozen manifest omits a follow-up implementation')
     for name,sha in value['implementation'].items():
         if digest(ROOT/'scripts'/name) != sha:
             raise ValueError('Follow-up implementation changed after matrix freeze')
@@ -334,6 +337,8 @@ def check_frozen(path,root=BASE):
         fit_end = fold(dates,quarter)['fit_end']
         if row['fit_end'] != fit_end or row['total_updates'] != for_fit(value['reference'],fit_end)['total_updates']:
             raise ValueError('Frozen manifest changed a two-epoch fit boundary')
+        if not isinstance(row['score_origins'],int) or row['score_origins'] <= 0:
+            raise ValueError('Frozen manifest must bind all common scoring origins')
     return value
 
 
