@@ -94,7 +94,7 @@ def test_real_three_seed_export_returns_restores_exact_bytes_and_keeps_original_
     assert originals(e)==before
     # A replayed restore may verify identical evidence, never overwrite bytes.
     repeated=returned.restore(archive,archive.parent/'receipt.json',e.path,e.manifest)
-    assert repeated['outcome']==result['outcome']
+    assert repeated==result
 
 
 def test_archive_hash_corruption_is_rejected_before_any_canonical_restore(fitted):

@@ -244,8 +244,14 @@ def restore(archive,receipt_path,manifest_path,manifest=None):
               'all_file_hashes_verified':True,'restored_file_count':len(pairs),'outcome':actual,
               'actual_new_model_CPU_acceptance_passed':False,'independent_research_success_claimed':False,
               'restored_at_utc':utc_now()}
+    receipt_path=directory/'restored_receipt.json'
+    if receipt_path.exists():
+        prior=identified(receipt_path)
+        stable=lambda row:{k:v for k,v in row.items() if k not in ('identity','restored_at_utc')}
+        if stable(prior)!=stable(result):raise ValueError('Preserve the previous formal restore binding; its evidence differs')
+        return prior
     result['identity'] = identity(result)
-    write_json(directory/'restored_receipt.json',result)
+    write_json(receipt_path,result)
     return result
 
 

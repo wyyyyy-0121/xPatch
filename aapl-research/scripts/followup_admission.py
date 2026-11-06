@@ -22,7 +22,7 @@ NUMERICAL = '9cf552a6c334bee8226411e1e989a25c11af89d8305bb29feb74ff2276098872'
 SPEED = '0c433a556af0a5d944c7a6afdfdbda35b9a7ac372610b7492295dcc487f06fab'
 IMPLEMENTATIONS = ('followup_runtime.py','followup_guard.py','followup_admission.py',
                    'run_fusion_followup.py','review_fusion_pilot.py','review_fusion_extension.py','fit_fusion_followup.py',
-                   'return_fusion_followup.py')
+                   'return_fusion_followup.py','deliver_fusion_followup.py','portable_package_runtime.py')
 REVIEW_POLICY = {'version':'development_pilot_review_v1','pilot_seed':2026,
                  'minimum_positive_quarters':2,'minimum_positive_time_segments':2,
                  'segments':['opening_0931_1029','midday_1030_1429','closing_1430_1548'],
@@ -96,6 +96,10 @@ def verify_delivery(root=BASE):
     for filename,expected in [('portable_inference_policy.json',NUMERICAL),('future_speed_policy.json',SPEED)]:
         if identified(note('performance/'+filename))['identity'] != expected:
             raise ValueError('Original numerical/speed policy differs')
+    if (root/'performance/portable_package_policy.json').exists():
+        from scripts.portable_package_runtime import specification
+        if identified(note('performance/portable_package_policy.json'))!=specification():
+            raise ValueError('Original local package-copy repair policy changed')
     frozen = identified(note('system_freeze.json'))
     confirmation = read_json(note('confirmation.json'))
     if (frozen['source_identity'] != ENGINE or frozen['plan_sha256'] != digest(PLAN)
