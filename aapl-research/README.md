@@ -6,6 +6,8 @@
 
 当前 Goal 的诊断与后续时间安排见 [11 月 8 日后续项目推进计划](FUSION_FOLLOWUP_PLAN.md)：11 月 6—7 日准备和小试，下一次大规模运算安排在 11 月 8 日，沿用原 100 小时绝对截止。开发诊断入口为 `scripts/review_fusion_development.py`，只读分析三个已知开发季度，不更改本轮正式选择。
 
+下一轮的候选草案、隔离缓存与恢复组件在 `scripts/followup_runtime.py`，独立进程组截止组件在 `scripts/followup_guard.py`。草案仍为 `draft_not_runnable`；正式训练入口和 GPU 实测准入待本轮交付后完成。
+
 本研究按 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) 执行。主目标是未来 12 分钟累计 log 收益，不加入新闻、政治或舆情输入。主评价时点为 13:30–15:47 ET。
 
 本地研究流程已完成，结果见 [RESULTS.md](RESULTS.md)。六类候选均完成预定搜索，主指标已从保存的预测独立重算。没有候选同时在开发验证和 D 块优于零收益，因此按计划结束本轮研究，2026 年 7—9 月数据保持封存。该结果适用于本轮 AAPL 下午时段、信息输入与训练预算。
