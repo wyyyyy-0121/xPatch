@@ -216,7 +216,7 @@ def test_actual_CPU_partial_fit_resumes_exports_three_fresh_seeds_and_preserves_
         fit.checkpoint_progress(destination,frozen)
 
 
-@pytest.mark.parametrize('purpose',['exploration','delivery_fit'])
+@pytest.mark.parametrize('purpose',['exploration','delivery_fit','delivery_cpu'])
 def test_real_delivery_worker_binds_only_the_delivery_guard_before_loading_a_matrix(evidence,purpose):
     attempt=evidence.root/'identity_attempt'
     missing=runtime.FOLLOW/'preparation'/('missing_'+evidence.root.name+'.json')
@@ -225,7 +225,7 @@ def test_real_delivery_worker_binds_only_the_delivery_guard_before_loading_a_mat
     try:
         assert process.wait(timeout=12)==1
         log=(attempt/'worker.log').read_text()
-        if purpose=='exploration':
+        if purpose!='delivery_fit':
             assert 'Delivery worker requires its exact delivery-fit guard purpose' in log
             assert 'FileNotFoundError' not in log
         else:

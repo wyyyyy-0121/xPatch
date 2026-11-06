@@ -166,7 +166,7 @@ def test_original_and_followup_locks_are_held_together_and_released(fixture,monk
     with run.execution_locks():pass
 
 
-@pytest.mark.parametrize('purpose',['exploration','delivery_fit'])
+@pytest.mark.parametrize('purpose',['exploration','delivery_fit','delivery_cpu'])
 def test_guard_bound_worker_passes_identity_check_before_refusing_an_absent_matrix(fixture,purpose):
     directory,_ = fixture
     attempt = directory/'worker_identity'

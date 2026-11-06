@@ -212,3 +212,18 @@ def test_one_bad_seed_prevents_development_qualification_even_when_ensemble_impr
     assert result['selected']['system']['mse_improvement_vs_zero']>.01
     assert not result['development_checks']['all_three_seeds_positive']
     assert not result['development_qualification_passed']
+
+
+def test_negative_pilot_can_be_recomputed_for_return_without_admitting_extension(evidence):
+    complete=read_json(evidence.run/'pilot/pilot_result.json')
+    for candidate in evidence.manifest['candidates']:
+        for q in pilot.QUARTERS:
+            report=evidence.save_fit(evidence.run/'pilot/trials/pilot'/candidate['name'],candidate['config'],q,2026,-.2)
+            item=next(r for r in complete['completed_fits'] if r['candidate']==candidate['name'] and r['quarter']==q)
+            item.update(scores=report['scores'],prediction_sha256=report['prediction_sha256'])
+    write_json(evidence.run/'pilot/pilot_result.json',complete)
+    _,report=pilot.review(evidence.manifest_path)
+    saved,fresh=pilot.checked_report(evidence.manifest_path,evidence.manifest)
+    assert fresh['selected_for_possible_expansion'] is None and fresh['decision_identity']==report['decision_identity']
+    assert saved['decision_identity']==report['decision_identity']
+    with pytest.raises(RuntimeError,match='No fixed pilot'):pilot.checked_review(evidence.manifest_path,evidence.manifest)

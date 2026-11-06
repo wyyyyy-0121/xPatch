@@ -162,8 +162,8 @@ def expansion_members(manifest,report):
             'paired_control_can_replace_selected_candidate':False}
 
 
-def checked_review(manifest_path,manifest=None):
-    """Recompute the saved pilot decision before granting any seed extension."""
+def checked_report(manifest_path,manifest=None):
+    """Recompute a saved decision, including a legitimate no-expansion result."""
     manifest = manifest or check_frozen(manifest_path)
     directory = FOLLOW/'runs'/manifest['identity']/'reviews'
     pointer = read_json(directory/'latest.json')
@@ -180,9 +180,15 @@ def checked_review(manifest_path,manifest=None):
     _,fresh = review(manifest_path,publish=False)
     if saved['decision_identity'] != fresh['decision_identity']:
         raise ValueError('Saved pilot decision differs from recomputed predictions')
-    plan = expansion_members(manifest,fresh)
     return {'report':str(path.relative_to(ROOT)),'identity':saved['identity'],
-            'decision_identity':saved['decision_identity']},plan
+            'decision_identity':saved['decision_identity']},fresh
+
+
+def checked_review(manifest_path,manifest=None):
+    """Recompute the saved pilot decision before granting any seed extension."""
+    manifest = manifest or check_frozen(manifest_path)
+    saved,fresh = checked_report(manifest_path,manifest)
+    return saved,expansion_members(manifest,fresh)
 
 
 def review(manifest_path,publish=True):

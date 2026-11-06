@@ -232,7 +232,8 @@ def bind_guarded_worker(attempt,entry,purpose):
     if (request['purpose'] != purpose
             or request['delivery_reserve_seconds'] != guard.PURPOSE_RESERVES[purpose]):
         raise RuntimeError('Research worker cannot use the reserved delivery-fit time' if purpose=='exploration'
-                           else 'Delivery worker requires its exact delivery-fit guard purpose')
+                           else ('Delivery worker requires its exact delivery-fit guard purpose' if purpose=='delivery_fit'
+                                 else 'Delivery CPU worker requires its exact delivery CPU guard purpose'))
     if (state.get('stage') != 'running' or state['request_identity'] != request['identity']
             or state['worker'] != current or state['guard']['pid'] != os.getppid()
             or not guard.exact_alive(state['guard']) or not guard.exact_alive(request['owner'])
