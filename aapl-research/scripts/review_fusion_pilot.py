@@ -100,11 +100,11 @@ def factorial(target,predictions,reference):
             'parameter_count_and_initialization_differ_when_a_branch_is_removed':True}
 
 
-def full_prediction(directory,config,quarter,manifest,panel,provenance):
+def full_prediction(directory,config,quarter,manifest,panel,provenance,seed=2026):
     f = fold(panel.dates,quarter);effective = for_fit(config,f['fit_end'])
-    path = directory/quarter/'seed_2026'/('updates_'+str(effective['total_updates']))
+    path = directory/quarter/('seed_'+str(seed))/('updates_'+str(effective['total_updates']))
     report = read_json(path/'result.json')
-    details = {'config':effective,'fold':f,'seed':2026,'updates':effective['total_updates'],
+    details = {'config':effective,'fold':f,'seed':seed,'updates':effective['total_updates'],
                'source':manifest['source_identity'],'evaluation_precision':'float32','numerical_policy_identity':NUMERICAL}
     if report['details'] != details or digest(path/'prediction.npz') != report['prediction_sha256']:
         raise ValueError('Pilot/reference prediction identity, precision or full recipe differs')
@@ -124,7 +124,68 @@ def full_prediction(directory,config,quarter,manifest,panel,provenance):
     return rows,p,report
 
 
-def review(manifest_path):
+def original_seeds(path,manifest,panel,rows,quarters,target):
+    relative = str(path.relative_to(BASE))
+    if (relative not in manifest['original_inputs']
+            or digest(path) != manifest['original_inputs'][relative]['sha256']):
+        raise ValueError('Original development ensemble was not frozen or changed')
+    with np.load(path,allow_pickle=False) as saved:
+        for key,value in {'rows':rows,'quarters':quarters,'target':target,
+                          'timestamps_ns':panel.stamps[rows].as_unit('ns').asi8}.items():
+            if not np.array_equal(saved[key],value):raise ValueError('Original ensemble changed common '+key)
+        seeds = saved['predictions'].astype(np.float64)
+        if seeds.shape != (3,len(rows)) or not np.isfinite(seeds).all() or not np.array_equal(seeds.mean(0),saved['ensemble']):
+            raise ValueError('Original ensemble is not the exact three-seed mean')
+        return seeds
+
+
+def expansion_members(manifest,report):
+    """One preselected recipe and only its fixed paired control receive new seeds."""
+    selected = report['selected_for_possible_expansion']
+    names = {r['name'] for r in manifest['candidates']}
+    if (report['manifest_identity'] != manifest['identity'] or report['policy'] != REVIEW_POLICY
+            or report['independent_research_success_claimed'] is not False
+            or report['original_research_gates_replaced'] is not False):
+        raise ValueError('Pilot review does not follow the frozen exploratory policy')
+    if selected is None:
+        raise RuntimeError('No fixed pilot recipe qualifies for seed expansion')
+    if selected not in names or not report['candidates'][selected]['eligible_for_seed_expansion']:
+        raise ValueError('Selected recipe is outside the eligible frozen matrix')
+    paired = REVIEW_POLICY['paired_control_by_selected'][selected]
+    train = [selected] if paired == 'original_frozen' else [selected,paired]
+    if not set(train).issubset(names):
+        raise ValueError('Fixed paired recipe is missing from the matrix')
+    return {'selected_candidate':selected,'paired_control':paired,'train_candidates':train,
+            'new_seeds':[2027,2028],'pilot_seed_reused':2026,'new_full_fits':len(train)*6,
+            'pilot_decision_identity':report['decision_identity'],
+            'original_frozen_control_reused':paired == 'original_frozen',
+            'paired_control_can_replace_selected_candidate':False}
+
+
+def checked_review(manifest_path,manifest=None):
+    """Recompute the saved pilot decision before granting any seed extension."""
+    manifest = manifest or check_frozen(manifest_path)
+    directory = FOLLOW/'runs'/manifest['identity']/'reviews'
+    pointer = read_json(directory/'latest.json')
+    path = (ROOT/pointer['report']).resolve()
+    if (not path.is_relative_to(directory.resolve()) or path.name != 'report.json'
+            or pointer['manifest_identity'] != manifest['identity']):
+        raise ValueError('Pilot review pointer leaves the exact matrix review directory')
+    saved = identified(path)
+    stable = {k:v for k,v in saved.items() if k not in ('identity','reviewed_at_utc','decision_identity')}
+    if (path.parent.name != saved['identity'] or pointer['identity'] != saved['identity']
+            or pointer['selected_for_possible_expansion'] != saved['selected_for_possible_expansion']
+            or identity(stable) != saved['decision_identity']):
+        raise ValueError('Pilot review pointer or stable decision changed')
+    _,fresh = review(manifest_path,publish=False)
+    if saved['decision_identity'] != fresh['decision_identity']:
+        raise ValueError('Saved pilot decision differs from recomputed predictions')
+    plan = expansion_members(manifest,fresh)
+    return {'report':str(path.relative_to(ROOT)),'identity':saved['identity'],
+            'decision_identity':saved['decision_identity']},plan
+
+
+def review(manifest_path,publish=True):
     manifest = check_frozen(manifest_path)
     run = FOLLOW/'runs'/manifest['identity']
     pilot = run/'pilot'
@@ -174,16 +235,7 @@ def review(manifest_path):
     quarters = np.concatenate([np.full(len(common[q]),q) for q in QUARTERS])
     target = np.concatenate(targets)
     path = BASE/manifest['original_selected_predictions']
-    if str(path.relative_to(BASE)) not in manifest['original_inputs']:
-        raise ValueError('Original selected development predictions were not frozen')
-    with np.load(path,allow_pickle=False) as saved:
-        for key,value in {'rows':rows,'quarters':quarters,'target':target,
-                          'timestamps_ns':panel.stamps[rows].as_unit('ns').asi8}.items():
-            if not np.array_equal(saved[key],value):raise ValueError('Original selected predictions changed common '+key)
-        seeds = saved['predictions'].astype(np.float64)
-        if seeds.shape != (3,len(rows)) or not np.isfinite(seeds).all() or not np.array_equal(seeds.mean(0),saved['ensemble']):
-            raise ValueError('Original selected ensemble is not the exact three-seed mean')
-        incumbent = saved['ensemble'].copy()
+    incumbent = original_seeds(path,manifest,panel,rows,quarters,target).mean(0)
     provenance[str(path.relative_to(ROOT))] = digest(path)
     result = evaluate(target,quarters,panel.dates[rows],time_segments(panel.stamps[rows]),
                       predictions,np.concatenate(reference),incumbent)
@@ -197,10 +249,13 @@ def review(manifest_path):
                                   'beats_original_strongest_simple':r['pooled']['mse']<frozen['fixed_strongest_simple']['mse']}
                             for name,r in result['candidates'].items()},
         'role':'original controls were recomputed in the completed original delivery; formal three-seed gates remain required'}
-    result.update(manifest_identity=manifest['identity'],reviewed_at_utc=utc_now(),
+    result.update(manifest_identity=manifest['identity'],
                   prediction_provenance_sha256=provenance,Q2_Q3_prediction_arrays_loaded=False,
                   horizon_minutes=12,full_pilot_fits=9,pilot_seed=2026)
+    result['decision_identity'] = identity(result)
+    result['reviewed_at_utc'] = utc_now()
     result['identity'] = identity(result)
+    if not publish:return None,result
     destination = run/'reviews'/result['identity']
     write_json(destination/'report.json',result)
     lines = ['# 下一轮固定试验开发复核','',

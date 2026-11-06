@@ -10,9 +10,9 @@
 
 本轮交付后，用 `scripts/followup_admission.py --freeze` 核验原阶段、正式回传与实际 CPU 验收，再冻结下一轮候选。该入口仍不启动训练；原运行、推理包或截止条件不符时拒绝冻结。
 
-`scripts/run_fusion_followup.py` 提供受守护的训练段短测与 11 月 8 日固定 9 次拟合入口，绑定真实 GPU 计时、原绝对截止、累计阶段上限和 CPU/软件环境。54 项相关 CPU 测试通过；实际 GPU 短测和正式拟合尚未执行。
+`scripts/run_fusion_followup.py` 提供受守护的训练段短测、11 月 8 日固定 9 次拟合和条件式种子扩展入口，绑定真实 GPU 计时、原绝对截止、累计阶段上限和 CPU/软件环境。实际 GPU 短测和正式拟合尚未执行。
 
-下一轮结束后，`scripts/review_fusion_pilot.py` 复算九次拟合与 2×2 对照，按预定季度、分时段和去除贡献最高五日的敏感性检查，最多推荐一个配方进入预算复核；它不启动扩展训练。包括该复核的相关 CPU 测试共 62 项通过。
+下一轮结束后，`scripts/review_fusion_pilot.py` 复算九次拟合与 2×2 对照，按预定季度、分时段和去除贡献最高五日的敏感性检查，最多推荐一个配方进入预算复核。`--mode extend` 重算决定后，只给已选配方及固定配对对照补 seed 2027/2028，另守累计 6 小时上限；`scripts/review_fusion_extension.py` 重算三种子及原开发门槛，不授权最终集访问。相关 CPU 测试共 70 项通过，未执行实际 pilot 或扩展。
 
 本研究按 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) 执行。主目标是未来 12 分钟累计 log 收益，不加入新闻、政治或舆情输入。主评价时点为 13:30–15:47 ET。
 

@@ -21,13 +21,15 @@ SCOPE = '2b93e6c04d1fe15f1fd9cb47f424846014b80d88f4f5c8679db0c918b6c60207'
 NUMERICAL = '9cf552a6c334bee8226411e1e989a25c11af89d8305bb29feb74ff2276098872'
 SPEED = '0c433a556af0a5d944c7a6afdfdbda35b9a7ac372610b7492295dcc487f06fab'
 IMPLEMENTATIONS = ('followup_runtime.py','followup_guard.py','followup_admission.py',
-                   'run_fusion_followup.py','review_fusion_pilot.py')
+                   'run_fusion_followup.py','review_fusion_pilot.py','review_fusion_extension.py')
 REVIEW_POLICY = {'version':'development_pilot_review_v1','pilot_seed':2026,
                  'minimum_positive_quarters':2,'minimum_positive_time_segments':2,
                  'segments':['opening_0931_1029','midday_1030_1429','closing_1430_1548'],
                  'remove_top_positive_gain_days':5,
                  'controls_for_exploratory_expansion':['zero','fixed_frozen_seed2026','original_selected_three_seed_mean'],
                  'maximum_recipes_to_expand':1,'selection':'lowest pooled raw MSE among eligible fixed recipes; candidate name breaks ties',
+                 'paired_control_by_selected':{'A_foundation_raw':'C_no_foundation_raw',
+                     'B_no_foundation_scaled':'original_frozen','C_no_foundation_raw':'A_foundation_raw'},
                  'role':'exploratory allocation only; no replacement of original research gates or final claims'}
 
 
@@ -242,6 +244,13 @@ def _freeze():
     if selected['prediction_sha256'] != digest(checked_file(root,incumbent)):
         raise ValueError('Original selected development ensemble differs')
     files[incumbent] = {'sha256':selected['prediction_sha256'],'bytes':(root/incumbent).stat().st_size}
+    frozen_reference = 'seed_verification/fusion/'+reference['candidate_id']+'/predictions.npz'
+    reference_report = checked_file(root,'seed_verification/fusion/'+reference['candidate_id']+'/report.json')
+    reference_value = read_json(reference_report)
+    if reference_value['prediction_sha256'] != digest(checked_file(root,frozen_reference)):
+        raise ValueError('Original frozen three-seed paired control differs')
+    files[frozen_reference] = {'sha256':digest(root/frozen_reference),'bytes':(root/frozen_reference).stat().st_size}
+    files[str(reference_report.relative_to(root))] = {'sha256':digest(reference_report),'bytes':reference_report.stat().st_size}
     # These artifacts are present on both hosts. Local replay/package receipts
     # stay in the delivery prerequisite, while the cloud's original fits,
     # policies and freeze must still match their verified local counterparts.
@@ -275,6 +284,7 @@ def _freeze():
              'expanded_seeds':[2026,2027,2028],'total_coverage_equivalent_epochs':2,
              'pilot_full_fits':9,'pilot_GPU_hours_ceiling':6,'extension_GPU_hours_ceiling':6,
              'review_policy':REVIEW_POLICY,'original_selected_predictions':incumbent,
+             'original_frozen_predictions':frozen_reference,
              'training_admitted':False,'new_training_launched':False,'Q2_Q3_prediction_arrays_loaded':False,
              'interpretation':'prospective development comparison; independent future evidence still required'}
     value['identity'] = identity(value)

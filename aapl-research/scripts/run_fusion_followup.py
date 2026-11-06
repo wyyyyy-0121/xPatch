@@ -1,8 +1,8 @@
-"""Guarded training-only probes and the fixed November 8 development pilot.
+"""Guarded training-only probes, fixed pilot and conditional seed extension.
 
 No entry changes the original engine, fits on final data or opens a holdout.
-The pilot deliberately stops for review; extending one recipe to three seeds
-still requires the prespecified evidence and a separate remaining-budget gate.
+The pilot stops for review; extending one recipe to three seeds requires the
+recomputed prespecified decision and a separate cumulative remaining-budget gate.
 """
 import argparse
 from contextlib import contextmanager
@@ -32,6 +32,7 @@ PROBE_SECONDS = 600
 MAX_PROBES = 5
 PROBE_UPDATES = 20
 PILOT_SECONDS = 6*3600
+EXTENSION_SECONDS = 6*3600
 ENTRY = Path(__file__).resolve()
 
 
@@ -111,12 +112,13 @@ def spent_seconds(request,stage):
 
 
 def attempts(run,mode):
-    prefix = 'probe_' if mode == 'probe' else 'pilot_attempt_'
+    prefix = {'probe':'probe_','pilot':'pilot_attempt_','extend':'extension_attempt_'}[mode]
     return [p/'guard_request.json' for p in sorted((run/'attempts').glob(prefix+'*')) if p.is_dir()]
 
 
-def stage_remaining(run):
-    return max(0,PILOT_SECONDS-sum(spent_seconds(p,PILOT_SECONDS) for p in attempts(run,'pilot') if p.exists()))
+def stage_remaining(run,mode='pilot'):
+    ceiling = {'pilot':PILOT_SECONDS,'extend':EXTENSION_SECONDS}[mode]
+    return max(0,ceiling-sum(spent_seconds(p,ceiling) for p in attempts(run,mode) if p.exists()))
 
 
 def probe_table(run,manifest,signature):
@@ -160,23 +162,25 @@ def probe_table(run,manifest,signature):
     return found
 
 
-def projection(manifest,table):
+def projection(manifest,table,names=None,seeds=(2026,)):
     rows = []
     for candidate in manifest['candidates']:
+        if names is not None and candidate['name'] not in names:continue
         measured = table[candidate['name']]
-        for quarter in QUARTERS:
-            f = manifest['folds'][quarter]
-            seconds = (measured['initialization_seconds_upper']
-                       + f['total_updates']*measured['seconds_per_update_upper']
-                       + f['score_origins']*measured['seconds_per_prediction_origin_upper'])
-            rows.append({'candidate':candidate['name'],'quarter':quarter,
-                         'updates':f['total_updates'],'score_origins':f['score_origins'],'seconds':seconds})
+        for seed in seeds:
+            for quarter in QUARTERS:
+                f = manifest['folds'][quarter]
+                seconds = (measured['initialization_seconds_upper']
+                           + f['total_updates']*measured['seconds_per_update_upper']
+                           + f['score_origins']*measured['seconds_per_prediction_origin_upper'])
+                rows.append({'candidate':candidate['name'],'quarter':quarter,'seed':seed,
+                             'updates':f['total_updates'],'score_origins':f['score_origins'],'seconds':seconds})
     return {'fits':rows,'seconds':sum(row['seconds'] for row in rows),
             'margin_multiplier':1.5,'cold_first_prefix_and_checkpoint_costs_included':True,
             'whole_training_speedup_claimed':False}
 
 
-def check_budget(mode,manifest,run,signature,now=None):
+def check_budget(mode,manifest,run,signature,now=None,manifest_path=None):
     """Date and budget gates are pure checks and never issue a training command."""
     now = now or datetime.now(timezone.utc)
     left = (datetime.fromisoformat(DEADLINE)-now).total_seconds()
@@ -189,19 +193,28 @@ def check_budget(mode,manifest,run,signature,now=None):
             raise RuntimeError('No time for a bounded preparation probe and delivery reserve')
         return {'mode':mode,'stage_seconds':PROBE_SECONDS,'maximum_total_probes':MAX_PROBES,
                 'remaining_seconds':left,'large_training_admitted':False}
-    if mode != 'pilot':
-        raise ValueError('Only the fixed pilot or a preparation probe can launch')
-    if (run/'pilot/pilot_result.json').exists():
-        raise RuntimeError('The fixed pilot already completed; review it instead of launching a duplicate')
+    if mode not in ('pilot','extend'):
+        raise ValueError('Only fixed pilot, conditional extension or preparation probe can launch')
+    result_path = 'pilot/pilot_result.json' if mode == 'pilot' else 'extension/extension_result.json'
+    if (run/result_path).exists():
+        raise RuntimeError('The fixed '+mode+' already completed; review it instead of launching a duplicate')
     # Reject early dates before even accepting any purported benchmark.
     launch_window(manifest['limit'],1e-9,now)
-    measured = projection(manifest,probe_table(run,manifest,signature))
+    extra = {}
+    if mode == 'extend':
+        from scripts.review_fusion_pilot import checked_review
+        if manifest_path is None:raise ValueError('Extension needs its exact frozen manifest path')
+        saved,plan = checked_review(manifest_path,manifest)
+        extra = {'pilot_review':saved,'extension_plan':plan}
+    table = probe_table(run,manifest,signature)
+    measured = (projection(manifest,table,plan['train_candidates'],plan['new_seeds'])
+                if mode == 'extend' else projection(manifest,table))
     window = launch_window(manifest['limit'],measured['seconds']/3600,now)
-    remaining = stage_remaining(run)
+    remaining = stage_remaining(run,mode)
     if 1.5*measured['seconds']+60 > remaining:
-        raise RuntimeError('Measured pilot plus margin and stop grace exceeds its remaining 6-hour cap')
+        raise RuntimeError('Measured '+mode+' plus margin and stop grace exceeds its remaining 6-hour cap')
     return {'mode':mode,'stage_seconds':remaining,'window':window,'projection':measured,
-            'large_training_admitted':True,'resumed_attempts_receive_no_new_six_hour_budget':True}
+            'large_training_admitted':True,'resumed_attempts_receive_no_new_six_hour_budget':True,**extra}
 
 
 def bound_worker(attempt):
@@ -356,17 +369,44 @@ def run_pilot(panel,store,manifest,destination):
     return report
 
 
+def run_extension(panel,store,manifest,destination,plan):
+    from fusion.next.experiment import neural_trial,score_rows
+    from fusion.next.evaluation import point_scores
+    completed = []
+    recipes = {r['name']:r['config'] for r in manifest['candidates']}
+    for name in plan['train_candidates']:
+        for seed in plan['new_seeds']:
+            for quarter in QUARTERS:
+                result,prediction = neural_trial(panel,recipes[name],quarter,seed,1.,'extension',store,'fusion_search')
+                _,rows = score_rows(panel,quarter)
+                validate_rows(rows,prediction,panel.dates,quarter)
+                score = point_scores(panel.targets['AAPL'][rows],prediction)
+                if score != result['scores']:
+                    raise ValueError('Extension score differs from recomputed common-origin predictions')
+                completed.append({'candidate':name,'quarter':quarter,'seed':seed,
+                                  'scores':score,'prediction_sha256':result['prediction_sha256']})
+                write_json(destination/'extension_progress.json',{'manifest_identity':manifest['identity'],
+                           'extension_plan':plan,'completed_fits':completed,'expected_fits':plan['new_full_fits'],
+                           'updated_at_utc':utc_now()})
+    report = {'manifest_identity':manifest['identity'],'stage':'extension_complete_review_required',
+              'extension_plan':plan,'completed_fits':completed,'expected_fits':plan['new_full_fits'],
+              'total_coverage_equivalent_epochs':2,'Q2_Q3_prediction_arrays_loaded':False,
+              'independent_success_claimed':False,'final_fit_started':False,'completed_at_utc':utc_now()}
+    write_json(destination/'extension_result.json',report)
+    return report
+
+
 def worker(manifest_path,attempt,destination,mode,candidate_name):
     request = bound_worker(attempt)
     manifest = check_frozen(manifest_path)
-    if mode not in ('probe','pilot') or request['limit'] != manifest['limit']:
+    if mode not in ('probe','pilot','extend') or request['limit'] != manifest['limit']:
         raise ValueError('Guarded worker mode or absolute limit differs')
     if os.environ.get('FUSION_EXECUTION_PROFILE') != 'autodl':
         raise RuntimeError('Formal/probe worker requires the admitted cloud CUDA runtime')
     # Parent holds original lock and must remain alive; do not take a competing
     # lock or rerun the idle-GPU query after this worker starts its own CUDA job.
     original_idle(manifest,query_gpu=False)
-    if mode == 'pilot':
+    if mode != 'probe':
         launch_window(manifest['limit'],1e-9)
     from scripts import portable_inference_runtime as numerical,future_speed_runtime as speed
     if numerical._installed or speed._installed:
@@ -384,6 +424,12 @@ def worker(manifest_path,attempt,destination,mode,candidate_name):
             or admission['budget']['mode'] != mode
             or request['stage_seconds'] != admission['budget']['stage_seconds']):
         raise ValueError('Worker differs from the scheduler admission')
+    plan = None
+    if mode == 'extend':
+        from scripts.review_fusion_pilot import checked_review
+        saved,plan = checked_review(manifest_path,manifest)
+        if admission['budget']['pilot_review'] != saved or admission['budget']['extension_plan'] != plan:
+            raise ValueError('Extension decision changed after scheduling')
     with isolated_outputs(destination):
         numerical.install();speed.install()
         if mode == 'probe':
@@ -393,11 +439,13 @@ def worker(manifest_path,attempt,destination,mode,candidate_name):
             return run_probe(panel,store,manifest,candidate,Path(attempt),request,signature)
         # Recheck the same benchmark and budget before any formal model loads.
         table = probe_table(FOLLOW/'runs'/manifest['identity'],manifest,signature)
-        measured = projection(manifest,table)
+        measured = (projection(manifest,table,plan['train_candidates'],plan['new_seeds'])
+                    if mode == 'extend' else projection(manifest,table))
         if admission['budget']['projection'] != measured or admission['budget']['large_training_admitted'] is not True:
             raise ValueError('Formal benchmark/budget admission changed')
         launch_window(manifest['limit'],measured['seconds']/3600)
-        return run_pilot(panel,store,manifest,Path(destination))
+        return (run_extension(panel,store,manifest,Path(destination),plan) if mode == 'extend'
+                else run_pilot(panel,store,manifest,Path(destination)))
 
 
 def stop_guard(process,attempt):
@@ -433,17 +481,17 @@ def launch(manifest_path,mode,candidate_name=None):
             raise RuntimeError('Use a clean launcher without the old original-output bootstrap')
         original_idle(manifest)
         signature = runtime_signature()
-        budget = check_budget(mode,manifest,run,signature)
+        budget = check_budget(mode,manifest,run,signature,manifest_path=manifest_path)
         if mode == 'probe' and candidate_name not in {r['name'] for r in manifest['candidates']}:
             raise ValueError('Choose one of the three fixed probe recipes')
-        if mode == 'pilot' and candidate_name is not None:
-            raise ValueError('Formal pilot must include all three recipes and quarters')
+        if mode != 'probe' and candidate_name is not None:
+            raise ValueError('Formal stages use their complete fixed recipe and seed list')
         previous = attempts(run,mode)
-        tag = ('probe_' if mode == 'probe' else 'pilot_attempt_')+str(len(previous)+1).zfill(2)
+        tag = {'probe':'probe_','pilot':'pilot_attempt_','extend':'extension_attempt_'}[mode]+str(len(previous)+1).zfill(2)
         attempt = run/'attempts'/tag
         if attempt.exists():
             raise RuntimeError('Preserve the existing attempt; do not overwrite missing/partial startup evidence')
-        destination = attempt if mode == 'probe' else run/'pilot'
+        destination = attempt if mode == 'probe' else run/('pilot' if mode == 'pilot' else 'extension')
         admission = {'manifest_identity':manifest['identity'],'mode':mode,'candidate_name':candidate_name,
                      'destination':str(destination),'runtime_signature':signature,'budget':budget,
                      'entry_sha256':digest(ENTRY),'issued_at_utc':utc_now()}
@@ -463,19 +511,20 @@ def launch(manifest_path,mode,candidate_name=None):
         state = read_json(attempt/'guard_state.json')
         if code != 0 or state['stage'] != 'completed':
             raise RuntimeError('Follow-up guard stopped or failed; inspect preserved attempt logs')
-        expected = attempt/'probe_result.json' if mode == 'probe' else destination/'pilot_result.json'
+        expected = (attempt/'probe_result.json' if mode == 'probe' else
+                    destination/('pilot_result.json' if mode == 'pilot' else 'extension_result.json'))
         result = read_json(expected)
         if result['manifest_identity'] != manifest['identity']:
             raise ValueError('Completed worker result belongs to another matrix')
         print({'mode':mode,'attempt':str(attempt),'completed':True,
-               'large_training':mode == 'pilot','extension_started':False})
+               'large_training':mode != 'probe','extension_started':mode == 'extend'})
         return result
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--manifest',type=Path,required=True)
-    parser.add_argument('--mode',choices=['probe','pilot'],required=True)
+    parser.add_argument('--mode',choices=['probe','pilot','extend'],required=True)
     parser.add_argument('--candidate')
     parser.add_argument('--worker',action='store_true',help=argparse.SUPPRESS)
     parser.add_argument('--attempt',type=Path,help=argparse.SUPPRESS)

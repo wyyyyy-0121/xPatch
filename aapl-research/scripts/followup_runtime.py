@@ -96,6 +96,7 @@ def prepare(snapshot):
              'admission_sha256': digest(ROOT/'scripts/followup_admission.py'),
              'training_entry_sha256': digest(ROOT/'scripts/run_fusion_followup.py'),
              'pilot_review_sha256': digest(ROOT/'scripts/review_fusion_pilot.py'), 'limit': limit,
+             'extension_review_sha256': digest(ROOT/'scripts/review_fusion_extension.py'),
              'earliest_large_run': EARLIEST, 'reference': selected, 'candidates': proposed,
              'reference_status': 'provisional until original F5, F6 and actual F8 finish',
              'validation': list(QUARTERS), 'pilot_seeds': [2026], 'expanded_seeds': [2026,2027,2028],

@@ -179,6 +179,7 @@ def test_complete_pilot_review_recomputes_all_nine_fits_and_refuses_a_duplicate(
         seeds = np.stack([target[origins]*.2]*3)
         np.savez_compressed(path,rows=origins,quarters=np.array(review.QUARTERS),target=target[origins],
                             timestamps_ns=stamps[origins].as_unit('ns').asi8,predictions=seeds,ensemble=seeds.mean(0))
+        manifest['original_inputs'][incumbent_path] = {'sha256':digest(path)}
         write_json(base/'system_freeze.json',{'fixed_strongest_single':{'mse':1e-7},'fixed_strongest_simple':{'mse':2e-7}})
         completion = {'manifest_identity':matrix,'stage':'pilot_complete_review_required','expected_fits':9,
                       'total_coverage_equivalent_epochs':2,'Q2_Q3_prediction_arrays_loaded':False,
