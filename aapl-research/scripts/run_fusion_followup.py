@@ -112,12 +112,12 @@ def spent_seconds(request,stage):
 
 
 def attempts(run,mode):
-    prefix = {'probe':'probe_','pilot':'pilot_attempt_','extend':'extension_attempt_'}[mode]
+    prefix = {'probe':'probe_','pilot':'pilot_attempt_','extend':'extension_attempt_','fit':'fit_attempt_'}[mode]
     return [p/'guard_request.json' for p in sorted((run/'attempts').glob(prefix+'*')) if p.is_dir()]
 
 
 def stage_remaining(run,mode='pilot'):
-    ceiling = {'pilot':PILOT_SECONDS,'extend':EXTENSION_SECONDS}[mode]
+    ceiling = {'pilot':PILOT_SECONDS,'extend':EXTENSION_SECONDS,'fit':guard.MAX_STAGE_SECONDS}[mode]
     return max(0,ceiling-sum(spent_seconds(p,ceiling) for p in attempts(run,mode) if p.exists()))
 
 
@@ -156,6 +156,12 @@ def probe_table(run,manifest,signature):
         if old:
             report = {**report,**{field:max(old[field],report[field]) for field in
                 ('seconds_per_update_upper','seconds_per_prediction_origin_upper','initialization_seconds_upper')}}
+            fields = ('checkpoint_copy_bytes','checkpoint_copy_seconds_upper')
+            if all(field in old and field in report for field in fields):
+                if any(not np.isfinite(r[field]) or r[field]<=0 for r in (old,report) for field in fields):
+                    raise ValueError('Checkpoint copy measurements must be finite and positive')
+                if old[fields[1]]/old[fields[0]]>report[fields[1]]/report[fields[0]]:
+                    report.update({field:old[field] for field in fields})
         found[name] = report
     if set(found) != {r['name'] for r in manifest['candidates']}:
         raise RuntimeError('Need completed numerical/recovery/timing probes for all three fixed recipes')
@@ -217,14 +223,16 @@ def check_budget(mode,manifest,run,signature,now=None,manifest_path=None):
             'large_training_admitted':True,'resumed_attempts_receive_no_new_six_hour_budget':True,**extra}
 
 
-def bound_worker(attempt):
+def bind_guarded_worker(attempt,entry,purpose):
     """A worker must be this exact live guard's direct session leader."""
     attempt = guard.checked_directory(attempt)
     request = identified(attempt/'guard_request.json')
     state = read_json(attempt/'guard_state.json')
     current = guard.process_identity()
-    if request['purpose'] != 'exploration' or request['delivery_reserve_seconds'] != guard.RESERVE_SECONDS:
-        raise RuntimeError('Research worker cannot use the reserved delivery-fit time')
+    if (request['purpose'] != purpose
+            or request['delivery_reserve_seconds'] != guard.PURPOSE_RESERVES[purpose]):
+        raise RuntimeError('Research worker cannot use the reserved delivery-fit time' if purpose=='exploration'
+                           else 'Delivery worker requires its exact delivery-fit guard purpose')
     if (state.get('stage') != 'running' or state['request_identity'] != request['identity']
             or state['worker'] != current or state['guard']['pid'] != os.getppid()
             or not guard.exact_alive(state['guard']) or not guard.exact_alive(request['owner'])
@@ -234,9 +242,13 @@ def bound_worker(attempt):
         raise RuntimeError('Worker is not bound to a live independent guard and caller')
     if psutil.Process(os.getppid()).cmdline()[1:] != [str(ROOT/'scripts/followup_guard.py'),'--request',str(attempt/'guard_request.json')]:
         raise ValueError('Worker parent command is not the exact group guard')
-    if request['command'] != [sys.executable,str(ENTRY),*sys.argv[1:]]:
+    if request['command'] != [sys.executable,str(entry),*sys.argv[1:]]:
         raise ValueError('Worker arguments differ from the guarded command')
     return request
+
+
+def bound_worker(attempt):
+    return bind_guarded_worker(attempt,ENTRY,'exploration')
 
 
 def state_hash(value):
@@ -301,7 +313,11 @@ def run_probe(panel,store,manifest,candidate,attempt,request,signature):
         started = time.perf_counter();continuous.run_until(PROBE_UPDATES//2)
         torch.cuda.synchronize();first = time.perf_counter()-started
         copy_path = continuous.path.parents[1]/'probe_resumed/seed_2026.pt'
-        clone_prefix(continuous.path,copy_path)
+        from fusion.next.checkpoint import resolve_checkpoint
+        committed,_ = resolve_checkpoint(continuous.path)
+        copy_bytes = committed.stat().st_size
+        started = time.perf_counter();clone_prefix(continuous.path,copy_path)
+        copy_seconds = time.perf_counter()-started
         started = time.perf_counter();continuous.run_until(PROBE_UPDATES)
         torch.cuda.synchronize();second = time.perf_counter()-started
         expected = state_hash(continuous);resources = continuous.guard.check()
@@ -338,6 +354,7 @@ def run_probe(panel,store,manifest,candidate,attempt,request,signature):
                  'initialization_seconds_upper':max(build1,build2),
                  'seconds_per_update_upper':max(first,second)/(PROBE_UPDATES//2),
                  'seconds_per_prediction_origin_upper':max(timings)/len(rows),
+                 'checkpoint_copy_bytes':copy_bytes,'checkpoint_copy_seconds_upper':copy_seconds,
                  'first_prefix_seconds':first,'second_prefix_seconds':second,
                  'checkpoint_io_in_update_timings':True,'adaptation_phase_timing_separately_measured':False,
                  'resources':resources,'telemetry_sample':gpu_telemetry(),

@@ -190,12 +190,12 @@ def test_portable_frozen_manifest_binds_inputs_recipe_code_and_the_original_prot
     (root/'data').mkdir()
     dates = np.array(['2024-12-27','2024-12-30','2024-12-31','2025-01-02',
                       '2025-06-26','2025-06-27','2025-06-30','2025-07-01',
-                      '2025-12-29','2025-12-30','2025-12-31','2026-01-02'])
+                      '2025-12-29','2025-12-30','2025-12-31','2026-01-02','2026-03-30','2026-03-31'])
     np.save(root/'data/dates.npy',dates)
     reference = {'candidate_id':'synthetic_reference','family':'fusion','foundation':True,
                  'foundation_mode':'frozen','loss':'scaled','representation_cache':True,
                  'sampler_policy':'balanced_complete_coverage_v1','total_updates':6,
-                 'updates_by_fit_end':{'2024-12-30':2,'2025-06-27':4,'2025-12-30':6}}
+                 'updates_by_fit_end':{'2024-12-30':2,'2025-06-27':4,'2025-12-30':6,'2026-03-30':8}}
     evidence.save('selections/fusion.json',{'selected':reference})
     directory = admit.FOLLOW/'preparation'
     directory.mkdir(exist_ok=True)
@@ -212,6 +212,7 @@ def test_portable_frozen_manifest_binds_inputs_recipe_code_and_the_original_prot
                  'validation':list(admit.QUARTERS),'pilot_seeds':[2026],'expanded_seeds':[2026,2027,2028],
                  'total_coverage_equivalent_epochs':2,'pilot_full_fits':9,'pilot_GPU_hours_ceiling':6,
                  'extension_GPU_hours_ceiling':6,'review_policy':admit.REVIEW_POLICY,
+                 'deployment_fit_policy':admit.deployment_policy(reference,dates),
                  'training_admitted':False,'new_training_launched':False,
                  'folds':{q:{'fit_end':fold(dates,q)['fit_end'],
                              'score_origins':1,
@@ -227,6 +228,7 @@ def test_portable_frozen_manifest_binds_inputs_recipe_code_and_the_original_prot
                      lambda v:v.update(folds={k:r for k,r in v['folds'].items() if k != '2026Q1'}),
                      lambda v:v['delivery'].update(engineering_acceptance_passed=False),
                      lambda v:v.update(review_policy={**v['review_policy'],'remove_top_positive_gain_days':0}),
+                     lambda v:v['deployment_fit_policy'].update(fit_end='2026-06-29'),
                      lambda v:v['candidates'].pop()]
         for mutate in mutations:
             altered = copy.deepcopy(value);mutate(altered);write_json(path,seal(altered))

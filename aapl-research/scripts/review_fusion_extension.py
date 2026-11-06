@@ -13,7 +13,7 @@ from fusion.next.evaluation import point_scores, seed_system
 from scripts.followup_admission import check_frozen, identified
 from scripts.followup_runtime import FOLLOW
 from scripts.review_fusion_development import QUARTERS
-from scripts.review_fusion_pilot import checked_review, full_prediction, original_seeds, robustness, time_segments
+from scripts.review_fusion_pilot import checked_review as checked_pilot_review, full_prediction, original_seeds, robustness, time_segments
 
 
 def evaluate(target,quarters,dates,segments,selected,paired,incumbent,fixed,plan):
@@ -53,9 +53,30 @@ def evaluate(target,quarters,dates,segments,selected,paired,incumbent,fixed,plan
             'parameter_count_and_initialization_differ_when_a_branch_is_removed':True}
 
 
-def review(manifest_path):
+def checked_review(manifest_path,manifest=None):
+    manifest = manifest or check_frozen(manifest_path)
+    directory = FOLLOW/'runs'/manifest['identity']/'extension_reviews'
+    pointer = read_json(directory/'latest.json');path = (ROOT/pointer['report']).resolve()
+    if (not path.is_relative_to(directory.resolve()) or path.name!='report.json'
+            or pointer['manifest_identity']!=manifest['identity']):
+        raise ValueError('Extension review pointer leaves its matrix directory')
+    saved = identified(path)
+    stable = {k:v for k,v in saved.items() if k not in ('identity','decision_identity','reviewed_at_utc')}
+    if (path.parent.name!=saved['identity'] or pointer['identity']!=saved['identity']
+            or identity(stable)!=saved['decision_identity']
+            or pointer['development_qualification_passed']!=saved['development_qualification_passed']
+            or pointer['final_data_access_authorized'] is not False):
+        raise ValueError('Extension review pointer or stable decision differs')
+    _,fresh = review(manifest_path,publish=False)
+    if saved['decision_identity']!=fresh['decision_identity']:
+        raise ValueError('Saved extension review differs from recomputed predictions')
+    return {'report':str(path.relative_to(ROOT)),'identity':saved['identity'],
+            'decision_identity':saved['decision_identity']},fresh
+
+
+def review(manifest_path,publish=True):
     manifest = check_frozen(manifest_path)
-    saved,plan = checked_review(manifest_path,manifest)
+    saved,plan = checked_pilot_review(manifest_path,manifest)
     run = FOLLOW/'runs'/manifest['identity'];extension = run/'extension'
     path = extension/'extension_result.json';complete = read_json(path)
     if (complete['manifest_identity'] != manifest['identity'] or complete['extension_plan'] != plan
@@ -118,8 +139,11 @@ def review(manifest_path):
                       original(manifest['original_selected_predictions']),read_json(fixed_path),plan)
     result.update(manifest_identity=manifest['identity'],extension_plan=plan,pilot_review=saved,
                   prediction_provenance_sha256=provenance,Q2_Q3_prediction_arrays_loaded=False,
-                  total_coverage_equivalent_epochs=2,new_full_fits=plan['new_full_fits'],reviewed_at_utc=utc_now())
+                  total_coverage_equivalent_epochs=2,new_full_fits=plan['new_full_fits'])
+    result['decision_identity'] = identity(result)
+    result['reviewed_at_utc'] = utc_now()
     result['identity'] = identity(result)
+    if not publish:return None,result
     destination = run/'extension_reviews'/result['identity'];write_json(destination/'report.json',result)
     lines = ['# 下一轮三种子开发复核','',
              f'固定配方：{plan["selected_candidate"]}；固定配对对照：{plan["paired_control"]}。',

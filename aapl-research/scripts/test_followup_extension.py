@@ -190,6 +190,12 @@ def test_complete_three_seed_review_reuses_pilot_and_never_promotes_pair(evidenc
     assert result['seeds']==[2026,2027,2028] and result['new_full_fits']==plan['new_full_fits']
     assert not result['development_checks_authorize_final_data_access'] and not result['independent_research_success_claimed']
     assert (destination/'report.md').exists()
+    stable,fresh=extension.checked_review(evidence.manifest_path,evidence.manifest)
+    assert stable['decision_identity']==result['decision_identity']==fresh['decision_identity']
+    pointer_path=evidence.run/'extension_reviews/latest.json';pointer=read_json(pointer_path)
+    write_json(pointer_path,{**pointer,'development_qualification_passed':False})
+    with pytest.raises(ValueError,match='pointer or stable'):extension.checked_review(evidence.manifest_path,evidence.manifest)
+    write_json(pointer_path,pointer)
     complete['completed_fits'][0] = complete['completed_fits'][1];write_json(path,complete)
     with pytest.raises(ValueError,match='omitted or duplicated'):extension.review(evidence.manifest_path)
     with pytest.raises(RuntimeError,match='already completed'):

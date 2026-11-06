@@ -97,6 +97,7 @@ def prepare(snapshot):
              'training_entry_sha256': digest(ROOT/'scripts/run_fusion_followup.py'),
              'pilot_review_sha256': digest(ROOT/'scripts/review_fusion_pilot.py'), 'limit': limit,
              'extension_review_sha256': digest(ROOT/'scripts/review_fusion_extension.py'),
+             'engineering_fit_entry_sha256': digest(ROOT/'scripts/fit_fusion_followup.py'),
              'earliest_large_run': EARLIEST, 'reference': selected, 'candidates': proposed,
              'reference_status': 'provisional until original F5, F6 and actual F8 finish',
              'validation': list(QUARTERS), 'pilot_seeds': [2026], 'expanded_seeds': [2026,2027,2028],
@@ -196,7 +197,7 @@ def isolated_outputs(destination, read_root=BASE):
     worker process. Data, weights and OOF are loaded from the original root;
     construct ExpertStore before this context, since it shares Trainer's module.
     """
-    from fusion.next import common,accounting,cache,checkpoint,experiment,trainer,hardware,foundation
+    from fusion.next import common,accounting,cache,checkpoint,experiment,trainer,hardware,foundation,inference
     destination, read_root = Path(destination).resolve(), Path(read_root).resolve()
     if (not destination.is_relative_to(FOLLOW/'runs') or destination == FOLLOW/'runs'
             or destination.is_relative_to(read_root) or read_root.is_relative_to(destination)):
@@ -237,9 +238,9 @@ def isolated_outputs(destination, read_root=BASE):
                     raise ValueError('Follow-up numerical/speed policy changed')
                 if not target.exists():
                     shutil.copyfile(source,target)
-        for module in (common,accounting,cache,experiment,trainer,hardware):
+        for module in (common,accounting,cache,experiment,trainer,hardware,inference):
             set_value(module,'OUT',destination)
-        for module in (common,accounting,cache,checkpoint,experiment,trainer,hardware,foundation):
+        for module in (common,accounting,cache,checkpoint,experiment,trainer,hardware,foundation,inference):
             set_value(module,'write_json',fenced)
         original_cache = trainer.RepresentationCache
         def warm(*args,**kwargs):

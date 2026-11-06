@@ -21,7 +21,7 @@ SCOPE = '2b93e6c04d1fe15f1fd9cb47f424846014b80d88f4f5c8679db0c918b6c60207'
 NUMERICAL = '9cf552a6c334bee8226411e1e989a25c11af89d8305bb29feb74ff2276098872'
 SPEED = '0c433a556af0a5d944c7a6afdfdbda35b9a7ac372610b7492295dcc487f06fab'
 IMPLEMENTATIONS = ('followup_runtime.py','followup_guard.py','followup_admission.py',
-                   'run_fusion_followup.py','review_fusion_pilot.py','review_fusion_extension.py')
+                   'run_fusion_followup.py','review_fusion_pilot.py','review_fusion_extension.py','fit_fusion_followup.py')
 REVIEW_POLICY = {'version':'development_pilot_review_v1','pilot_seed':2026,
                  'minimum_positive_quarters':2,'minimum_positive_time_segments':2,
                  'segments':['opening_0931_1029','midday_1030_1429','closing_1430_1548'],
@@ -231,6 +231,18 @@ def fixed_reference(root=BASE,panel=None):
     return reference,proposed,quarters,files
 
 
+def deployment_policy(reference,dates):
+    from fusion.next.splits import fold
+    from fusion.next.recipe import for_fit
+    f = fold(dates,'2026Q2',confirmation=True)
+    return {'fit_end':f['fit_end'],'purged_full_session':f['purged_full_session'],
+            'total_updates':for_fit(reference,f['fit_end'])['total_updates'],
+            'system_seeds':[2026,2027,2028],'total_coverage_equivalent_epochs':2,
+            'GPU_hours_ceiling':6,'local_delivery_reserve_hours':2,
+            'expert_policy':'reuse_identical_original_pre_Q2_only',
+            'post_Q2_refit':False,'Q2_Q3_scoring_authorized':False}
+
+
 def _freeze():
     if os.environ.get('FUSION_EXECUTION_PROFILE','local') != 'local':
         raise RuntimeError('Verify actual original CPU delivery on the local research host')
@@ -258,6 +270,9 @@ def _freeze():
         if name.split('/')[0] in ('performance','deployment') or name in (
                 'F3_complete.json','F4_complete.json','F5_complete.json','system_freeze.json','confirmation.json'):
             files[name] = row
+    for name in ['search_manifest.json']+['selections/single_'+name+'.json' for name in ('ridge','lightgbm','xpatch','patchtst')]:
+        path = checked_file(root,name)
+        files[name] = {'sha256':digest(path),'bytes':path.stat().st_size}
     store = trainer.ExpertStore(original_panel)
     for name in ['data/dates.npy','data/timestamps_ns.npy','data_admission.json','foundation_weights.json']:
         path = checked_file(Path(root),name)
@@ -285,6 +300,7 @@ def _freeze():
              'pilot_full_fits':9,'pilot_GPU_hours_ceiling':6,'extension_GPU_hours_ceiling':6,
              'review_policy':REVIEW_POLICY,'original_selected_predictions':incumbent,
              'original_frozen_predictions':frozen_reference,
+             'deployment_fit_policy':deployment_policy(reference,original_panel.dates),
              'training_admitted':False,'new_training_launched':False,'Q2_Q3_prediction_arrays_loaded':False,
              'interpretation':'prospective development comparison; independent future evidence still required'}
     value['identity'] = identity(value)
@@ -356,6 +372,8 @@ def check_frozen(path,root=BASE):
     from fusion.next.recipe import for_fit
     from fusion.next.splits import fold
     dates = np.load(Path(root)/'data/dates.npy',mmap_mode='r')
+    if value['deployment_fit_policy'] != deployment_policy(value['reference'],dates):
+        raise ValueError('Frozen delivery fit boundary, seeds or budget changed')
     if set(value['folds']) != set(QUARTERS):
         raise ValueError('Frozen manifest omitted a validation quarter')
     for quarter,row in value['folds'].items():
