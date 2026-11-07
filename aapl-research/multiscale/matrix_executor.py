@@ -23,7 +23,8 @@ import pandas as pd
 
 from .bars import Bars, eligible_origins, file_digest
 from .development import FoldConfig, atomic_json, run_development_fold, validate_split
-from .matrix_gate import REQUIRED_SOURCE_FILES, _reviewer, locked_protocol_issues, review_issues
+from .matrix_gate import (REQUIRED_SOURCE_FILES, _reviewer, locked_protocol_issues,
+                          profile_selection, review_issues, task_inventory)
 from .spec import DEV_END, MODELS, NY, OUT, PROFILES, ROOT, TARGETS
 from .splits import rolling_folds, warmup_folds
 from .training import digest_indices
@@ -40,13 +41,13 @@ def _json_inside(path: Path, root: Path):
     return json.loads(path.read_text(encoding="utf8")), file_digest(path), path
 
 
-def load_reviewed(admission_dir: Path, review_path: Path):
+def load_reviewed(admission_dir: Path, review_path: Path, *, selected_profiles=None):
     admission, admission_hash, admission_path = _json_inside(
         admission_dir.resolve() / "admission.json", OUT / "admission")
     review, review_hash, review_path = _json_inside(review_path, OUT)
     note = OUT / "POST_CUTOFF_EXPOSURE.md"
     note_hash = file_digest(note) if note.is_file() else None
-    issues = review_issues(admission, admission_hash, review, OUT, note_hash)
+    issues = review_issues(admission, admission_hash, review, OUT, note_hash, selected_profiles=selected_profiles)
     if issues:
         raise ValueError("Matrix admission blocked: " + ", ".join(issues))
     return admission, admission_hash, admission_path.parent, review, review_hash, review_path
@@ -131,9 +132,11 @@ def _training_config(job, training, protocol_hash):
 
 
 def freeze(admission_dir: Path, review_path: Path, recipe_path: Path):
-    """Bind a complete five-fold recipe to reviewed data before any scores."""
-    admission, admission_hash, source, review, review_hash, _ = load_reviewed(admission_dir, review_path)
+    """Bind predeclared complete scales and five folds before any scores."""
     recipe, recipe_hash, _ = _json_inside(recipe_path, OUT)
+    selected = profile_selection(recipe.get("selected_profiles"))
+    admission, admission_hash, source, review, review_hash, _ = load_reviewed(
+        admission_dir, review_path, selected_profiles=selected)
     kind = admission.get("data_kind", "market")
     if kind not in ("market", "synthetic_test"):
         raise ValueError("Unknown data kind")
@@ -144,6 +147,11 @@ def freeze(admission_dir: Path, review_path: Path, recipe_path: Path):
     strategies = recipe.get("fold_strategies")
     if not isinstance(strategies, dict) or set(strategies) != {p.name for p in PROFILES}:
         raise ValueError("Recipe must specify one fold strategy for each profile")
+    omitted = recipe.get("omitted_profiles")
+    expected_omitted = {p.name for p in PROFILES if p.name not in selected}
+    if (not isinstance(omitted, dict) or set(omitted) != expected_omitted or
+            any(not isinstance(note, str) or len(note.strip()) < 20 for note in omitted.values())):
+        raise ValueError("Every omitted scale needs a predeclared reason")
     training = recipe.get("training")
     if not isinstance(training, dict):
         raise ValueError("A complete fixed training configuration is required")
@@ -154,6 +162,8 @@ def freeze(admission_dir: Path, review_path: Path, recipe_path: Path):
     rows = {(row["profile"], row["horizon"], row["target"]): row for row in admission["tasks"]}
     jobs = []
     for profile in PROFILES:
+        if profile.name not in selected:
+            continue
         strategy = strategies[profile.name]
         if strategy not in ("rolling", "warmup"):
             raise ValueError("Unknown fold strategy")
@@ -195,6 +205,9 @@ def freeze(admission_dir: Path, review_path: Path, recipe_path: Path):
                 "created_at_utc": datetime.now(timezone.utc).isoformat(), "admission_sha256": admission_hash,
                 "review_sha256": review_hash, "recipe_sha256": recipe_hash,
                 "development_cutoff_new_york": DEV_END, "Q3_values_read": False, "independent_test": False,
+                "matrix_scope": "full" if len(selected) == len(PROFILES) else "partial",
+                "selected_profiles": selected, "omitted_profiles": omitted,
+                "task_inventory": task_inventory(selected, omitted),
                 "models": list(MODELS), "training": training, "analysis": recipe.get("analysis"), "jobs": jobs,
                 "source_code_sha256": {name: file_digest(ROOT / name) for name in REQUIRED_SOURCE_FILES}}
     issues = locked_protocol_issues(admission, admission_hash, protocol, review_hash)
@@ -218,8 +231,10 @@ def _parent_death_guard(parent_pid):
 def _worker(admission_dir, review_path, protocol_path, job, folder, resume, parent_pid, queue):
     try:
         _parent_death_guard(parent_pid)
-        admission, admission_hash, source, review, review_hash, _ = load_reviewed(Path(admission_dir), Path(review_path))
         protocol, protocol_hash, _ = _json_inside(Path(protocol_path), OUT)
+        selected = profile_selection(protocol.get("selected_profiles"))
+        admission, admission_hash, source, review, review_hash, _ = load_reviewed(
+            Path(admission_dir), Path(review_path), selected_profiles=selected)
         issues = locked_protocol_issues(admission, admission_hash, protocol, review_hash)
         if issues or job not in protocol["jobs"]:
             raise ValueError("Worker protocol is no longer valid")
@@ -260,8 +275,10 @@ def execute(admission_dir: Path, review_path: Path, protocol_path: Path, *, max_
     """Run a single-device queue with identity, locking and wall-time checks."""
     if max_jobs is not None and (type(max_jobs) is not int or max_jobs < 1):
         raise ValueError("The optional job limit must be a positive integer")
-    admission, admission_hash, _, review, review_hash, _ = load_reviewed(admission_dir, review_path)
     protocol, protocol_hash, protocol_path = _json_inside(protocol_path, OUT)
+    selected = profile_selection(protocol.get("selected_profiles"))
+    admission, admission_hash, _, review, review_hash, _ = load_reviewed(
+        admission_dir, review_path, selected_profiles=selected)
     issues = locked_protocol_issues(admission, admission_hash, protocol, review_hash)
     if issues:
         raise ValueError("Frozen matrix blocked: " + ", ".join(issues))
@@ -291,11 +308,15 @@ def execute(admission_dir: Path, review_path: Path, protocol_path: Path, *, max_
             raise ValueError("The device or matrix queue is already active") from None
         if state_path.exists():
             state = json.loads(state_path.read_text(encoding="utf8"))
-            if state.get("protocol_sha256") != protocol_hash or state.get("review_sha256") != review_hash:
+            if (state.get("protocol_sha256") != protocol_hash or state.get("review_sha256") != review_hash or
+                    state.get("matrix_scope") != protocol["matrix_scope"] or
+                    state.get("selected_profiles") != protocol["selected_profiles"]):
                 raise ValueError("Existing matrix state identity differs")
         else:
             state = {"schema_version": 1, "protocol_sha256": protocol_hash, "review_sha256": review_hash,
                      "data_kind": protocol["data_kind"], "status": "running",
+                     "matrix_scope": protocol["matrix_scope"], "selected_profiles": protocol["selected_profiles"],
+                     "omitted_profiles": protocol["omitted_profiles"],
                      "consumed_wall_seconds": 0.0, "active": None, "jobs": {},
                      "time_policy": "wall time, including interruptions; unexpected downtime may be conservatively counted"}
             atomic_json(state_path, state)
@@ -385,8 +406,9 @@ def execute(admission_dir: Path, review_path: Path, protocol_path: Path, *, max_
             state["jobs"][key].update(status="completed", receipt_sha256=outcome["receipt_sha256"])
             completed_this_call += 1
             atomic_json(state_path, state)
-        state["status"] = ("completed_synthetic_test_only" if protocol["data_kind"] == "synthetic_test"
-                           else "completed_development_only")
+        state["status"] = ("completed_synthetic_test_only" if protocol["data_kind"] == "synthetic_test" else
+                           "completed_development_only" if protocol["matrix_scope"] == "full" else
+                           "completed_partial_development_only")
         atomic_json(state_path, state)
         return state
 

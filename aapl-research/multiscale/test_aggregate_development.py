@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 
 from . import aggregate_development as aggregate_module
-from .spec import MODELS
+from .spec import MODELS, PROFILES
 
 
 def test_synthetic_fold_pooling_and_nonoverlap_do_not_claim_confirmation(tmp_path, monkeypatch):
@@ -16,15 +16,17 @@ def test_synthetic_fold_pooling_and_nonoverlap_do_not_claim_confirmation(tmp_pat
              "target": "future_log_return", "fold": number} for number in range(1, 6)]
     analysis = {"block_lengths_by_profile": {"annual": [12, 24]}, "resamples": 100, "seed": 2026,
                 "confidence": .95, "development_p_values": False, "annual_nonoverlap": True}
-    protocol = {"data_kind": "synthetic_test", "jobs": jobs, "analysis": analysis}
-    monkeypatch.setattr(aggregate_module, "load_reviewed", lambda *args: ({}, admission_hash, tmp_path, {}, review_hash, None))
+    protocol = {"data_kind": "synthetic_test", "jobs": jobs, "analysis": analysis,
+                "selected_profiles": [profile.name for profile in PROFILES], "matrix_scope": "full", "omitted_profiles": {}}
+    monkeypatch.setattr(aggregate_module, "load_reviewed", lambda *args, **kwargs: ({}, admission_hash, tmp_path, {}, review_hash, None))
     monkeypatch.setattr(aggregate_module, "_json_inside", lambda *args: (protocol, protocol_hash, None))
     monkeypatch.setattr(aggregate_module, "locked_protocol_issues", lambda *args: [])
     labels = pd.date_range("2018-01-31", periods=50, freq="ME").strftime("%Y-%m-%d").to_numpy()
     monkeypatch.setattr(aggregate_module, "session_labels", lambda *args: labels)
     run = tmp_path / "synthetic_matrix_validation" / "runs" / protocol_hash[:24]
     run.mkdir(parents=True)
-    state = {"protocol_sha256": protocol_hash, "review_sha256": review_hash, "data_kind": "synthetic_test", "jobs": {}}
+    state = {"protocol_sha256": protocol_hash, "review_sha256": review_hash, "data_kind": "synthetic_test",
+             "matrix_scope": "full", "selected_profiles": protocol["selected_profiles"], "jobs": {}}
     verified = {}
     for job, origins in zip(jobs[:2], ([0, 1, 2, 12], [13, 24, 25, 36]), strict=True):
         key = aggregate_module._job_key(job)

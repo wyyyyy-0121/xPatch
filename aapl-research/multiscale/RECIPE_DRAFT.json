@@ -2,6 +2,8 @@
   "status": "draft_not_runnable",
   "data_kind": "market",
   "admission_sha256": null,
+  "selected_profiles": ["annual", "quarterly", "monthly", "hourly", "minute"],
+  "omitted_profiles": {},
   "reviewed_by": null,
   "reviewed_at_utc": null,
   "fold_strategies": {

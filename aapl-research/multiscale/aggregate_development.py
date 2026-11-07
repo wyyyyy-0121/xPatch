@@ -15,7 +15,7 @@ import numpy as np
 from .bars import file_digest
 from .evaluation import paired_block_bootstrap
 from .matrix_executor import _job_key, _json_inside, load_reviewed
-from .matrix_gate import locked_protocol_issues
+from .matrix_gate import locked_protocol_issues, profile_selection
 from .spec import DEV_END, MODELS, OUT, PROFILES, TARGETS
 from .verify_development import check_fold
 
@@ -37,8 +37,10 @@ def session_labels(directory: Path, admission: dict, frequency: str):
 
 def aggregate(admission_dir: Path, review_path: Path, protocol_path: Path, run_dir: Path,
               profile: str, horizon: int, target: str, *, allow_partial=False):
-    admission, admission_hash, source, _, review_hash, _ = load_reviewed(admission_dir, review_path)
     protocol, protocol_hash, _ = _json_inside(protocol_path, OUT)
+    selected = profile_selection(protocol.get("selected_profiles"))
+    admission, admission_hash, source, _, review_hash, _ = load_reviewed(
+        admission_dir, review_path, selected_profiles=selected)
     issues = locked_protocol_issues(admission, admission_hash, protocol, review_hash)
     if issues:
         raise ValueError("Frozen analysis blocked: " + ", ".join(issues))
@@ -50,7 +52,8 @@ def aggregate(admission_dir: Path, review_path: Path, protocol_path: Path, run_d
         raise ValueError("Matrix output path does not match the frozen protocol")
     state = json.loads((run_dir / "matrix_state.json").read_text(encoding="utf8"))
     if (state.get("protocol_sha256") != protocol_hash or state.get("review_sha256") != review_hash or
-            state.get("data_kind") != data_kind):
+            state.get("data_kind") != data_kind or state.get("matrix_scope") != protocol["matrix_scope"] or
+            state.get("selected_profiles") != selected):
         raise ValueError("Matrix state identity differs from the frozen protocol")
     requested = [job for job in protocol["jobs"] if job["profile"] == profile and
                  job["horizon"] == horizon and job["target"] == target]
@@ -164,6 +167,7 @@ def aggregate(admission_dir: Path, review_path: Path, protocol_path: Path, run_d
         models[model] = summary
     return {"status": "synthetic_test_results_only" if data_kind == "synthetic_test" else "historical_development_only",
             "data_kind": data_kind, "independent_test": False, "development_p_values_reported": False,
+            "matrix_scope": protocol["matrix_scope"], "omitted_profiles": protocol["omitted_profiles"],
             "task": {"profile": profile, "frequency": frequency, "horizon": horizon, "target": target},
             "protocol_sha256": protocol_hash, "admission_sha256": admission_hash,
             "completed_folds": [job["fold"] for job, _, _ in complete], "missing_folds": missing,

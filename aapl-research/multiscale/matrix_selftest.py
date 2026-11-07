@@ -7,6 +7,7 @@ admit a provider, read market data, or produce research results.
 from __future__ import annotations
 
 import argparse
+from copy import deepcopy
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -93,13 +94,16 @@ def main():
                                  "projected_seconds": 120})
     person = {"reviewed_by": "automated synthetic self-test; not a provider approval",
               "reviewed_at_utc": datetime.now(timezone.utc).isoformat()}
+    selected = [p.name for p in PROFILES]
     exposure_note = OUT / "POST_CUTOFF_EXPOSURE.md"
-    review = {"data_kind": "synthetic_test", "admission_sha256": admission_hash,
+    review = {"data_kind": "synthetic_test", "admission_sha256": admission_hash, "selected_profiles": selected,
               "rights": {**person, "decision": "permitted", "training_allowed": True,
                          "publication_of_nonreconstructable_aggregate_results_allowed": True,
-                         "admission_sha256": admission_hash, "daily_evidence": item(evidence_file, quote),
+                         "admission_sha256": admission_hash, "selected_profiles": selected,
+                         "daily_evidence": item(evidence_file, quote),
                          "minute_evidence": item(evidence_file, quote)},
               "quality": {**person, "decision": "approved", "admission_sha256": admission_hash,
+                          "selected_profiles": selected,
                           "nominal_price_and_split_chain_checked": True, "material_discrepancies_disposition_fixed": True,
                           "review_notes": "SYNTHETIC TEST ONLY: generated series have no external market-data source."},
               "exposure": {**person, "decision": "reviewed_for_development_only", "admission_sha256": admission_hash,
@@ -115,6 +119,7 @@ def main():
     review_path = work / "synthetic_review.json"
     write_json(review_path, review)
     recipe = {"status": "reviewed_synthetic_test", "data_kind": "synthetic_test", "admission_sha256": admission_hash,
+              "selected_profiles": selected, "omitted_profiles": {},
               **person, "fold_strategies": {p.name: "rolling" for p in PROFILES},
               "warmup": {"min_inner_fit": 24, "min_inner_stop": 4, "min_validation_groups": 6},
               "analysis": {"block_lengths_by_profile": {"annual": [12, 24], "quarterly": [3, 6],
@@ -141,15 +146,39 @@ def main():
         raise ValueError("Synthetic partial-fold summary is incorrectly labeled")
     aggregate_path = work / "synthetic_aggregate.json"
     write_json(aggregate_path, summary)
+    partial_selected = ["hourly", "minute"]
+    partial_review = deepcopy(review)
+    partial_review["selected_profiles"] = partial_selected
+    partial_review["rights"]["selected_profiles"] = partial_selected
+    partial_review["rights"]["daily_evidence"] = {}
+    partial_review["quality"]["selected_profiles"] = partial_selected
+    partial_review_path = work / "synthetic_partial_review.json"
+    write_json(partial_review_path, partial_review)
+    partial_recipe = deepcopy(recipe)
+    partial_recipe["selected_profiles"] = partial_selected
+    partial_recipe["omitted_profiles"] = {name: "SYNTHETIC TEST: this scale is not included in this batch."
+                                           for name in ("annual", "quarterly", "monthly")}
+    partial_recipe_path = work / "synthetic_partial_recipe.json"
+    write_json(partial_recipe_path, partial_recipe)
+    partial_protocol_path = freeze(source, partial_review_path, partial_recipe_path)
+    partial_protocol = json.loads(partial_protocol_path.read_text(encoding="utf8"))
+    partial_state = execute(source, partial_review_path, partial_protocol_path, max_jobs=1)
+    if (partial_protocol["matrix_scope"] != "partial" or len(partial_protocol["jobs"]) != 70 or
+            len(partial_protocol["task_inventory"]) != 20 or partial_state["matrix_scope"] != "partial" or
+            partial_state["status"] != "paused_after_job_limit" or
+            sum(job["status"] == "completed" for job in partial_state["jobs"].values()) != 1):
+        raise ValueError("Synthetic partial-scale queue did not preserve its omitted-task scope")
     receipt = {"status": "passed_synthetic_test_only", "market_data_read": False, "formal_experiment": False,
-               "scope": "100 synthetic fold definitions; two CPU/GPU fold executions in separate queue calls",
+               "scope": "Full and partial synthetic matrices; three synthetic fold executions in separate queue calls",
                "synthetic_admission": str(source), "synthetic_protocol": str(protocol_path),
                "jobs_frozen": len(json.loads(protocol_path.read_text(encoding="utf8"))["jobs"]),
                "completed_synthetic_folds": count, "queue_resumed_after_job_limit": True,
                "synthetic_aggregate": str(aggregate_path), "partial_aggregate_correctly_labeled": True,
+               "partial_scale_protocol": str(partial_protocol_path), "partial_scale_jobs_frozen": len(partial_protocol["jobs"]),
+               "partial_scale_folds_executed": 1, "omitted_scale_status_preserved": True,
                "consumed_wall_seconds": second["consumed_wall_seconds"],
                "limitations": ["Synthetic reviews are fictional test fixtures and do not grant market-data rights.",
-                               "Only two synthetic folds were executed, not the formal 100-fold study.",
+                               "Only three synthetic folds were executed across both matrices, not the formal study.",
                                "An OS crash during a full queue has not been tested by this self-test."]}
     target = work / "selftest_receipt.json"
     write_json(target, receipt)

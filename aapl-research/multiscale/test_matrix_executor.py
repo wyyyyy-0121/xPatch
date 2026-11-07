@@ -79,8 +79,10 @@ def test_missing_review_blocks_execution_before_run_directory(tmp_path, monkeypa
                                                                 "development_cutoff_new_york": "2026-06-30"}))
     review = tmp_path / "unapproved.json"
     review.write_text("{}")
+    protocol = tmp_path / "synthetic-protocol.json"
+    protocol.write_text(json.dumps({"selected_profiles": [p.name for p in PROFILES]}))
     with pytest.raises(ValueError, match="Matrix admission blocked"):
-        matrix_executor.execute(admission_dir, review, tmp_path / "nonexistent-protocol.json")
+        matrix_executor.execute(admission_dir, review, protocol)
     assert not (tmp_path / "matrix_runs").exists()
 
 

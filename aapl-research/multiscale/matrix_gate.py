@@ -34,6 +34,23 @@ BENCHMARK_SHAPES = {
 MINIMUM_BLOCK_GROUPS = {"annual": 12, "quarterly": 3, "monthly": 21, "hourly": 2, "minute": 1}
 
 
+def profile_selection(value):
+    """Validate a predeclared, ordered group of complete study scales."""
+    order = [profile.name for profile in PROFILES]
+    if (not isinstance(value, list) or not value or any(not isinstance(name, str) for name in value) or
+            len(set(value)) != len(value) or any(name not in order for name in value) or
+            value != [name for name in order if name in value]):
+        raise ValueError("Profiles must be a nonempty unique selection in study order")
+    return value
+
+
+def task_inventory(selected, omitted):
+    return [{"profile": p.name, "horizon": horizon, "target": target,
+             "status": "included" if p.name in selected else "omitted_before_scoring",
+             "reason": None if p.name in selected else omitted[p.name]}
+            for p in PROFILES for horizon in p.horizons for target in TARGETS]
+
+
 def _digest(value):
     return (isinstance(value, str) and len(value) == 64 and
             all(char in "0123456789abcdef" for char in value))
@@ -116,8 +133,14 @@ def _representative_benchmark(item, workspace: Path, expected_device: str, *, re
         return False
 
 
-def review_issues(admission, admission_sha256, review, evidence_root: Path, exposure_note_sha256):
+def review_issues(admission, admission_sha256, review, evidence_root: Path, exposure_note_sha256,
+                  *, selected_profiles=None):
     issues = []
+    try:
+        selected = profile_selection(selected_profiles if selected_profiles is not None else [p.name for p in PROFILES])
+    except ValueError:
+        selected = []
+        issues.append("predeclared_profile_selection_invalid")
     if (not _digest(admission_sha256) or admission.get("Q3_values_read") is not False or
             admission.get("experiment_scored") is not False or
             admission.get("development_cutoff_new_york") != DEV_END):
@@ -137,18 +160,26 @@ def review_issues(admission, admission_sha256, review, evidence_root: Path, expo
         issues.append("review_not_bound_to_candidate_admission")
     if review.get("data_kind", "market") != admission.get("data_kind", "market"):
         issues.append("review_data_kind_mismatch")
+    if review.get("selected_profiles") != selected:
+        issues.append("review_not_bound_to_selected_profiles")
     rights = review.get("rights") if isinstance(review.get("rights"), dict) else {}
     if (not _reviewer(rights) or rights.get("decision") != "permitted" or
             rights.get("training_allowed") is not True or
             rights.get("publication_of_nonreconstructable_aggregate_results_allowed") is not True or
-            rights.get("admission_sha256") != admission_sha256):
+            rights.get("admission_sha256") != admission_sha256 or rights.get("selected_profiles") != selected):
         issues.append("training_and_publication_rights_not_reviewed")
-    for name in ("daily", "minute"):
+    required_sources = set()
+    if any(name in selected for name in ("annual", "quarterly", "monthly")):
+        required_sources.add("daily")
+    if any(name in selected for name in ("hourly", "minute")):
+        required_sources.add("minute")
+    for name in sorted(required_sources):
         if not _evidence(rights.get(name + "_evidence"), evidence_root, require_quote=True):
             issues.append(name + "_rights_evidence_missing_or_changed")
     quality = review.get("quality") if isinstance(review.get("quality"), dict) else {}
     if (not _reviewer(quality) or quality.get("decision") != "approved" or
             quality.get("admission_sha256") != admission_sha256 or
+            quality.get("selected_profiles") != selected or
             quality.get("nominal_price_and_split_chain_checked") is not True or
             quality.get("material_discrepancies_disposition_fixed") is not True or
             not isinstance(quality.get("review_notes"), str) or len(quality["review_notes"].strip()) < 40):
@@ -199,7 +230,23 @@ def locked_protocol_issues(admission, admission_sha256, protocol, review_sha256)
             protocol.get("admission_sha256") != admission_sha256 or protocol.get("review_sha256") != review_sha256 or
             not _digest(review_sha256) or not _digest(protocol.get("recipe_sha256")) or protocol.get("models") != list(MODELS)):
         issues.append("frozen_protocol_identity_or_scope_invalid")
-    expected = {(p.name, h, t, fold) for p in PROFILES for h in p.horizons for t in TARGETS for fold in range(1, 6)}
+    try:
+        selected = profile_selection(protocol.get("selected_profiles"))
+    except ValueError:
+        selected = []
+        issues.append("frozen_profile_selection_invalid")
+    omitted = protocol.get("omitted_profiles")
+    expected_omitted = {p.name for p in PROFILES if p.name not in selected}
+    if (not isinstance(omitted, dict) or set(omitted) != expected_omitted or
+            any(not isinstance(note, str) or len(note.strip()) < 20 for note in omitted.values())):
+        issues.append("frozen_omitted_profile_reasons_missing")
+    elif protocol.get("task_inventory") != task_inventory(selected, omitted):
+        issues.append("frozen_full_task_inventory_invalid")
+    scope = "full" if len(selected) == len(PROFILES) else "partial"
+    if protocol.get("matrix_scope") != scope:
+        issues.append("frozen_matrix_scope_invalid")
+    expected = {(p.name, h, t, fold) for p in PROFILES if p.name in selected
+                for h in p.horizons for t in TARGETS for fold in range(1, 6)}
     profiles = {profile.name: profile for profile in PROFILES}
     rows = {(row["profile"], row["horizon"], row["target"]): row for row in admission.get("tasks", [])}
     jobs = protocol.get("jobs")
@@ -252,7 +299,7 @@ def locked_protocol_issues(admission, admission_sha256, protocol, review_sha256)
             issues.append("frozen_targets_use_different_chronological_splits")
         paired_folds[pair_key] = split_signature
     if len(identities) != len(expected) or len(set(identities)) != len(expected) or set(identities) != expected:
-        issues.append("frozen_matrix_not_exactly_twenty_tasks_five_folds")
+        issues.append("frozen_selected_tasks_missing_or_duplicate_folds")
     training = protocol.get("training")
     if not isinstance(training, dict):
         issues.append("frozen_training_configuration_missing")
@@ -316,7 +363,8 @@ def main():
     protocol, _ = optional(args.protocol)
     note = OUT / "POST_CUTOFF_EXPOSURE.md"
     note_hash = file_digest(note) if note.is_file() else None
-    reasons = review_issues(admission, admission_hash, review, OUT, note_hash)
+    selected = protocol.get("selected_profiles") if protocol else None
+    reasons = review_issues(admission, admission_hash, review, OUT, note_hash, selected_profiles=selected)
     reasons.extend(locked_protocol_issues(admission, admission_hash, protocol, review_hash))
     result = {"status": "blocked" if reasons else "technical_checks_passed_not_automatic_legal_clearance",
               "created_at_utc": datetime.now(timezone.utc).isoformat(), "admission_sha256": admission_hash,

@@ -1,11 +1,13 @@
 {
   "data_kind": "market",
   "admission_sha256": null,
+  "selected_profiles": ["annual", "quarterly", "monthly", "hourly", "minute"],
   "rights": {
     "decision": "pending",
     "reviewed_by": null,
     "reviewed_at_utc": null,
     "admission_sha256": null,
+    "selected_profiles": ["annual", "quarterly", "monthly", "hourly", "minute"],
     "training_allowed": false,
     "publication_of_nonreconstructable_aggregate_results_allowed": false,
     "daily_evidence": {"path": null, "sha256": null, "grant_quote": null},
@@ -16,6 +18,7 @@
     "reviewed_by": null,
     "reviewed_at_utc": null,
     "admission_sha256": null,
+    "selected_profiles": ["annual", "quarterly", "monthly", "hourly", "minute"],
     "nominal_price_and_split_chain_checked": false,
     "material_discrepancies_disposition_fixed": false,
     "review_notes": null
