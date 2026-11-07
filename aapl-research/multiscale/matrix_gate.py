@@ -117,7 +117,8 @@ def _representative_benchmark(item, workspace: Path, expected_device: str, *, re
                     any(not _digest(digest) or file_digest(ROOT / name) != digest for name, digest in sources.items())):
                 return False
         expected = {(profile.name, model) for profile in PROFILES for model in ("mlp", "gru", "lstm", "xpatch")}
-        measured = set()
+        measured, retained = set(), set()
+        benchmark_dir = Path(item["path"]).resolve().parent
         for row in report.get("records", []):
             if not isinstance(row, dict) or row.get("profile") not in BENCHMARK_SHAPES:
                 continue
@@ -128,8 +129,21 @@ def _representative_benchmark(item, workspace: Path, expected_device: str, *, re
                     type(row.get("validation_origins")) is int and row["validation_origins"] >= validation and
                     type(row.get("epochs")) is int and row["epochs"] >= 1 and
                     type(row.get("steps")) is int and row["steps"] >= 1):
-                measured.add((row["profile"], row.get("model")))
-        return measured == expected
+                key = (row["profile"], row.get("model"))
+                measured.add(key)
+                if require_runtime_source and row.get("prediction_retained") is True:
+                    name = row.get("prediction_path")
+                    if not isinstance(name, str):
+                        return False
+                    path = Path(name).resolve()
+                    if (not path.is_relative_to(benchmark_dir) or not path.is_file() or
+                            file_digest(path) != row.get("synthetic_prediction_sha256") or
+                            path.stat().st_size != row.get("prediction_file_bytes")):
+                        return False
+                    retained.add(key)
+                elif require_runtime_source and row.get("prediction_matches_retained_reference") is not True:
+                    return False
+        return measured == expected and (not require_runtime_source or retained == expected)
     except (OSError, UnicodeError, ValueError, TypeError):
         return False
 

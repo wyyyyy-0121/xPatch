@@ -8,9 +8,15 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import hashlib
 import json
+import os
 from pathlib import Path
+import platform
 import resource
+import socket
+import sys
+import tempfile
 import time
 
 import numpy as np
@@ -89,7 +95,24 @@ def partitions(bars: Bars, lookback: int, horizon: int, counts):
     return fit, stop, validation
 
 
-def measure(bars, spec, model, destination: Path, *, small=False):
+def write_prediction(prediction, origins, destination: Path, *, retain: bool):
+    """Measure compression, durable write and hashing; keep only requested samples."""
+    target = destination / "synthetic_prediction.npz" if retain else None
+    stream = target.open("x+b") if target is not None else tempfile.TemporaryFile(mode="w+b", dir=destination)
+    with stream:
+        np.savez_compressed(stream, prediction=prediction, origins=origins)
+        stream.flush()
+        os.fsync(stream.fileno())
+        size = os.fstat(stream.fileno()).st_size
+        stream.seek(0)
+        digest = hashlib.sha256()
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return {"synthetic_prediction_sha256": digest.hexdigest(), "prediction_file_bytes": size,
+            "prediction_retained": retain, "prediction_path": str(target) if target is not None else None}
+
+
+def measure(bars, spec, model, destination: Path, *, small=False, retain_prediction=True):
     profile, _, lookback, horizon, fit_n, stop_n, validation_n = spec
     if small:
         fit_n, stop_n, validation_n = 64, 16, 32
@@ -119,9 +142,7 @@ def measure(bars, spec, model, destination: Path, *, small=False):
     torch.cuda.synchronize()
     prediction_seconds = time.monotonic() - prediction_started
     save_started = time.monotonic()
-    prediction_path = destination / "synthetic_prediction.npz"
-    np.savez_compressed(prediction_path, prediction=prediction, origins=validation)
-    prediction_sha = file_digest(prediction_path)
+    saved = write_prediction(prediction, validation, destination, retain=retain_prediction)
     storage_seconds = time.monotonic() - save_started
     return {"profile": profile, "frequency": bars.frequency, "horizon": horizon, "lookback": lookback,
             "model": model, "target": "synthetic_future_log_return", "fit_origins": fit_n,
@@ -132,8 +153,7 @@ def measure(bars, spec, model, destination: Path, *, small=False):
             "total_seconds": training_seconds + prediction_seconds + storage_seconds,
             "peak_gpu_allocated_bytes": torch.cuda.max_memory_allocated(),
             "peak_gpu_reserved_bytes": torch.cuda.max_memory_reserved(),
-            "prediction_shape": list(prediction.shape), "prediction_file_bytes": prediction_path.stat().st_size,
-            "synthetic_prediction_sha256": prediction_sha, "recovery_included": interrupted,
+            "prediction_shape": list(prediction.shape), **saved, "recovery_included": interrupted,
             "output_directory": str(destination)}
 
 
@@ -148,16 +168,25 @@ def run(duration_seconds: int, *, small: bool):
     directory = OUT / "synthetic_matrix_benchmark" / stamp
     directory.mkdir(parents=True, exist_ok=False)
     source_hashes = {name: file_digest(ROOT / name) for name in BENCHMARK_SOURCE_FILES}
+    free_gpu, total_gpu = torch.cuda.mem_get_info()
     report = {"status": "running", "created_at_utc": datetime.now(timezone.utc).isoformat(),
               "purpose": "synthetic local engineering measurement only",
               "device": torch.cuda.get_device_name(0), "torch": str(torch.__version__),
               "cuda_runtime": torch.version.cuda, "target_duration_seconds": duration_seconds,
+              "runtime": {"python": sys.version.split()[0], "numpy": np.__version__, "pandas": pd.__version__,
+                          "platform": platform.platform(), "hostname": socket.gethostname(),
+                          "cpu_affinity": sorted(os.sched_getaffinity(0)), "torch_cpu_threads": torch.get_num_threads(),
+                          "gpu_free_bytes_at_start": free_gpu, "gpu_total_bytes": total_gpu,
+                          "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG")},
               "small_smoke_mode": small, "market_data_read": False, "formal_experiment": False,
+              "prediction_storage_policy": "retain the first sample of each shape and model; repeat predictions use temporary files",
               "source_sha256_at_start": source_hashes, "records": [],
               "limitations": ["Synthetic data and one epoch do not establish convergence or real data quality.",
                   "A local laptop measurement does not predict cloud performance.",
                   "Synthetic compression ratios may differ from real predictions; no firm storage peak is implied.",
                   "One return target is timed per shape; budget and data rights remain unapproved.",
+                  "GPU reserved-memory peaks can include allocations cached by earlier shapes in this process.",
+                  "Repeat prediction files are temporary; their recorded hashes can be compared with the retained representative samples.",
                   "The stop time is checked between jobs, so the last job can extend beyond the target duration."]}
     report_path = directory / "benchmark.json"
     atomic_json_save(report, report_path)
@@ -165,6 +194,7 @@ def run(duration_seconds: int, *, small: bool):
         bars_by_freq = {frequency: synthetic_bars(frequency) for frequency in ("minute", "hour", "day", "month")}
         agenda = [(shape, model) for shape in SHAPES for model in NEURAL]
         index = 0
+        references = {}
         while index < len(agenda) or (not small and time.monotonic() - start < duration_seconds):
             if index >= len(agenda):
                 # Once every shape has been attempted, repeat only the costly minute cases.
@@ -176,7 +206,16 @@ def run(duration_seconds: int, *, small: bool):
             destination = directory / f"{index + 1:03d}_{shape[0]}_{model}"
             report["active_job"] = {"profile": shape[0], "model": model, "directory": str(destination)}
             atomic_json_save(report, report_path)
-            result = measure(bars_by_freq[shape[1]], shape, model, destination, small=small)
+            retain_prediction = index < len(agenda)
+            result = measure(bars_by_freq[shape[1]], shape, model, destination, small=small,
+                             retain_prediction=retain_prediction)
+            key = (shape[0], model)
+            if retain_prediction:
+                references[key] = result["synthetic_prediction_sha256"]
+                result["prediction_matches_retained_reference"] = None
+            else:
+                result["prediction_matches_retained_reference"] = (
+                    result["synthetic_prediction_sha256"] == references[key])
             report["records"].append(result)
             report.pop("active_job", None)
             report["elapsed_seconds"] = time.monotonic() - start

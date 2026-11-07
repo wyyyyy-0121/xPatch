@@ -3,7 +3,7 @@ from copy import deepcopy
 import hashlib
 import json
 
-from .matrix_gate import (BENCHMARK_SHAPES, REQUIRED_SOURCE_FILES, _source_io_evidence,
+from .matrix_gate import (BENCHMARK_SHAPES, REQUIRED_SOURCE_FILES, _representative_benchmark, _source_io_evidence,
                           locked_protocol_issues, review_issues, task_inventory)
 from .spec import DEV_END, MODELS, PROFILES, ROOT, TARGETS
 from .test_matrix_plan import synthetic_admission
@@ -146,3 +146,29 @@ def test_io_evidence_is_bound_to_source_host_and_selected_scales(tmp_path):
     assert not _source_io_evidence(item, tmp_path, "b" * 64, ["hourly", "minute"], "synthetic-host")
     assert not _source_io_evidence(item, tmp_path, "a" * 64, ["monthly", "minute"], "synthetic-host")
     assert not _source_io_evidence(item, tmp_path, "a" * 64, ["hourly", "minute"], "another-host")
+
+
+def test_pinned_benchmark_requires_retained_samples_with_matching_hashes(tmp_path):
+    from .benchmark_matrix_synthetic import BENCHMARK_SOURCE_FILES
+    sources = {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest() for name in BENCHMARK_SOURCE_FILES}
+    records = []
+    for profile in PROFILES:
+        lookback, horizon, fit, stop, validation = BENCHMARK_SHAPES[profile.name]
+        for model in ("mlp", "gru", "lstm", "xpatch"):
+            path = tmp_path / f"{profile.name}_{model}.npz"
+            path.write_bytes(b"fictional retained benchmark sample")
+            records.append({"profile": profile.name, "model": model, "lookback": lookback, "horizon": horizon,
+                            "fit_origins": fit, "stop_origins": stop, "validation_origins": validation,
+                            "epochs": 1, "steps": 1, "prediction_retained": True, "prediction_path": str(path),
+                            "prediction_file_bytes": path.stat().st_size,
+                            "synthetic_prediction_sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
+    repeat = {**records[0], "prediction_retained": False, "prediction_path": None,
+              "prediction_matches_retained_reference": True}
+    report = {"scope": "fictional test fixture only", "status": "completed_engineering_only",
+              "device": "synthetic-gpu", "small_smoke_mode": False, "all_shapes_measured": True,
+              "market_data_read": False, "formal_experiment": False, "elapsed_seconds": 901,
+              "source_sha256_at_start": sources, "source_sha256_at_end": sources, "records": records + [repeat]}
+    item = evidence(tmp_path / "synthetic-benchmark.json", json.dumps(report))
+    assert _representative_benchmark(item, tmp_path, "synthetic-gpu")
+    (tmp_path / "annual_mlp.npz").write_bytes(b"changed synthetic sample")
+    assert not _representative_benchmark(item, tmp_path, "synthetic-gpu")
