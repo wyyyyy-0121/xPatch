@@ -1,0 +1,41 @@
+{
+  "status": "draft_not_runnable",
+  "data_kind": "market",
+  "admission_sha256": null,
+  "reviewed_by": null,
+  "reviewed_at_utc": null,
+  "fold_strategies": {
+    "annual": "warmup",
+    "quarterly": "warmup",
+    "monthly": "rolling",
+    "hourly": "rolling",
+    "minute": "rolling"
+  },
+  "warmup": {
+    "min_inner_fit": 24,
+    "min_inner_stop": 4,
+    "min_validation_groups": 6
+  },
+  "training": {
+    "max_epochs": 20,
+    "patience": 3,
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "seed": 2026,
+    "ridge_alphas": [0.1, 1.0, 10.0]
+  },
+  "analysis": {
+    "block_lengths_by_profile": {
+      "annual": [12, 24],
+      "quarterly": [3, 6],
+      "monthly": [21, 42],
+      "hourly": [2, 5],
+      "minute": [1, 5]
+    },
+    "resamples": 5000,
+    "seed": 2026,
+    "confidence": 0.95,
+    "development_p_values": false,
+    "annual_nonoverlap": true
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "data_kind": "market",
+  "admission_sha256": null,
+  "rights": {
+    "decision": "pending",
+    "reviewed_by": null,
+    "reviewed_at_utc": null,
+    "admission_sha256": null,
+    "training_allowed": false,
+    "publication_of_nonreconstructable_aggregate_results_allowed": false,
+    "daily_evidence": {"path": null, "sha256": null, "grant_quote": null},
+    "minute_evidence": {"path": null, "sha256": null, "grant_quote": null}
+  },
+  "quality": {
+    "decision": "pending",
+    "reviewed_by": null,
+    "reviewed_at_utc": null,
+    "admission_sha256": null,
+    "nominal_price_and_split_chain_checked": false,
+    "material_discrepancies_disposition_fixed": false,
+    "review_notes": null
+  },
+  "exposure": {
+    "decision": "pending",
+    "reviewed_by": null,
+    "reviewed_at_utc": null,
+    "admission_sha256": null,
+    "independent_test": false,
+    "Q3_sealed": true,
+    "legacy_ledger_sha256": null,
+    "post_cutoff_note_sha256": null
+  },
+  "compute": {
+    "decision": "pending",
+    "reviewed_by": null,
+    "reviewed_at_utc": null,
+    "admission_sha256": null,
+    "device": "cuda",
+    "device_name": null,
+    "location": "local",
+    "host": null,
+    "maximum_wall_seconds": null,
+    "projected_wall_seconds": null,
+    "real_source_io_reviewed": false,
+    "benchmark_evidence": {"path": null, "sha256": null},
+    "real_source_io_evidence": {"path": null, "sha256": null},
+    "projection_evidence": {"path": null, "sha256": null},
+    "explicit_user_authorization": false,
+    "authorization_note": null
+  }
+}

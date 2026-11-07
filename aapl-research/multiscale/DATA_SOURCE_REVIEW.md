@@ -18,10 +18,26 @@
 | [Kaggle：Alpha Vantage 历史快照](https://www.kaggle.com/datasets/prathamjyotsingh/apple-stocks)及[另一上传版本](https://www.kaggle.com/datasets/ayeshaaqib/apple-stock-data-1999-2024) | 上传者均称原始来源为 Alpha Vantage，覆盖 1999-11 至 2024 年；较长版本有 6,262 个日线，上传页分别标注 Apache 2.0 与 CC BY 4.0。 | 两份候选的 6,213 个重合日收盘价完全一致，不能当作独立来源。公开标签不证明上游允许转授权或论文发表；部分旧日期与另一来源不一致。 |
 | [Twelve Data](https://twelvedata.com/terms) | 先前取得的开发截止内诊断数据覆盖 1980 年至 2026 年 6 月。 | 其条款区分内部使用、非展示使用、不可还原的派生数据和向第三方展示；是否允许当前订阅／演示方式用于论文训练与发布结果尚未确认。 |
 | [Alpha Vantage](https://www.alphavantage.co/documentation/) | 官方文档称月线覆盖 25 年以上；[支持页面](https://www.alphavantage.co/support/)列出免费 API 额度和经过验证的教育项目。 | 月线端点是否可用、价格复权、论文发表权以及截止日期参数均未确认；其[条款](https://www.alphavantage.co/terms_of_service/)将个人许可限定为私人、个人性质的非商业使用。未注册账号，也未请求可能包含封存期行情的最新数据。 |
+| [Kibot 官方访客接口](https://www.kibot.com/api/api-access.html) | 官方说明访客可获取美国股票日线；[历史接口](https://www.kibot.com/api/history-request.html)文档列出日期上下界及 `unadjusted=1` 选项。 | [许可](https://www.kibot.com/license.html)将数据和相关或派生信息用于许可人内部，论文发表聚合结果的权限未确认。实际历史价格口径仍需调查，内部诊断回执留在本机，尚未准入训练。 |
+| [QuantConnect](https://www.quantconnect.com/terms) | 条款描述平台数据可在托管环境内用于研究与算法开发。 | 平台数据导出受到明确限制，学术用途不自动例外；购买的 CLI 数据或机构派生数据协议有单独规定。尚无适合本地研究及发表的适用许可，不取得或绕过平台数据。 |
 | [SimFin](https://www.simfin.com/en/prices/) | 官网列出免费与付费计划，并声称更高级数据有 20 年以上历史；免费档列有 5 年图表和 5 年基本面批量历史。 | 免费档是否提供至少 15 年可下载 AAPL 日收盘价未证实；发表权和具体价格计划待确认。官网还写明取消订阅后需删除下载数据及备份，影响长期复现。 |
 | [EODHD 学术方案](https://eodhd.com/lp/universities) | 官网介绍面向大学和学术研究的长期数据及学生折扣。 | 尚无适用本人的学术许可、价格与发表权确认；演示数据保留为诊断，不用于训练或论文结果。 |
 
 另有一个 [Kaggle 长期数据集](https://www.kaggle.com/datasets/adamvakar/apple-comprehensive-financial-dataset-1980-2026) 标注 CC BY-NC-SA，但其说明明确称行情来自 Yahoo Finance，且保留原数据提供方权利。这说明上传页的开放许可标签不能单独证明上游行情权利；没有下载或准入该候选。
+
+## 追加的公开数据集元数据核对
+
+以下只检查了上传页元数据，没有下载价格行，也没有将其用于训练或评分。检索时间为 2026-11-07，原始元数据和哈希回执保存在本机 `outputs/multiscale/source_references/kaggle_metadata_20261107T072219536837Z/`。上传者给出的许可标签与用途描述不等于原始行情提供商的授权。
+
+| 数据集 | 页面说明 | 目前判断 |
+| --- | --- | --- |
+| [MAANG Historical Stock Market Data](https://www.kaggle.com/datasets/soumendraprasad/stock) | 标注 CC0；说明包含 2001–2023 年苹果等公司数据，并提及研究用途。 | 页面未列出行情上游来源；该版本也在 2023 年结束，不能直接覆盖计划截止期。发表权和拼接口径均未确认。 |
+| [Apple Stock Price Dataset](https://www.kaggle.com/datasets/mayankanand2701/apple-stock-price-dataset) | 标注 MIT；说明包含约 44 年苹果价格与调整收盘价。 | 上传页未说明行情上游提供商和调整规则；仅检查说明，没有验证具体日期与逐日质量。 |
+| [US Stock Market Historical](https://www.kaggle.com/datasets/sadiajavedd/us-stock-market-historical) | 标注 CC0；描述美国股票日线及分析用途。 | 上游来源、AAPL 实际覆盖期和价格口径未在所查说明中明确。 |
+| [New York Stock Exchange](https://www.kaggle.com/datasets/dgawlik/nyse) | 标注 CC0，但页面明确称价格来自 Yahoo Finance；大多数价格覆盖 2010–2016 年。 | 该例进一步说明上传者许可标签不能单独证明上游授权；年限也不足原年度任务要求。 |
+| [S&P 500 stock data](https://www.kaggle.com/datasets/camnugent/sandp500) | 标注 CC0；作者称新版从 Investors Exchange API 获取，包含约五年数据至 2018 年 2 月。 | 不满足年度历史要求；原始供应商许可及论文发表条件未核实。 |
+
+Stooq 的数据库说明页面在本次普通访问时返回浏览器验证页面，未取得可核对的许可正文；其使用权、历史覆盖及价格口径仍为未知，不能将它列为合格来源。
 
 ## 价格与公司行动检查
 
