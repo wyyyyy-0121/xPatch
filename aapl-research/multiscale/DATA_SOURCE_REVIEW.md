@@ -19,6 +19,7 @@
 | [Twelve Data](https://twelvedata.com/terms) | 先前取得的开发截止内诊断数据覆盖 1980 年至 2026 年 6 月。 | 其条款区分内部使用、非展示使用、不可还原的派生数据和向第三方展示；是否允许当前订阅／演示方式用于论文训练与发布结果尚未确认。 |
 | [Alpha Vantage](https://www.alphavantage.co/documentation/) | 官方文档称月线覆盖 25 年以上；[支持页面](https://www.alphavantage.co/support/)列出免费 API 额度和经过验证的教育项目。 | 月线端点是否可用、价格复权、论文发表权以及截止日期参数均未确认；其[条款](https://www.alphavantage.co/terms_of_service/)将个人许可限定为私人、个人性质的非商业使用。未注册账号，也未请求可能包含封存期行情的最新数据。 |
 | [Massive 股票接口](https://massive.com/docs/rest/stocks/overview) | 官方概览说明可按自定义日期区间请求历史股票 OHLC；其[个人服务条款](https://massive.com/legal/individuals-terms-of-service)将使用限定为本人个人、非商业、非业务用途。 | 尚未确认 AAPL 日线的最早可得日期、适用方案及费用、价格调整口径和论文发表聚合结果的权利。仅检查网页片段，响应未完整读取；没有注册账户或请求市场行情，不能认定候选已准入。 |
+| [FinMultiTime，论文 v1](https://arxiv.org/html/2506.05019v1) | 论文的资产表将 AAPL 标为具备时间序列；总体覆盖被描述为 2009—2025。美国股票价格序列在表 2 中标为日线，“分钟级”对应新闻文本，不是分钟价格柱；论文称美国日线来自 Yahoo Finance。 | 未核实 AAPL 自身的实际起止日期、调整口径及上游训练／发表授权。论文的 CC BY 4.0 不自动授权第三方行情；本次 Hugging Face 元数据访问超时，未下载数据，不能准入。 |
 | [Kibot 官方访客接口](https://www.kibot.com/api/api-access.html) | 官方说明访客可获取美国股票日线；[历史接口](https://www.kibot.com/api/history-request.html)文档列出日期上下界及 `unadjusted=1` 选项。 | [许可](https://www.kibot.com/license.html)将数据和相关或派生信息用于许可人内部，论文发表聚合结果的权限未确认。实际历史价格口径仍需调查，内部诊断回执留在本机，尚未准入训练。 |
 | [QuantConnect](https://www.quantconnect.com/terms) | 条款描述平台数据可在托管环境内用于研究与算法开发。 | 平台数据导出受到明确限制，学术用途不自动例外；购买的 CLI 数据或机构派生数据协议有单独规定。尚无适合本地研究及发表的适用许可，不取得或绕过平台数据。 |
 | [SimFin](https://www.simfin.com/en/prices/) | 官网列出免费与付费计划，并声称更高级数据有 20 年以上历史；免费档列有 5 年图表和 5 年基本面批量历史。 | 免费档是否提供至少 15 年可下载 AAPL 日收盘价未证实；发表权和具体价格计划待确认。官网还写明取消订阅后需删除下载数据及备份，影响长期复现。 |
@@ -75,6 +76,8 @@ Zenodo 日线与已检查的 Kenil Patel 候选有 10,987 个共同日期，`Clo
 数据及来源原文、SHA-256 和诊断回执保留在本机 `outputs/multiscale/`，不上传行情或机器收据。Kaggle 三候选比较见 `kaggle_review/20261107T055249953534Z/review.json`，SEC 季度范围比较见 `kaggle_review/sec_ranges_20261107T060941942177Z.json`，Alpha 归因候选比较见 `kaggle_review/alpha_20261107T062504602213Z.json`，日期覆盖模拟见 `coverage_planning/20261107T063051882441Z.json`，2017 年样例见 `source_references/plotly_20261107T063711607888Z/receipt.json`。
 
 Massive 的有界网页片段核查及限制见本机 `source_references/massive_metadata_20261107T095845862208Z/`；未保存整页，不能将其当作完整条款审读或行情数据授权。
+
+FinMultiTime 的版本、模态频率、上游来源和访问结果见本机 `literature/finmultitime_v1_20261107T102614Z/receipt.json`；不能将不同模态的总体时间跨度当作 AAPL 日线覆盖证明。
 
 ## 准入前还需完成
 

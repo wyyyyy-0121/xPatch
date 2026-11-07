@@ -16,6 +16,8 @@
 
 xPatch 使用指数移动平均分解和趋势/残差双流网络；其原论文通用时间序列结果不能直接证明 AAPL 金融预测有效 [1]。DeepLOB 使用限价订单簿和方向分类标签，与本研究使用的收盘价及固定交易柱跨度不同 [2]。多跨度收益预测已有相关研究 [3, 6]；金融 K 线预训练生成模型 Kronos 使用不同的多变量信息 [5]。Mattera 等的作者版还对包含 AAPL 的道指成分股开展日线多跨度预测，并比较随机游走及跨序列预测协调 [7]；本研究不使用其跨股票信息或执行该协调方法，不能直接比较数值。当前主矩阵没有运行这些扩展方法。最终贡献和新颖性须在完成直接相关文献检索及实验后判断。
 
+Kamalov 等比较价格与收益作为方向分类模型的输入 [8]，与本研究将它们作为预测目标不同。Hu 等的多尺度 K 线视觉基准 [9] 使用图像输入和不同评价方式。Xu 等的 FinMultiTime 数据集列有 AAPL，但其股票价格为日线，分钟级对应新闻文本 [10]；这些频率属于不同模态，而不是同一价格序列的多频率预测，也不是本研究主矩阵的直接对照。
+
 ## 2. 任务定义
 
 在已完成的第 t 根交易柱产生预测。令该柱收盘价为 \(P_t\)，第 j 个未来交易柱收盘价为 \(P_{t+j}\)，则两类路径标签为
@@ -76,5 +78,8 @@ Alpaca 文档说明日柱按纽约自然日聚合 [4]。本工作暂将日柱最
 5. Shi, Y. 等，*Kronos: A Foundation Model for the Language of Financial Markets*. arXiv version 1, 2025. https://arxiv.org/abs/2508.02739v1
 6. Kroujiline, D. 等，*Forecasting Stock Market Returns Over Multiple Time Horizons*. arXiv version 1, 2015. https://arxiv.org/abs/1508.04332v1
 7. Mattera, R., Athanasopoulos, G. & Hyndman, R. J. “Improving Out-of-Sample Forecasts of Stock Price Indexes with Forecast Reconciliation and Clustering.” *Quantitative Finance*, 24(11), 1641–1667, 2024. https://doi.org/10.1080/14697688.2024.2412687；本次核对的作者稿：https://robjhyndman.com/papers/dow_hts.pdf
+8. Kamalov, F., Gurrib, I. & Rajab, K. D. “Financial Forecasting with Machine Learning: Price Vs Return.” *Journal of Computer Science*, 17(3), 251–264, 2021. https://doi.org/10.3844/jcssp.2021.251.264
+9. Hu, K. 等，*Do VLMs Truly "Read" Candlesticks? A Multi-Scale Benchmark for Visual Stock Price Forecasting*. arXiv version 1, 2026. https://arxiv.org/abs/2604.12659v1
+10. Xu, W. 等，*FinMultiTime: A Four-Modal Bilingual Dataset for Financial Time-Series Analysis*. arXiv version 1, 2025. https://arxiv.org/abs/2506.05019v1
 
 已有来源阅读范围与版本记录见上级目录的 `METHOD_REVIEW.md`、`FUSION_RELATED_WORK.md` 和 `FUSION_REFERENCES.bib`。当前参考资料尚不足以证明方法新颖性或支持完整综述。
