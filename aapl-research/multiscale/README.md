@@ -46,9 +46,12 @@
 从 `aapl-research` 目录执行：
 
 ```bash
-AAPL_CPU_IDS='0-11,14-17' AAPL_CPU_THREADS=2 bash scripts/python.sh -m pytest -q multiscale/test_foundations.py
+mkdir -p tmp
+AAPL_TEST_DIR="$(mktemp -d "$PWD/tmp/multiscale-pytest.XXXXXXXX")"
+AAPL_CPU_IDS='0-11,14-17' AAPL_CPU_THREADS=2 bash scripts/python.sh -m pytest -q \
+  --basetemp "$AAPL_TEST_DIR/run" tests/test_core.py multiscale/test_foundations.py
 ```
 
-以上 CPU 亲和性避开现有原任务预留的 12、13 号逻辑核心。市场数据、权重、预测、供应商原始响应和机器收据均在 `outputs/` 忽略目录，不提交 Git。
+以上 CPU 亲和性避开现有原任务预留的 12、13 号逻辑核心。每次使用新的测试目录，避免 pytest 默认轮换已有 `tmp/pytest-of-ayaka` 会话；新目录保留供用户决定是否清理。市场数据、权重、预测、供应商原始响应和机器收据均在 `outputs/` 忽略目录，不提交 Git。
 
 下一步是核实可用于学术发表的长期数据及其许可，处理年度历史不足和季度早折样本不足，随后冻结数据、跨度、预处理和有限训练矩阵；先短测再决定正式计算。不因旧模型工程验收通过而宣称新模型完成。
