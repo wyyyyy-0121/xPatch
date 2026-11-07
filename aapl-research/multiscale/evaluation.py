@@ -49,7 +49,7 @@ def endpoint_improvement(actual, predicted, baseline):
 
 
 def paired_block_bootstrap(loss_difference, groups, *, block_length: int, resamples: int = 5000,
-                           seed: int = 2026, confidence: float = 0.95):
+                           seed: int = 2026, confidence: float = 0.95, group_order=None):
     """Non-circular contiguous-group bootstrap, weighted by origin count.
 
     Negative differences favor the model. The centered one-sided p-value tests
@@ -62,7 +62,17 @@ def paired_block_bootstrap(loss_difference, groups, *, block_length: int, resamp
         raise ValueError("Loss differences and groups must be equal-length vectors")
     if not np.isfinite(diff).all() or not 0 < confidence < 1 or resamples < 100:
         raise ValueError("Invalid loss differences, confidence or resample count")
-    unique, inverse = np.unique(group, return_inverse=True)
+    if group_order is None:
+        unique, inverse = np.unique(group, return_inverse=True)
+        grid_status = "observed_groups_only; gaps not checked"
+    else:
+        unique = np.asarray(group_order)
+        if unique.ndim != 1 or not len(unique) or (unique[1:] <= unique[:-1]).any():
+            raise ValueError("Full group order must be unique and strictly increasing")
+        inverse = np.searchsorted(unique, group)
+        if (inverse >= len(unique)).any() or not np.array_equal(unique[inverse], group):
+            raise ValueError("An observed group is absent from the supplied full order")
+        grid_status = "caller_supplied_full_order"
     if not 1 <= block_length <= len(unique):
         raise ValueError("Block length must fit the number of observed groups")
     sums = np.bincount(inverse, weights=diff, minlength=len(unique))
@@ -72,15 +82,23 @@ def paired_block_bootstrap(loss_difference, groups, *, block_length: int, resamp
     block_count = int(np.ceil(len(unique) / block_length))
     draws = np.empty(resamples, dtype=np.float64)
     offsets = np.arange(block_length)
-    for i in range(resamples):
+    i = attempts = 0
+    while i < resamples:
+        attempts += 1
+        if attempts > 20 * resamples:
+            raise ValueError("Too many resamples contain no observed origins")
         starts = rng.integers(0, len(unique) - block_length + 1, size=block_count)
         sample = (starts[:, None] + offsets).ravel()[:len(unique)]
+        if counts[sample].sum() == 0:
+            continue
         draws[i] = sums[sample].sum() / counts[sample].sum()
+        i += 1
     tail = (1.0 - confidence) / 2
     lo, hi = np.quantile(draws, [tail, 1 - tail])
     p = (1 + np.count_nonzero(draws - observed <= observed)) / (resamples + 1)
     return {"groups": len(unique), "origins": len(diff), "block_length": block_length,
-            "resamples": resamples, "seed": seed, "confidence": confidence,
+            "resamples": resamples, "empty_resamples_skipped": attempts - resamples,
+            "group_grid": grid_status, "seed": seed, "confidence": confidence,
             "mean_paired_loss_difference": observed, "confidence_interval": [float(lo), float(hi)],
             "centered_one_sided_p_improvement": float(p),
             "interpretation": "Negative loss difference favors the model; apply only to prespecified independent comparisons."}

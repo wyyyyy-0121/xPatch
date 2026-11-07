@@ -33,6 +33,83 @@ def test_scope_has_twenty_tasks_and_eight_named_models():
     assert date_in_scope(date(2026, 6, 30)) and not date_in_scope(date(2026, 7, 1))
 
 
+def test_candidate_csv_rejects_dates_after_the_development_boundary():
+    from .acquire_kaggle_candidate import csv_metadata
+    valid = b"Date,Close\n2026-06-29,100\n2026-06-30,101\n"
+    assert csv_metadata(valid)["last"] == "2026-06-30"
+    with pytest.raises(ValueError, match="outside"):
+        csv_metadata(valid + b"2026-07-01,102\n")
+    day_first = b"Date,Close\n04-03-2024,100\n15-08-2024,101\n"
+    assert csv_metadata(day_first)["first"] == "2024-03-04"
+    assert csv_metadata(day_first)["last"] == "2024-08-15"
+    with pytest.raises(ValueError, match="outside"):
+        csv_metadata(day_first + b"01-07-2026,102\n")
+
+
+def test_kaggle_split_table_preserves_dates_and_ratios(tmp_path):
+    from .audit_kaggle_candidates import kpatel_splits
+    path = tmp_path / "actions.csv"
+    path.write_text("Date,Stock Splits\n2020-08-31,4:1\n2014-06-09,7:1\n", encoding="utf8")
+    receipt = {"files": [{"original_name": "AppleStockSplit.csv", "file": path.name}]}
+    assert kpatel_splits(tmp_path, receipt) == [
+        {"date": "2014-06-09", "ratio": 7.0}, {"date": "2020-08-31", "ratio": 4.0}]
+    path.write_text("Date,Stock Splits\n2020-08-31,4:0\n", encoding="utf8")
+    with pytest.raises(ValueError, match="ratio"):
+        kpatel_splits(tmp_path, receipt)
+
+
+def test_sec_range_audit_handles_fiscal_order_and_later_split_units():
+    from datetime import date
+    from .audit_sec_ranges import QUARTERS, audit_ranges
+    filing = ("On June 21, 2000, the Company effected a two-for-one stock split\n"
+              "Fiscal 2000 price range per common\n share..... $20.00-$10.00 $20.00-$10.00 $20.00-$10.00 $20.00-$10.00\n"
+              "Fiscal 1999 price range per common\n share..... $20.00-$10.00 $20.00-$10.00 $20.00-$10.00 $20.00-$10.00\n")
+    prices = pd.DataFrame({"Date": [date.fromisoformat(start).strftime("%d-%m-%Y") for _, _, start, _ in QUARTERS],
+                           "High": [20 / 56] * 8, "Low": [10 / 56] * 8})
+    events = [{"date": "2005-02-28", "ratio": 2.0}, {"date": "2014-06-09", "ratio": 7.0},
+              {"date": "2020-08-31", "ratio": 4.0}]
+    result = audit_ranges(prices, events, filing)
+    assert len(result["quarters"]) == 8 and result["all_within_one_cent"]
+    assert result["candidate_to_2000_filing_share_units_factor"] == 56
+    with pytest.raises(ValueError, match="split chain"):
+        audit_ranges(prices, events[:-1], filing)
+
+
+def test_alpha_source_audit_checks_split_units_and_incomplete_quarters():
+    from .audit_alpha_candidates import compare_filing_quarters, compare_raw_to_adjusted
+    raw = pd.DataFrame({"date": ["2014-06-06", "2014-06-09"], "close": [700.0, 100.0]})
+    adjusted = pd.DataFrame({"date": ["2014-06-06", "2014-06-09"], "close": [100.0, 100.0]})
+    events = [{"date": "2014-06-09", "ratio": 7.0}]
+    comparison = compare_raw_to_adjusted(raw, adjusted, events)
+    assert comparison["overlap"] == 2 and comparison["max_relative_difference"] == 0.0
+    adjusted.loc[1, "close"] = 102.0
+    comparison = compare_raw_to_adjusted(raw, adjusted, events)
+    assert comparison["above_1_percent_count"] == 1
+    assert comparison["over_0_1_percent_dates"][0]["date"] == "2014-06-09"
+    filing = ("On June 21, 2000, the Company effected a two-for-one stock split\n"
+              "Fiscal 2000 price range per common\n share..... $20.00-$10.00 $20.00-$10.00 $20.00-$10.00 $20.00-$10.00\n"
+              "Fiscal 1999 price range per common\n share..... $20.00-$10.00 $20.00-$10.00 $20.00-$10.00 $20.00-$10.00\n")
+    incomplete = pd.DataFrame({"date": ["1999-11-01"], "high": [20.0], "low": [10.0]})
+    result = compare_filing_quarters(incomplete, filing)
+    assert result["complete_quarters"] == 0 and not result["all_compared_within_one_cent"]
+
+
+def test_protocol_draft_preserves_all_twenty_tasks_and_is_not_runnable():
+    from .protocol_draft import make_draft
+    rows = [{**item, "primary_endpoint": item["primary"], "common_max_lookback": max(item["lookbacks"]),
+             "lookback_candidates": item["lookbacks"], "origins": 100,
+             "status": "candidate", "minimum_inner_fit_origins": 64, "known_legacy_overlap_origins": 0,
+             "folds": [{"inner_fit_origins": 64}], "proposed_warmup_folds": None} for item in tasks()]
+    admission = {"Q3_values_read": False, "experiment_scored": False,
+                 "development_cutoff_new_york": "2026-06-30", "tasks": rows}
+    draft = make_draft(admission, "synthetic-id")
+    assert draft["status"] == "draft_not_runnable" and draft["frozen"] is False
+    assert len(draft["tasks"]) == 20 and draft["neural_update_upper_bound_one_seed_all_tasks"] == 20 * 20 * 4
+    admission["tasks"] = rows[:-1]
+    with pytest.raises(ValueError, match="twenty"):
+        make_draft(admission, "synthetic-id")
+
+
 def test_minute_labels_are_cumulative_and_do_not_cross_target_session():
     bars = make_minutes([3, 3], ["2024-11-27", "2024-11-29"])
     origins = eligible_origins(bars, 2, 2, same_session=True)
@@ -175,7 +252,7 @@ def test_baselines_use_origin_anchor_and_past_only():
 
 def test_streamed_ridge_matches_sklearn_with_unpenalized_intercept():
     from sklearn.linear_model import Ridge
-    from .ridge import fit
+    from .ridge import fit, fit_many
     bars = make_minutes([60], ["2024-11-27"])
     windows = CloseWindows(bars, 4)
     origins = np.arange(3, 50)
@@ -187,6 +264,8 @@ def test_streamed_ridge_matches_sklearn_with_unpenalized_intercept():
     sklearn = Ridge(alpha=2.0).fit(np.column_stack((x, anchor)).astype(np.float64), y.astype(np.float64))
     expected = scaler.invert_y(sklearn.predict(np.column_stack((x, anchor)).astype(np.float64)))
     np.testing.assert_allclose(model.predict(windows, scaler, origins), expected, rtol=1e-10, atol=1e-9)
+    grid = fit_many(windows, scaler, origins, 2, "future_close", [1.0, 2.0, 10.0], batch_size=7)
+    np.testing.assert_allclose(grid[2.0].coefficients, model.coefficients, rtol=1e-12, atol=1e-12)
 
 
 def test_path_metrics_separate_endpoint_path_and_zero_direction_abstention():
@@ -200,14 +279,29 @@ def test_path_metrics_separate_endpoint_path_and_zero_direction_abstention():
     assert result["relative_improvement"] == 0.0
 
 
+def test_independent_price_metrics_use_the_origin_price_for_direction():
+    from .verify_development import independent_metrics
+    actual = np.array([[101.0, 102.0], [99.0, 97.0]])
+    prediction = np.array([[100.0, 101.0], [100.0, 98.0]])
+    metric, terminal = independent_metrics(actual, prediction, "future_close", np.array([100.0, 100.0]))
+    assert terminal == 1.0 and metric["path_mse"] == 1.0
+    assert metric["direction_coverage"] == 1.0 and metric["direction_accuracy_when_active"] == 1.0
+
+
 def test_group_bootstrap_and_holm_use_prespecified_units():
     from .evaluation import holm, paired_block_bootstrap
     groups = np.repeat(np.arange(10), 3)
     result = paired_block_bootstrap(np.full(30, -1.0), groups, block_length=3, resamples=200, seed=5)
     assert result["groups"] == 10 and result["origins"] == 30
+    assert result["group_grid"] == "observed_groups_only; gaps not checked"
     np.testing.assert_allclose(result["confidence_interval"], [-1.0, -1.0])
     assert result["centered_one_sided_p_improvement"] == pytest.approx(1 / 201)
     np.testing.assert_allclose(holm([0.04, 0.001, 0.02]), [0.04, 0.003, 0.04])
+    missing_day = paired_block_bootstrap([-1.0, -2.0], [1, 3], block_length=2,
+                                         resamples=200, group_order=[1, 2, 3])
+    assert missing_day["groups"] == 3 and missing_day["group_grid"] == "caller_supplied_full_order"
+    with pytest.raises(ValueError, match="absent"):
+        paired_block_bootstrap([-1.0, -2.0], [1, 3], block_length=2, resamples=200, group_order=[1, 2])
 
 
 def test_shared_horizon_objective_weights_prefix_paths_equally():
@@ -292,6 +386,93 @@ print(json.dumps(result))
     np.testing.assert_array_equal(forecast, changed)
     with pytest.raises(ValueError, match="changed"):
         run_fit(windows, fit, stop, cfg, tmp_path / "resumed", "changed-identity", resume=True)
+
+
+def test_complete_synthetic_development_fold_has_eight_aligned_models(tmp_path, monkeypatch):
+    import json
+    import torch
+    from . import development
+    from .development import FoldConfig, run_development_fold, validate_split
+    from .verify_development import check_fold
+    torch.set_num_threads(2)
+    days = pd.bdate_range("2024-01-02", periods=12).strftime("%Y-%m-%d").tolist()
+    bars = make_minutes([30] * len(days), days)
+    origins = eligible_origins(bars, 6, 3, same_session=True)
+    fold = rolling_folds(bars, origins, 3)[0]
+    cfg = FoldConfig("minute", 3, "future_log_return", 6, 6, (0.1, 1.0),
+                     1, 1, 16, 1e-3, 2026, "synthetic-protocol-v1")
+    raw_targets = development.targets
+    def guarded_targets(data, indices, horizon, mode):
+        if np.array_equal(indices, fold["validation"]):
+            assert all((tmp_path / "fold" / f"prediction_{name}.npz").is_file() for name in MODELS)
+        return raw_targets(data, indices, horizon, mode)
+    monkeypatch.setattr(development, "targets", guarded_targets)
+    receipt = run_development_fold(bars, fold, [], cfg, tmp_path / "fold", "synthetic-data-v1")
+    assert receipt["status"] == "completed" and not receipt["independent_test"]
+    assert tuple(receipt["models"]) == MODELS
+    actual = np.load(tmp_path / "fold/targets.npz", allow_pickle=False)["actual"]
+    assert receipt["models"]["last_close"]["metrics"]["endpoint_mse"] == pytest.approx(np.square(actual[:, -1]).mean())
+    for name in MODELS:
+        prediction = np.load(tmp_path / f"fold/prediction_{name}.npz", allow_pickle=False)["prediction"]
+        assert prediction.shape == actual.shape
+    receipt_path = tmp_path / "fold/fold_receipt.json"
+    original_receipt = receipt_path.read_text()
+    disk_receipt = json.loads(original_receipt)
+    assert disk_receipt["phase"] == "development" and not disk_receipt["Q3_values_read"]
+    verification = check_fold(tmp_path / "fold")
+    assert verification["status"] == "verified_saved_fold" and not verification["independent_test"]
+    assert len(verification["models"]) == 8 and all(verification["current_source_matches_recorded"].values())
+    disk_receipt["models"]["mlp"]["metrics"]["endpoint_mse"] += 1.0
+    receipt_path.write_text(json.dumps(disk_receipt), encoding="utf8")
+    with pytest.raises(ValueError, match="Reported metric differs"):
+        check_fold(tmp_path / "fold")
+    receipt_path.write_text(original_receipt, encoding="utf8")
+    monkeypatch.setattr(development, "targets", raw_targets)
+    changed_close = bars.close.copy(); changed_close[fold["validation"][0] + 1:] *= 1.25
+    changed_bars = Bars("minute", bars.start_ns, bars.end_ns, changed_close, bars.observed, bars.session_date)
+    changed = run_development_fold(changed_bars, fold, [], cfg, tmp_path / "future_changed", "synthetic-changed-v1")
+    assert changed["models"]["ridge"]["alpha"] == receipt["models"]["ridge"]["alpha"]
+    for name in MODELS:
+        before = np.load(tmp_path / f"fold/prediction_{name}.npz", allow_pickle=False)["prediction"][0]
+        after = np.load(tmp_path / f"future_changed/prediction_{name}.npz", allow_pickle=False)["prediction"][0]
+        np.testing.assert_array_equal(before, after)
+    contaminated = dict(fold)
+    contaminated["train"] = np.r_[fold["train"], fold["validation"][0]]
+    with pytest.raises(ValueError, match="overlap"):
+        validate_split(bars, contaminated, 3)
+    ridge_prediction = tmp_path / "fold/prediction_ridge.npz"
+    with np.load(ridge_prediction, allow_pickle=False) as stored:
+        altered = stored["prediction"].copy()
+        saved_origins = stored["origins"].copy()
+        saved_decisions = stored["decision_ns"].copy()
+    altered[0, 0] += 1.0
+    np.savez_compressed(ridge_prediction, prediction=altered)
+    with pytest.raises(ValueError, match="Artifact identity mismatch"):
+        check_fold(tmp_path / "fold")
+    np.savez_compressed(ridge_prediction, prediction=altered, origins=saved_origins[::-1],
+                        decision_ns=saved_decisions)
+    from .bars import file_digest
+    disk_receipt = json.loads(original_receipt)
+    disk_receipt["models"]["ridge"]["prediction_sha256"] = file_digest(ridge_prediction)
+    receipt_path.write_text(json.dumps(disk_receipt), encoding="utf8")
+    with pytest.raises(ValueError, match="Prediction origins or decision times differ"):
+        check_fold(tmp_path / "fold")
+
+
+def test_shared_fold_uses_common_h60_purged_samples_for_every_model(tmp_path):
+    import torch
+    from .shared_development import SharedConfig, run_shared_fold
+    torch.set_num_threads(2)
+    days = pd.bdate_range("2024-01-02", periods=12).strftime("%Y-%m-%d").tolist()
+    bars = make_minutes([100] * len(days), days)
+    origins = eligible_origins(bars, 12, 60, same_session=True)
+    fold = rolling_folds(bars, origins, 60)[0]
+    cfg = SharedConfig(12, 1, 1, 16, 1e-3, 2026, "synthetic-matched-protocol")
+    receipt = run_shared_fold(bars, fold, [], cfg, tmp_path / "matched", "synthetic-matched-bars")
+    assert receipt["status"] == "completed" and not receipt["independent_test"]
+    assert receipt["purge_horizon_for_every_model"] == 60
+    assert set(receipt["comparisons"]) == {"5", "15", "30", "60"}
+    assert len(receipt["models"]) == 5
 
 
 @pytest.mark.parametrize("name", ["mlp", "gru", "lstm", "xpatch"])

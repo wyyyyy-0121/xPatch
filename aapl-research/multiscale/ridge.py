@@ -25,11 +25,14 @@ class RidgeFit:
         return np.concatenate(outputs) if outputs else np.empty((0, self.coefficients.shape[1]))
 
 
-def fit(windows: CloseWindows, scaler: Scaler, fit_origins, horizon: int, mode: str,
-        alpha: float, batch_size: int = 4096):
+def fit_many(windows: CloseWindows, scaler: Scaler, fit_origins, horizon: int, mode: str,
+             alphas, batch_size: int = 4096):
     indices = np.asarray(fit_origins, dtype=np.int64)
-    if not len(indices) or alpha <= 0 or batch_size < 1:
-        raise ValueError("Positive alpha, batch size and nonempty fit origins required")
+    alphas = tuple(float(a) for a in alphas)
+    if not len(indices) or not alphas or any(not np.isfinite(a) or a <= 0 for a in alphas) or batch_size < 1:
+        raise ValueError("Positive alphas, batch size and nonempty fit origins required")
+    if len(set(alphas)) != len(alphas):
+        raise ValueError("Ridge alphas must be unique")
     if len(np.unique(indices)) != len(indices):
         raise ValueError("Ridge fit origins must be distinct")
     width = windows.lookback + 2  # window, anchor, intercept
@@ -43,9 +46,17 @@ def fit(windows: CloseWindows, scaler: Scaler, fit_origins, horizon: int, mode: 
         design = np.column_stack((x.astype(np.float64), anchor.astype(np.float64), np.ones(len(x))))
         gram += design.T @ design
         cross += design.T @ y.astype(np.float64)
-    penalty = np.eye(width, dtype=np.float64) * alpha
-    penalty[-1, -1] = 0.0
-    coefficients = np.linalg.solve(gram + penalty, cross)
-    if not np.isfinite(coefficients).all():
-        raise ValueError("Nonfinite ridge coefficients")
-    return RidgeFit(coefficients, float(alpha), len(indices))
+    result = {}
+    for alpha in alphas:
+        penalty = np.eye(width, dtype=np.float64) * alpha
+        penalty[-1, -1] = 0.0
+        coefficients = np.linalg.solve(gram + penalty, cross)
+        if not np.isfinite(coefficients).all():
+            raise ValueError("Nonfinite ridge coefficients")
+        result[alpha] = RidgeFit(coefficients, alpha, len(indices))
+    return result
+
+
+def fit(windows: CloseWindows, scaler: Scaler, fit_origins, horizon: int, mode: str,
+        alpha: float, batch_size: int = 4096):
+    return fit_many(windows, scaler, fit_origins, horizon, mode, (alpha,), batch_size)[float(alpha)]
