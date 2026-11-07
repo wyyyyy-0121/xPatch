@@ -1,10 +1,12 @@
 # AAPL 多尺度研究：当前实现与边界
 
-这是独立于原十二分钟冻结研究的工作目录。五个尺度、十个跨度、价格与累计 log 收益两类目标见 `spec.py`。北京时间 2026-11-08，历史开发矩阵已完成 68/100 折，12/20 个任务完成五折；完整矩阵与独立确认尚未完成。年度部分按用户接受的约十年日线历史执行。
+这是独立于原十二分钟冻结研究的工作目录。五个尺度、十个跨度、价格与累计 log 收益两类目标见 `spec.py`。北京时间 2026-11-08 03:36 的核验快照中，历史开发矩阵已完成 71/100 折，12/20 个任务完成五折；完整矩阵与独立确认尚未完成。年度部分按用户接受的约十年日线历史执行。
 
-用户已确认 Alpaca、Kibot 允许全部数据，当前许可记录见 [DATA_PERMISSION_STATUS.md](DATA_PERMISSION_STATUS.md)。今晚低负载截止已改为 03:30，六个训练进程和四个队列暂停；恢复保留原预算。以下工程与调查条目含较早阶段状态，应结合日期和最新实验回执阅读。
+用户已确认 Alpaca、Kibot 允许全部数据，当前许可记录见 [DATA_PERMISSION_STATUS.md](DATA_PERMISSION_STATUS.md)。今晚低负载于 03:30 结束，已实测六个原训练进程在 03:30:01 以原 PID 和内存状态继续，恢复原线程 CPU 分配及剩余预算；已完成队列的预算定时器正常撤销。实际恢复回执位于本机 `outputs/multiscale/private_low_load/20261107T153438623158Z/ACTUAL_RESUME_VERIFICATION.json`。以下工程与调查条目含较早阶段状态，应结合日期和最新实验回执阅读。
 
 当前真实历史开发产物的核验入口见 [HISTORICAL_REPRODUCIBILITY.md](HISTORICAL_REPRODUCIBILITY.md)：`historical_coverage.py` 检查全部 100 折的身份及状态，`historical_minute_check.py` 从保存预测复算已完成分钟折，`historical_restore_check.py` 在新进程中恢复每个完整任务的四类神经模型。它们核对原记录，不启动训练；当前英文工作稿和全部核验产物仍在本地忽略目录。
+
+真实历史开发模型的按任务预测包见 [STUDY_PACKAGE.md](STUDY_PACKAGE.md)。`study_package.py` 保留二十任务及八模型定义，用来源、当前许可、原协议和完成折复核导出；部分矩阵必须显式标记。`verify_study_package.py` 在新进程中核对保存预测和缺失柱、错误时点等输入拒绝行为。既有 `market:` 正式冻结矩阵仍使用原门控；历史探索身份保持原字节，不因包装或许可更新而改称独立确认。
 
 ## 已实现
 

@@ -100,7 +100,11 @@ def _data_kind(data_identity):
         return "synthetic_test"
     if data_identity.startswith("market:") and _sha256(data_identity[len("market:"):]):
         return "market"
-    raise ValueError("Fold data identity is neither explicitly synthetic nor an admitted market identity")
+    for prefix in ("private_exploration_not_publication_admitted:", "private-minute-breadth:",
+                   "private-minute-parallel:", "private-minute-matrix:"):
+        if data_identity.startswith(prefix) and _sha256(data_identity[len(prefix):]):
+            return "historical_exploration"
+    raise ValueError("Unrecognized synthetic, admitted-market or historical-exploration identity")
 
 
 def _check_market_provenance(fold_directory, receipt, receipt_sha256, admission_dir, review_path, protocol_path):
@@ -170,6 +174,13 @@ def export_development_bundle(fold_directory: Path, *, expected_receipt_sha256: 
     provenance = (_check_market_provenance(fold_directory, receipt, expected_receipt_sha256,
                                            admission_dir, review_path, protocol_path)
                   if data_kind == "market" else None)
+    historical_provenance, support_sources = None, {}
+    if data_kind == "historical_exploration":
+        from .historical_bundle_review import check_provenance
+        historical_provenance = check_provenance(fold_directory, receipt, expected_receipt_sha256,
+                                                 admission_dir, review_path, protocol_path)
+        support_sources = {"multiscale/historical_bundle_review.py":
+                           file_digest(ROOT / "multiscale/historical_bundle_review.py")}
     actions = _actions(fields.get("actions"))
     models = receipt.get("models")
     if not isinstance(models, dict) or set(models) != set(MODELS):
@@ -221,12 +232,15 @@ def export_development_bundle(fold_directory: Path, *, expected_receipt_sha256: 
             shutil.copyfileobj(stream, destination)
         _checked_file(out, name, files[name])
     bundle_status = ("synthetic_test_inference_bundle" if data_kind == "synthetic_test"
+                     else "historical_exploration_inference_bundle" if data_kind == "historical_exploration"
                      else "historical_development_inference_bundle")
     manifest = {"schema_version": 1, "status": bundle_status, "data_kind": data_kind,
                 "independent_test": False, "Q3_values_read": False,
                 "rights_status": "export does not authorize use or publication of model weights",
                 "fold_receipt_sha256": expected_receipt_sha256, "fold_identity": receipt["fold_identity"],
                 "market_review_provenance": provenance,
+                "historical_review_provenance": historical_provenance,
+                "support_source_sha256": support_sources,
                 "protocol_identity": config.get("protocol_identity"),
                 "training_data_identity": receipt["data_identity"],
                 "profile": profile.name, "frequency": profile.frequency,
@@ -364,6 +378,7 @@ def load_development_bundle(directory: Path, *, expected_manifest_sha256: str, d
     manifest = json.loads(path.read_text(encoding="utf8"))
     kind = manifest.get("data_kind")
     expected_status = ("synthetic_test_inference_bundle" if kind == "synthetic_test" else
+                       "historical_exploration_inference_bundle" if kind == "historical_exploration" else
                        "historical_development_inference_bundle" if kind == "market" else None)
     if (manifest.get("schema_version") != 1 or expected_status is None or manifest.get("status") != expected_status or
             manifest.get("independent_test") is not False or manifest.get("Q3_values_read") is not False or
@@ -383,7 +398,18 @@ def load_development_bundle(directory: Path, *, expected_manifest_sha256: str, d
                 manifest.get("protocol_identity") != provenance["protocol_sha256"]):
             raise ValueError("Market bundle lacks reviewed provenance")
     elif manifest.get("market_review_provenance") is not None:
-        raise ValueError("Synthetic bundle cannot claim market review provenance")
+        raise ValueError("Non-market bundle cannot claim market review provenance")
+    if kind == "historical_exploration":
+        support = manifest.get("support_source_sha256")
+        if not isinstance(support, dict) or set(support) != {"multiscale/historical_bundle_review.py"}:
+            raise ValueError("Historical bundle is missing packaging-code identity")
+        _check_sources(support)
+        from .historical_bundle_review import validate_provenance
+        validate_provenance(manifest.get("historical_review_provenance"),
+                            data_identity=manifest["training_data_identity"],
+                            protocol_identity=manifest.get("protocol_identity"))
+    elif manifest.get("historical_review_provenance") is not None or manifest.get("support_source_sha256"):
+        raise ValueError("Bundle cannot claim historical exploration provenance")
     profile = _task(manifest)
     if manifest.get("frequency") != profile.frequency:
         raise ValueError("Bundle frequency differs from its study profile")
@@ -483,6 +509,8 @@ class DevelopmentPredictor:
         if _json_hash(m) != self._manifest_content_sha256 or file_digest(Path(__file__)) != m["inference_source_sha256"]:
             raise ValueError("Loaded inference identity changed")
         _check_sources(m["training_source_sha256"])
+        if m["data_kind"] == "historical_exploration":
+            _check_sources(m["support_source_sha256"])
         if (profile != m["profile"] or type(horizon) is not int or horizon != m["horizon"] or target != m["target"] or
                 model not in MODELS or bars.frequency != m["frequency"]):
             raise ValueError("Requested task, frequency, or model differs from the bundle")
@@ -521,7 +549,9 @@ class DevelopmentPredictor:
                                           m["model_metadata"][model]["training_identity"], device=self.device)
         if prediction.shape != (1, horizon) or not np.isfinite(prediction).all():
             raise ValueError("Invalid forecast path")
-        status = "synthetic_test_forecast_only" if m["data_kind"] == "synthetic_test" else "historical_development_forecast"
+        status = ("synthetic_test_forecast_only" if m["data_kind"] == "synthetic_test" else
+                  "historical_exploration_forecast" if m["data_kind"] == "historical_exploration" else
+                  "historical_development_forecast")
         return {"status": status, "data_kind": m["data_kind"], "independent_test": False,
                 "bundle_manifest_sha256": self.manifest_sha256, "fold_identity": m["fold_identity"],
                 "training_data_identity": m["training_data_identity"], "history_identity": history_identity,
