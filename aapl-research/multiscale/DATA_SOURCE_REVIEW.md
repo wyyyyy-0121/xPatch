@@ -24,8 +24,11 @@
 | [QuantConnect](https://www.quantconnect.com/terms) | 条款描述平台数据可在托管环境内用于研究与算法开发。 | 平台数据导出受到明确限制，学术用途不自动例外；购买的 CLI 数据或机构派生数据协议有单独规定。尚无适合本地研究及发表的适用许可，不取得或绕过平台数据。 |
 | [SimFin](https://www.simfin.com/en/prices/) | 官网列出免费与付费计划，并声称更高级数据有 20 年以上历史；免费档列有 5 年图表和 5 年基本面批量历史。 | 免费档是否提供至少 15 年可下载 AAPL 日收盘价未证实；发表权和具体价格计划待确认。官网还写明取消订阅后需删除下载数据及备份，影响长期复现。 |
 | [EODHD 学术方案](https://eodhd.com/lp/universities) | 官网介绍面向大学和学术研究的长期数据及学生折扣。 | 尚无适用本人的学术许可、价格与发表权确认；演示数据保留为诊断，不用于训练或论文结果。 |
+| [CRSP 美国股票数据库](https://www.crsp.org/research/crsp-us-stock-databases/)／[WRDS 机构账号](https://wrds-www.wharton.upenn.edu/pages/about/wrds-account-types/) | CRSP 产品页说明其数据库有超过 100 年历史，包含日度、月度市场数据与公司行动，并向获许可机构提供；WRDS 列出订阅机构的师生及课程账号类型。 | 尚无该机构订阅或本人账号，具体 AAPL 覆盖、未复权收盘字段及拆股口径未检查。WRDS 使用条款页面本次要求登录，论文结果与模型权重发表权须按具体机构和 CRSP 协议核实；账号资格也须由机构确认。 |
 
 另有一个 [Kaggle 长期数据集](https://www.kaggle.com/datasets/adamvakar/apple-comprehensive-financial-dataset-1980-2026) 标注 CC BY-NC-SA，但其说明明确称行情来自 Yahoo Finance，且保留原数据提供方权利。这说明上传页的开放许可标签不能单独证明上游行情权利；没有下载或准入该候选。
+
+CRSP/WRDS 信息仅为公开产品及账号说明，本次没有登录、请求行情或认定个人可用。供咨询学校图书馆或指导教师的英文草稿在本机 `outputs/multiscale/CRSP_WRDS_LIBRARY_QUERY_EN.md`；原网页与哈希回执在 `outputs/multiscale/source_references/crsp_wrds_20261107.bXKgllpL/`。这条机构渠道可与 Kibot、Alpaca 书面询问并行，但不能保证在六天内开通。
 
 ## 追加的公开数据集元数据核对
 

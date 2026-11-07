@@ -599,6 +599,8 @@ development.run_development_fold(bars, fold, [], cfg, Path(sys.argv[1]), "synthe
 def test_shared_fold_uses_common_h60_purged_samples_for_every_model(tmp_path):
     import torch
     from .shared_development import SharedConfig, run_shared_fold
+    from .training import digest_indices
+    from .verify_shared_development import check_shared_fold
     torch.set_num_threads(2)
     days = pd.bdate_range("2024-01-02", periods=12).strftime("%Y-%m-%d").tolist()
     bars = make_minutes([100] * len(days), days)
@@ -610,6 +612,17 @@ def test_shared_fold_uses_common_h60_purged_samples_for_every_model(tmp_path):
     assert receipt["purge_horizon_for_every_model"] == 60
     assert set(receipt["comparisons"]) == {"5", "15", "30", "60"}
     assert len(receipt["models"]) == 5
+    hashes = {"train_indices_sha256": digest_indices(fold["train"]),
+              "fit_indices_sha256": digest_indices(fold["inner"]["fit"]),
+              "stop_indices_sha256": digest_indices(fold["inner"]["stop"]),
+              "validation_indices_sha256": digest_indices(fold["validation"])}
+    verified = check_shared_fold(tmp_path / "matched", expected_data_identity="synthetic-matched-bars",
+                                 expected_protocol_identity=cfg.protocol_identity, expected_split_hashes=hashes)
+    assert verified["status"] == "verified_saved_shared_fold" and verified["models_verified"] == 5
+    with (tmp_path / "matched" / "prediction_shared_h60.npz").open("ab") as stream:
+        stream.write(b"synthetic-corruption")
+    with pytest.raises(ValueError, match="Artifact identity mismatch"):
+        check_shared_fold(tmp_path / "matched")
 
 
 @pytest.mark.parametrize("invalid_partition", ["train", "fit", "stop", "validation", "missing_history", "missing_target"])
@@ -654,6 +667,22 @@ def test_shared_fold_rejects_out_of_scope_split_before_training(tmp_path, monkey
     with pytest.raises(ValueError, match="out-of-scope split"):
         shared_development.run_shared_fold(bars, fold, [{"date": "2026-07-01", "ratio": 2.0}], cfg,
                                            destination, "synthetic-matched-bars")
+    assert not destination.exists()
+
+
+def test_shared_fold_does_not_accept_ungated_market_identity(tmp_path, monkeypatch):
+    from . import shared_development
+
+    days = pd.bdate_range("2024-01-02", periods=6).strftime("%Y-%m-%d").tolist()
+    bars = make_minutes([100] * len(days), days)
+    fit = np.arange(11, 19, dtype=np.int64)
+    stop, validation = np.array([201]), np.array([401])
+    fold = {"train": np.r_[fit, stop], "inner": {"fit": fit, "stop": stop}, "validation": validation}
+    monkeypatch.setattr(shared_development, "run_fit", lambda *args, **kwargs: pytest.fail("Training started"))
+    cfg = shared_development.SharedConfig(12, 1, 1, 16, 1e-3, 2026, "synthetic-matched-protocol")
+    destination = tmp_path / "must_not_start"
+    with pytest.raises(ValueError, match="reviewed mechanism executor"):
+        shared_development.run_shared_fold(bars, fold, [], cfg, destination, "market:" + "a" * 64)
     assert not destination.exists()
 
 

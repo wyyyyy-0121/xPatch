@@ -20,7 +20,16 @@ from .development import validate_split
 from .evaluation import endpoint_improvement, path_metrics
 from .features import CloseWindows
 from .models import make_model
-from .training import TrainConfig, predict_best, run_fit
+from .spec import ROOT
+from .training import TrainConfig, digest_indices, predict_best, run_fit
+
+
+SHARED_SOURCE_FILES = (
+    "multiscale/shared_development.py", "multiscale/training.py", "multiscale/mechanism.py",
+    "multiscale/models.py", "multiscale/features.py", "multiscale/bars.py", "multiscale/development.py",
+    "multiscale/evaluation.py", "multiscale/corporate_actions.py", "aapl/models.py", "aapl/vendor/xpatch_network.py",
+)
+_MARKET_GATE_TOKEN = object()
 
 
 @dataclass(frozen=True)
@@ -43,10 +52,15 @@ class SharedConfig:
 
 
 def run_shared_fold(bars: Bars, fold: dict, actions, cfg: SharedConfig, directory: Path,
-                    data_identity: str, *, device="cpu"):
+                    data_identity: str, *, device="cpu", _market_gate_token=None):
     cfg.validate()
-    if bars.frequency != "minute" or not data_identity:
+    if bars.frequency != "minute" or not isinstance(data_identity, str) or not data_identity:
         raise ValueError("A minute series and verified data identity are required")
+    if data_identity.startswith("market:"):
+        if _market_gate_token is not _MARKET_GATE_TOKEN:
+            raise ValueError("Market comparisons require the reviewed mechanism executor")
+    elif not data_identity.startswith(("synthetic-", "synthetic_test:")):
+        raise ValueError("Shared-fold data identity must specify market or synthetic scope")
     train, fit, stop, validation = validate_split(bars, fold, 60)
     eligible = eligible_origins(bars, cfg.lookback, 60, same_session=True)
     invalid = [name for name, origins in (("train", train), ("fit", fit), ("stop", stop),
@@ -57,13 +71,18 @@ def run_shared_fold(bars: Bars, fold: dict, actions, cfg: SharedConfig, director
                          ", ".join(invalid))
     split_event_dates(actions)
     windows = CloseWindows(bars, cfg.lookback, actions)
+    sources = {name: file_digest(ROOT / name) for name in SHARED_SOURCE_FILES}
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=False)
-    result = {"status": "running", "phase": "development", "independent_test": False,
+    kind = "market" if data_identity.startswith("market:") else "synthetic_test"
+    result = {"schema_version": 1, "status": "running", "phase": "development", "independent_test": False,
+              "data_kind": kind, "scope": "historical_development_only" if kind == "market" else "synthetic_test_only",
               "created_at_utc": datetime.now(timezone.utc).isoformat(), "config": asdict(cfg),
               "data_identity": data_identity, "fit_origins": len(fit), "stop_origins": len(stop),
               "validation_origins": len(validation), "purge_horizon_for_every_model": 60,
-              "Q3_values_read": False, "models": {}, "comparisons": {}}
+              "train_indices_sha256": digest_indices(train), "fit_indices_sha256": digest_indices(fit),
+              "stop_indices_sha256": digest_indices(stop), "validation_indices_sha256": digest_indices(validation),
+              "source_sha256": sources, "Q3_values_read": False, "models": {}, "comparisons": {}}
     started = time.monotonic()
     try:
         for name, horizon, shared in [("independent_h5", 5, False), ("independent_h15", 15, False),
@@ -79,14 +98,17 @@ def run_shared_fold(bars: Bars, fold: dict, actions, cfg: SharedConfig, director
             prediction = predict_best(directory / name / "best.pt", windows, validation,
                                       trained["identity"], device=device)
             path = directory / f"prediction_{name}.npz"
-            np.savez_compressed(path, prediction=prediction)
+            np.savez_compressed(path, prediction=prediction, origins=validation, decision_ns=bars.end_ns[validation])
             result["models"][name] = {"horizon": horizon, "shared": shared,
                                       "parameters": parameter_count, "epochs": trained["epochs"],
                                       "best_epoch": trained["best_epoch"], "steps": trained["steps"],
                                       "stopped_early": trained["stopped_early"],
                                       "training_and_inference_seconds": time.monotonic() - before,
                                       "prediction_sha256": file_digest(path),
-                                      "training_identity": trained["identity"]}
+                                      "training_identity": trained["identity"],
+                                      "best_checkpoint_sha256": file_digest(directory / name / "best.pt"),
+                                      "latest_checkpoint_sha256": file_digest(directory / name / "latest.pt"),
+                                      "training_summary_sha256": file_digest(directory / name / "training_summary.json")}
         # Development labels are not read until every matched model is fixed.
         truth = targets(bars, validation, 60, "future_log_return")
         np.savez_compressed(directory / "targets.npz", origins=validation, actual=truth,
@@ -103,6 +125,8 @@ def run_shared_fold(bars: Bars, fold: dict, actions, cfg: SharedConfig, director
             result["comparisons"][str(horizon)] = {"shared": path_metrics(actual, shared, "future_log_return"),
                                                    "independent": path_metrics(actual, individual, "future_log_return"),
                                                    "shared_vs_independent": paired}
+        if any(file_digest(ROOT / name) != digest for name, digest in sources.items()):
+            raise ValueError("Shared-experiment source changed during the fold")
         result.update(status="completed", total_seconds=time.monotonic() - started,
                       targets_sha256=file_digest(directory / "targets.npz"))
         (directory / "fold_receipt.json").write_text(json.dumps(result, indent=2, allow_nan=False), encoding="utf-8")
