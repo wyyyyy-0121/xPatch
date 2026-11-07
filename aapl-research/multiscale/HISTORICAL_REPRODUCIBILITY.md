@@ -136,6 +136,40 @@ a 180-second overall admission and 60-second per-process cap. It reads training
 labels but scores no validation targets. This is a bounded CPU engineering
 check, separate from full-fold real-data recovery and synthetic CUDA recovery.
 
+## Original split design and actual clock horizons
+
+```bash
+AAPL_CPU_IDS=24,26 AAPL_CPU_THREADS=2 CUDA_VISIBLE_DEVICES=-1 \
+  bash scripts/python.sh -m multiscale.historical_design_audit \
+  --coverage outputs/multiscale/reproduction/coverage_run1.json \
+  --destination outputs/multiscale/reproduction/design_timing_run1
+```
+
+This metadata audit reconstructs every original fit, stopping, outer-training
+and validation partition independently of the training splitter. All 400
+partition hashes must match the original protocols, and each of the 50 paired
+price/return designs must agree. It retains the original rolling and count-only
+warmup rules, including strict label completion before the next decision. It
+checks observed positions across each input/target window and the protected
+cutoff. For completed folds, saved origins, decisions and target completions
+must equal the admitted bar metadata; the separate first H60-return fold keeps
+its original control/neural layout.
+
+Only the timestamp, observed-mask, session and origin members of the admitted
+NPZ files are materialized. No close, actual-target or prediction-value member
+is loaded, and no training is performed. Full archive hashes still bind the
+original files. This checks metadata consistency, not a new price-quality
+audit or historical vendor-availability guarantee.
+
+`DESIGN_TIMING_AUDIT.json` retains all 100 fold designs, partition counts and
+purge gaps, as well as 20 task summaries. `FOLD_TIMING.csv` lists endpoint
+elapsed-hour quantiles and cross-session fractions. Planned timing for an
+unfinished fold is explicitly distinguished from completed saved-file checks
+and experimental results. In particular, complete trading-hour H4/H8 paths
+can cross overnight, weekend and holiday gaps; H does not specify elapsed
+clock hours. Minute endpoints must remain in one session and last exactly H
+minutes.
+
 ## Focused tests
 
 ```bash
@@ -145,7 +179,8 @@ AAPL_CPU_IDS=24,26 AAPL_CPU_THREADS=2 CUDA_VISIBLE_DEVICES=-1 \
   multiscale/test_historical_coverage.py \
   multiscale/test_historical_minute_check.py \
   multiscale/test_historical_restore_check.py \
-  multiscale/test_historical_results.py
+  multiscale/test_historical_results.py \
+  multiscale/test_historical_design_audit.py
 ```
 
 The completion checks exercise mismatched receipts, origins, protocols,
@@ -156,3 +191,5 @@ inventory check is skipped when its local research outputs are absent.
 Compilation checks also cover duplicate or missing cells, changed completed
 evidence, unequal fold sizes, missing session groups, degenerate intervals and
 the distinction between raw elapsed envelopes and pause-adjusted estimates.
+Design checks cover missing positions, cross-session clock gaps, strict purge
+equality, protected completion timestamps and endian-stable index identities.
