@@ -170,6 +170,64 @@ can cross overnight, weekend and holiday gaps; H does not specify elapsed
 clock hours. Minute endpoints must remain in one session and last exactly H
 minutes.
 
+## Preparing an additional-budget continuation
+
+```bash
+AAPL_CPU_IDS=24,26 AAPL_CPU_THREADS=2 CUDA_VISIBLE_DEVICES=-1 \
+  bash scripts/python.sh -m multiscale.historical_continuation prepare \
+  --output outputs/multiscale/remaining_compute_proposals/new_inventory
+
+AAPL_CPU_IDS=24,26 AAPL_CPU_THREADS=2 CUDA_VISIBLE_DEVICES=-1 \
+  bash scripts/python.sh -m multiscale.historical_continuation preflight \
+  --manifest outputs/multiscale/remaining_compute_proposals/new_inventory/MANIFEST.json
+```
+
+These commands inventory only incomplete original folds. They verify the
+original protocol and source hashes, preserved checkpoint copies, stopped
+process identities and thread affinities. Verified completions are skipped.
+Neither command resumes a process or changes an original budget. A separate
+`checkpoint-check` command accepts the same manifest plus `--job KEY`; it
+rebuilds the original runtime, bars, splits, checkpoint identity and scaler
+without optimizer updates or validation scoring.
+
+Activation requires a separate approval receipt tied to the exact manifest
+SHA-256 and a direct human reply. The receipt specifies the additional wall
+time, worker count, two threads per worker, and disabled GPU training. This
+preparation does not create that receipt. The hard ceiling is ten hours and
+six disjoint two-core worker slots; a smaller user-approved limit applies if
+specified. A consumed approval cannot reset its budget. The independent new
+accounting leaves the exhausted original budgets intact.
+
+After approval, `launch --manifest PATH --approval PATH` registers the
+controller as a systemd user service independent of tool/terminal timeouts.
+Its verified `KillMode=process` keeps stopped worker RAM alive if the
+controller service exits; automatic controller restart is disabled. Direct
+activation from a tool session is refused. Before any training is released,
+the controller installs a separate systemd user
+watchdog and verifies both its live PID identity and active service. Existing
+workers retain their exact RAM state; vanished workers use the original
+on-disk state only after identity reconstruction. New worker processes stop
+at a gate before loading numerical libraries or data, and are registered
+before release. Boot ID, start ticks, command identity and pidfds prevent
+signals from reaching a reused PID. The workstation's Python lacks the native
+pidfd methods, so a checked libc binding supplies the same Linux API.
+
+At the additional deadline, controller exit, lost heartbeat or cancellation,
+the independent guard freezes matching worker PIDs and hashes stable copies
+of fold state, predictions, coefficients and checkpoints. Temporary partial
+copies are never published as complete backups. An OS shutdown can still lose
+updates newer than the latest periodic disk checkpoint. Original queue
+parents remain stopped; verified completion updates only mutable result
+entries, preserving their budget fields. Preparation and the focused tests
+install no real experiment services.
+
+The independent guard reads atomic registry snapshots without waiting for
+the controller's lock. If the controller stalls while holding that lock, the
+guard freezes this new controller before taking over preservation, and
+retires it only after the copies are verified. It never retires original
+queue parents or frozen training workers. Thus the deadline and heartbeat
+checks cannot block behind the failure they are meant to contain.
+
 ## Focused tests
 
 ```bash
@@ -180,7 +238,8 @@ AAPL_CPU_IDS=24,26 AAPL_CPU_THREADS=2 CUDA_VISIBLE_DEVICES=-1 \
   multiscale/test_historical_minute_check.py \
   multiscale/test_historical_restore_check.py \
   multiscale/test_historical_results.py \
-  multiscale/test_historical_design_audit.py
+  multiscale/test_historical_design_audit.py \
+  multiscale/test_historical_continuation.py
 ```
 
 The completion checks exercise mismatched receipts, origins, protocols,
@@ -193,3 +252,7 @@ evidence, unequal fold sizes, missing session groups, degenerate intervals and
 the distinction between raw elapsed envelopes and pause-adjusted estimates.
 Design checks cover missing positions, cross-session clock gaps, strict purge
 equality, protected completion timestamps and endian-stable index identities.
+Continuation checks use fictional files and idle temporary processes to test
+approval limits, the launch gate, conflicting CPU slots, PID reuse guards,
+deadline/controller/heartbeat/cancel stops, checkpoint copies and unchanged
+original budget fields. They perform no training updates.
