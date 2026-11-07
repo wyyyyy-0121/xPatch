@@ -16,6 +16,7 @@
 - `matrix_gate.py`、`matrix_executor.py`：检查绑定数据身份的权利、质量、曝光、计算预算和冻结协议，按一个设备队列执行、独立复算并在折边界接续。若某尺度尚不能准入，可在评分前按完整尺度冻结部分矩阵并记录所有遗漏；当前没有通过正式准入。门控只核对人工复核记录及证据字节，不自动判断法律含义。新云端资源必须有明确授权，程序不会租赁机器。
 - `matrix_selftest.py`：构造清楚标记的虚构数据与虚构复核记录，验证完整与部分矩阵的冻结、队列暂停和接续；所有输出与真实研究分开，不代表正式运行或发表许可。
 - `aggregate_development.py`：独立核对已保存折并按起点数合并全路径／终点误差，使用冻结的交易会话分块计算描述性区间，并做年度非重叠起点敏感性；不输出开发阶段 p 值。默认要求五折齐全，显式请求部分汇总时会列出缺失折。
+- `report_development.py`：在现有准入及冻结门控之后核验已完成折、训练配置、起点身份和文件哈希，生成二十任务、每任务八模型的覆盖与指标表，保留遗漏、失败及未完成状态；另列训练轮次、预算上限、早停和学习曲线。合成测试和历史开发输出分别标注，不代表独立确认或已取得发表许可。
 - `inference.py`：从已完成折导出本地开发预测包，并按尺度、跨度、目标和八类模型调用。真实行情折须重新通过既有数据、权利、曝光和冻结协议门控；合成包及其预测明确标注为合成测试。包不包含已保存的目标或验证预测数组，但权重、标准化参数和公司行动仍可能受供应商条款约束。
 - `gpu_recovery_check.py`：仅用合成价格，在独立进程中于 xPatch 更新后退出并恢复，比较完整折与不中断参照。它不读取市场数据，不能代替正式吞吐准入或论文结果。
 - `evaluation.py`：逐步/路径/终点指标、按时间块重采样和 Holm 校正工具；是否可做独立检验仍取决于真实确认数据。
@@ -57,7 +58,9 @@
 
 随后进行的代码身份绑定重测持续 **913 秒**，重新覆盖全部 20 种形状；记录的八个源码文件在测试开始、结束和事后复核时哈希一致，20 份代表性预测文件通过哈希校验，39 次重复预测与各自代表样本的哈希一致。PyTorch 报告的最高已分配显存约 736 MiB、最高保留显存约 1,562 MiB；这不是整机显存峰值。按同一候选矩阵和前述假设，更新后的中位数与第 90 百分位时间示例分别约 **15.73 和 15.90 小时**；它们不是上下界或置信区间，之前列出的遗漏项仍然适用。本机结果不能直接外推到云端，也不能批准超出本地既定范围的计算。该示例中分钟任务约占神经训练与预测合计的 99%，但各尺度的实际数据与训练轮次尚未确定；数据和资源准入后可把分钟队列列为 GPU 关键路径，并与 CPU 评分及文稿处理并行。回执与计算分别在 `outputs/multiscale/synthetic_matrix_benchmark/20261107T083523408421Z/` 和 `outputs/multiscale/benchmark_projections/20261107T085120288406Z.json`。
 
-重测完成后，当前测试集为 **125 项通过**。另用合成数据冻结完整 100 折与部分 70 折矩阵，在三个合成折上检查暂停、接续和部分汇总；预测入口针对二十任务和八模型各核对一个合成起点，并检查独立进程恢复、缺失柱、提前收市及封存边界。这些都不是实际市场比较，也未演练完整队列的操作系统崩溃。补充文献暴露台账后，旧台账哈希对应的合成复核不再代表当前复核，已用当前台账重新执行；新队列回执在 `outputs/multiscale/synthetic_matrix_validation/20261107T092422837432Z/`，预测示例和回执在 `outputs/multiscale/inference_validation/20261107T091809719219Z/`。
+加入汇总校验后，当前测试集为 **131 项通过**。另用合成数据冻结完整 100 折与部分 70 折矩阵，在三个合成折上检查暂停、接续和部分汇总；预测入口针对二十任务和八模型各核对一个合成起点，并检查独立进程恢复、缺失柱、提前收市及封存边界。这些都不是实际市场比较，也未演练完整队列的操作系统崩溃。补充文献暴露台账后，旧台账哈希对应的合成复核不再代表当前复核，已用当前台账重新执行；新队列回执在 `outputs/multiscale/synthetic_matrix_validation/20261107T092422837432Z/`，预测示例和回执在 `outputs/multiscale/inference_validation/20261107T091809719219Z/`。两套合成矩阵的当前代码报告分别位于 `outputs/multiscale/synthetic_matrix_validation/reports/20261107T095225958227Z/` 与 `outputs/multiscale/synthetic_matrix_validation/reports/20261107T095225957035Z/`；它们分别只含两折和一折的合成结果，不是完整训练矩阵。
+
+随后另建合成协议，针对年度价格和年度收益各完成五折，共十个合成折；其余十八个任务未运行。报告 `outputs/multiscale/synthetic_matrix_validation/reports/20261107T100156114978Z/` 正确标出两个任务完成、其余未开始。独立脚本重新计算两种目标、八类模型的逐步／路径／终点误差及基线改善，并核对单位、轮次上限和报告哈希；脚本与回执位于 `outputs/multiscale/synthetic_matrix_validation/report_checks/check.kMJmtsfY/`。本机队列记录耗时约 26.4 秒，仅对应小规模合成测试，不能用于推算正式训练时间。
 
 当前队列的正式能力边界：同一个本机设备由文件锁串行调度，已完成折会复核哈希和指标，预算到期会停止当前进程并保留已有检查点；若尚未写出检查点则保留不完整尝试。意外退出后的耗时按保守方式恢复。不同机器不共享全局任务锁，不能据此保证跨云端不重复；改变数据、代码、复核或预算身份后不会自动续跑。完整与部分矩阵分别经合成队列检查，单折经进程中断测试，尚未进行完整 100 折的异常恢复演练。门控也不能自动证明人工选择没有受到此前分数影响，后续冻结仍须审计曝光。
 
@@ -88,6 +91,18 @@ bash scripts/python.sh -m multiscale.inference forecast \
 
 合成测试包不使用真实行情的三项审核参数，输出显式标记 `synthetic_test_forecast_only`。未取得权重及衍生信息的发表许可前，预测包只用于本地；不同硬件和软件版本的数值一致性还需实测。
 
+## 开发结果汇总
+
+数据、权利、曝光及计算记录通过审核，且已有匹配的冻结协议和矩阵输出后，才可替换以下占位路径。程序不会启动训练。默认不汇总未完成五折的任务；加上 `--allow-partial` 才显示已完成折的描述性结果，并列出缺失及失败状态。报告保留全体二十任务和 160 个模型槽位，未计算项留空，不跨价格和收益单位取平均。训练表里的折耗时在八个模型行重复，不能相加当作各模型耗时；达到轮次上限或触发早停都不能证明收敛。
+
+```bash
+AAPL_CPU_IDS='0-11,14-17' AAPL_CPU_THREADS=2 bash scripts/python.sh -m multiscale.report_development \
+  --admission "<已审核准入目录>" --review "<复核JSON>" \
+  --protocol "<冻结协议JSON>" --run "<匹配的矩阵目录>"
+```
+
+输出包括覆盖清单、模型指标表、训练记录表、含学习曲线的 JSON 和文件哈希清单。合成产物带 `SYNTHETIC_ONLY_` 前缀；市场数据的历史开发产物带 `DEVELOPMENT_ONLY_` 前缀。当前真实行情路径尚未执行，供应商是否允许发表派生结果仍须另行确认。
+
 ## 本机测试
 
 从 `aapl-research` 目录执行：
@@ -100,7 +115,8 @@ AAPL_CPU_IDS='0-11,14-17' AAPL_CPU_THREADS=2 bash scripts/python.sh -m pytest -q
   multiscale/test_kibot_candidate.py multiscale/test_matrix_plan.py \
   multiscale/test_matrix_gate.py multiscale/test_matrix_executor.py \
   multiscale/test_aggregate_development.py multiscale/test_source_io_benchmark.py \
-  multiscale/test_benchmark_matrix.py multiscale/test_inference.py
+  multiscale/test_benchmark_matrix.py multiscale/test_inference.py \
+  multiscale/test_report_development.py
 ```
 
 以上 CPU 亲和性避开现有原任务预留的 12、13 号逻辑核心。每次使用新的测试目录，避免 pytest 默认轮换已有 `tmp/pytest-of-ayaka` 会话；新目录保留供用户决定是否清理。市场数据、权重、预测、供应商原始响应和机器收据均在 `outputs/` 忽略目录，不提交 Git。
