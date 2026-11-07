@@ -79,6 +79,8 @@ Massive 的有界网页片段核查及限制见本机 `source_references/massive
 
 FinMultiTime 的版本、模态频率、上游来源和访问结果见本机 `literature/finmultitime_v1_20261107T102614Z/receipt.json`；不能将不同模态的总体时间跨度当作 AAPL 日线覆盖证明。
 
+直接访问 [Yahoo 官方服务条款地址](https://legal.yahoo.com/us/en/yahoo/terms/otos/index.html)时，当前网络虽收到 HTTP 200，页面实际显示地区服务不可用通知而非条款正文；因此未能核实 Yahoo 行情的学术发表条件。元数据回执见本机 `source_references/yahoo_terms_metadata_20261107T103402656493Z/receipt.json`。
+
 ## 准入前还需完成
 
 1. 取得可引用的原始供应商和适用于本研究的使用／发表条件，区分公开下载、研究使用、结果发表和原始行情再分发；不把未知条件写成已获许可。
