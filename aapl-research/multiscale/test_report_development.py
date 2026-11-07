@@ -170,6 +170,36 @@ def test_empty_split_subgroup_stays_empty_in_report():
     assert row["no_split_origins"] == 15 and row["split_events_in_evaluated_paths"] == 0
 
 
+def test_annual_nonoverlap_coverage_is_checked_and_exported():
+    task = next(item for item in tasks() if item["profile"] == "annual" and item["target"] == "future_log_return")
+    analysis = fictional_protocol()["analysis"]
+    summary = fictional_summary(task, [1, 2], analysis)
+    dates = {"first_origin_session": "2018-01-31", "last_origin_session": "2020-01-31",
+             "first_target_session": "2018-02-28", "last_target_session": "2021-01-31"}
+    for model, values in summary["models"].items():
+        values["annual_nonoverlapping_origins"] = {
+            "origins": 3, **dates, "endpoint_mse": values["endpoint_mse"], "endpoint_mae": values["endpoint_mae"],
+            "relative_improvement_vs_persistence": 1 - values["endpoint_mse"] / 4.0,
+            "selection": "earliest eligible origin, then at least H completed monthly bars apart"}
+    report_module._validate_summary(summary, task, [1, 2], PROTOCOL_HASH, ADMISSION_HASH, "synthetic_test", analysis)
+    report = {"data_kind": "synthetic_test", "seed": 2026, "tasks": [{**task, "summary": summary,
+               "primary_endpoint": True, "status": "partial_descriptive", "completed_folds": [1, 2],
+               "missing_folds": [3, 4, 5], "omission_reason": None}]}
+    row = next(row for row in report_module.rows(report) if row["model"] == "mlp")
+    assert row["annual_nonoverlapping_origins"] == 3
+    assert row["annual_first_origin_session"] == "2018-01-31"
+    assert row["annual_last_origin_session"] == "2020-01-31"
+    assert row["annual_first_target_session"] == "2018-02-28"
+    assert row["annual_last_target_session"] == "2021-01-31"
+    summary["models"]["mlp"]["annual_nonoverlapping_origins"]["last_target_session"] = "2021-02-28"
+    with pytest.raises(ValueError, match="Annual nonoverlapping coverage differs"):
+        report_module._validate_summary(summary, task, [1, 2], PROTOCOL_HASH, ADMISSION_HASH, "synthetic_test", analysis)
+    summary["models"]["mlp"]["annual_nonoverlapping_origins"]["last_target_session"] = "2021-01-31"
+    summary["models"]["last_close"]["annual_nonoverlapping_origins"]["first_target_session"] = "2017-12-31"
+    with pytest.raises(ValueError, match="Annual nonoverlapping date coverage is invalid"):
+        report_module._validate_summary(summary, task, [1, 2], PROTOCOL_HASH, ADMISSION_HASH, "synthetic_test", analysis)
+
+
 def test_export_labels_synthetic_rows_and_leaves_missing_values_empty(tmp_path, monkeypatch):
     protocol = fictional_protocol(); state = one_partial_state(protocol)
     report = report_module.assemble(protocol, state, PROTOCOL_HASH, ADMISSION_HASH, REVIEW_HASH,

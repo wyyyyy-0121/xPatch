@@ -60,7 +60,12 @@ def test_synthetic_fold_pooling_and_nonoverlap_do_not_claim_confirmation(tmp_pat
     assert result["completed_folds"] == [1, 2] and result["missing_folds"] == [3, 4, 5]
     assert result["independent_test"] is False and result["development_p_values_reported"] is False
     assert result["models"]["mlp"]["relative_improvement_vs_persistence"] == pytest.approx(.75)
-    assert result["models"]["mlp"]["annual_nonoverlapping_origins"]["origins"] == 4
+    annual = result["models"]["mlp"]["annual_nonoverlapping_origins"]
+    assert annual["origins"] == 4
+    assert annual["first_origin_session"] == "2018-01-31" and annual["last_origin_session"] == "2021-01-31"
+    assert annual["first_target_session"] == "2018-02-28" and annual["last_target_session"] == "2022-01-31"
+    assert all(result["models"][name]["annual_nonoverlapping_origins"]["last_target_session"] == "2022-01-31"
+               for name in MODELS)
     assert result["split_events_in_evaluated_paths"] == 1
     event_groups = result["models"]["mlp"]["split_event_sensitivity"]
     assert event_groups["crosses_split"]["origins"] == 3 and event_groups["no_split"]["origins"] == 5

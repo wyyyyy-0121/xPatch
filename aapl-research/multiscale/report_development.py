@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 import csv
 import fcntl
 import hashlib
@@ -35,7 +35,8 @@ CSV_FIELDS = ("data_kind", "profile", "frequency", "horizon", "target", "primary
               "squared_error_unit", "absolute_error_unit", *METRICS,
               "primary_block_length", "primary_loss_difference_lower", "primary_loss_difference_upper",
               "sensitivity_block_length", "sensitivity_loss_difference_lower", "sensitivity_loss_difference_upper",
-              "annual_nonoverlapping_origins", "split_events_in_evaluated_paths",
+              "annual_nonoverlapping_origins", "annual_first_origin_session", "annual_last_origin_session",
+              "annual_first_target_session", "annual_last_target_session", "split_events_in_evaluated_paths",
               "cross_split_origins", "cross_split_endpoint_mse", "cross_split_endpoint_mae", "cross_split_path_mse",
               "cross_split_relative_improvement", "no_split_origins", "no_split_endpoint_mse",
               "no_split_endpoint_mae", "no_split_path_mse", "no_split_relative_improvement")
@@ -102,6 +103,21 @@ def _validate_summary(summary, task, completed, protocol_hash, admission_hash, d
             type(event_count) is not int or event_count < 0 or
             (event_count == 0) != (split_reference["crosses_split"]["origins"] == 0)):
         raise ValueError("Invalid split-event subgroup counts")
+    annual_reference = baseline_values.get("annual_nonoverlapping_origins") if task["profile"] == "annual" else None
+    date_fields = ("first_origin_session", "last_origin_session", "first_target_session", "last_target_session")
+    if task["profile"] == "annual":
+        if (not isinstance(annual_reference, dict) or type(annual_reference.get("origins")) is not int or
+                not 1 <= annual_reference["origins"] <= reference_count):
+            raise ValueError("Annual nonoverlapping origin count is invalid")
+        try:
+            dates = [date.fromisoformat(annual_reference[key]) for key in date_fields]
+            canonical = all(isinstance(annual_reference[key], str) and
+                            value.isoformat() == annual_reference[key] for key, value in zip(date_fields, dates))
+        except (KeyError, ValueError, TypeError):
+            raise ValueError("Annual nonoverlapping date coverage is invalid") from None
+        if (not canonical or dates[0] > dates[1] or dates[0] >= dates[2] or
+                dates[1] >= dates[3] or dates[2] > dates[3]):
+            raise ValueError("Annual nonoverlapping date coverage is invalid")
     for model, values in summary["models"].items():
         if (not isinstance(values, dict) or type(values.get("origins")) is not int or values["origins"] < 1 or
                 values["origins"] != reference_count):
@@ -146,6 +162,27 @@ def _validate_summary(summary, task, completed, protocol_hash, admission_hash, d
         if ((expected is None) != (improvement is None) or
                 (expected is not None and not math.isclose(improvement, expected, rel_tol=1e-10, abs_tol=1e-15))):
             raise ValueError(f"Relative baseline improvement disagrees for {model}")
+        if annual_reference is not None:
+            annual = values.get("annual_nonoverlapping_origins")
+            if (not isinstance(annual, dict) or
+                    any(annual.get(key) != annual_reference.get(key) for key in ("origins", *date_fields)) or
+                    annual.get("selection") != "earliest eligible origin, then at least H completed monthly bars apart"):
+                raise ValueError(f"Annual nonoverlapping coverage differs for {model}")
+            for metric in ("endpoint_mse", "endpoint_mae"):
+                value = annual.get(metric)
+                if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+                    raise ValueError(f"Annual nonoverlapping {metric} is invalid for {model}")
+            base_annual = annual_reference.get("endpoint_mse")
+            expected_annual = (1 - annual["endpoint_mse"] / base_annual
+                               if isinstance(base_annual, (float, int)) and not isinstance(base_annual, bool) and
+                               math.isfinite(base_annual) and base_annual > 0 else None)
+            observed_annual = annual.get("relative_improvement_vs_persistence")
+            if ((expected_annual is None) != (observed_annual is None) or
+                    (expected_annual is not None and
+                     (isinstance(observed_annual, bool) or not isinstance(observed_annual, (float, int)) or
+                      not math.isfinite(observed_annual) or
+                      not math.isclose(observed_annual, expected_annual, rel_tol=1e-10, abs_tol=1e-15)))):
+                raise ValueError(f"Annual nonoverlapping relative improvement disagrees for {model}")
         split_groups = values.get("split_event_sensitivity")
         if not isinstance(split_groups, dict) or set(split_groups) != set(split_reference):
             raise ValueError(f"Missing split-event subgroups for {model}")
@@ -485,6 +522,8 @@ def rows(report):
                 row[label + "_loss_difference_upper"] = limits[1] if limits else None
             nonoverlap = values.get("annual_nonoverlapping_origins") or {}
             row["annual_nonoverlapping_origins"] = nonoverlap.get("origins")
+            for name in ("first_origin_session", "last_origin_session", "first_target_session", "last_target_session"):
+                row["annual_" + name] = nonoverlap.get(name)
             row["split_events_in_evaluated_paths"] = summary.get("split_events_in_evaluated_paths") if summary else None
             split_groups = values.get("split_event_sensitivity") or {}
             for name, label in (("crosses_split", "cross_split"), ("no_split", "no_split")):

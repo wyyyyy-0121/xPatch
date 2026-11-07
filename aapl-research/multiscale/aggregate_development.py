@@ -91,6 +91,7 @@ def aggregate(admission_dir: Path, review_path: Path, protocol_path: Path, run_d
                                               "endpoint_absolute": 0.0, "path_squared": 0.0}
                                       for name in ("crosses_split", "no_split")}} for model in MODELS}
     groups, prior_origin, nonoverlap_count = [], None, 0
+    nonoverlap_dates = None
     crossed_events = set()
     prior_decision = None
     for job, folder, verified in complete:
@@ -112,6 +113,11 @@ def aggregate(admission_dir: Path, review_path: Path, protocol_path: Path, run_d
                 if prior_origin is None or int(origin) >= prior_origin + horizon:
                     nonoverlap.append(position)
                     prior_origin = int(origin)
+                    if nonoverlap_dates is None:
+                        nonoverlap_dates = {"first_origin_session": str(labels[prior_origin]),
+                                            "first_target_session": str(labels[prior_origin + 1])}
+                    nonoverlap_dates.update(last_origin_session=str(labels[prior_origin]),
+                                            last_target_session=str(labels[prior_origin + horizon]))
             nonoverlap_count += len(nonoverlap)
         with np.load(folder / "prediction_last_close.npz", allow_pickle=False) as saved:
             baseline = np.asarray(saved["prediction"], dtype=np.float64)
@@ -181,6 +187,7 @@ def aggregate(admission_dir: Path, review_path: Path, protocol_path: Path, run_d
                 "origins": nonoverlap_count, "endpoint_mse": mse,
                 "endpoint_mae": data["nonoverlap_absolute"] / nonoverlap_count,
                 "relative_improvement_vs_persistence": 1 - mse / baseline_nonoverlap if baseline_nonoverlap else None,
+                **nonoverlap_dates,
                 "selection": "earliest eligible origin, then at least H completed monthly bars apart"}
         split_summary = {}
         for group_name, bucket in data["split_groups"].items():
