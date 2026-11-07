@@ -12,6 +12,7 @@ import math
 from pathlib import Path
 
 from .bars import file_digest
+from .corporate_actions import SPLIT_SENSITIVITY_RULE, split_event_dates
 from .spec import DEV_END, MODELS, OUT, PROFILES, ROOT, TARGETS
 
 
@@ -21,7 +22,7 @@ REQUIRED_SOURCE_FILES = (
     "multiscale/ridge.py", "multiscale/splits.py", "multiscale/spec.py",
     "multiscale/training.py", "multiscale/mechanism.py", "multiscale/matrix_gate.py",
     "multiscale/matrix_executor.py", "multiscale/verify_development.py", "multiscale/aggregate_development.py",
-    "multiscale/source_io_benchmark.py",
+    "multiscale/source_io_benchmark.py", "multiscale/corporate_actions.py",
     "aapl/models.py", "aapl/vendor/xpatch_network.py",
 )
 PERIODS = {"minute": 390, "hour": 6, "day": 252, "month": 12}
@@ -185,6 +186,10 @@ def review_issues(admission, admission_sha256, review, evidence_root: Path, expo
             admission.get("experiment_scored") is not False or
             admission.get("development_cutoff_new_york") != DEV_END):
         issues.append("candidate_admission_identity_or_cutoff_invalid")
+    try:
+        split_event_dates(admission.get("split_actions"))
+    except ValueError:
+        issues.append("candidate_split_actions_invalid")
     expected_tasks = {(p.name, h, t) for p in PROFILES for h in p.horizons for t in TARGETS}
     profiles = {profile.name: profile for profile in PROFILES}
     try:
@@ -380,6 +385,8 @@ def locked_protocol_issues(admission, admission_sha256, protocol, review_sha256)
             issues.append("frozen_analysis_plan_invalid")
         elif any(values[0] < MINIMUM_BLOCK_GROUPS[name] for name, values in blocks.items()):
             issues.append("frozen_analysis_blocks_shorter_than_declared_horizon")
+        if analysis.get("split_event_sensitivity") != SPLIT_SENSITIVITY_RULE:
+            issues.append("frozen_split_sensitivity_rule_missing_or_changed")
     return sorted(set(issues))
 
 

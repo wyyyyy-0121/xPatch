@@ -3,6 +3,7 @@ from copy import deepcopy
 import hashlib
 import json
 
+from .corporate_actions import SPLIT_SENSITIVITY_RULE
 from .matrix_gate import (BENCHMARK_SHAPES, REQUIRED_SOURCE_FILES, _representative_benchmark, _source_io_evidence,
                           locked_protocol_issues, review_issues, task_inventory)
 from .spec import DEV_END, MODELS, PROFILES, ROOT, TARGETS
@@ -80,6 +81,10 @@ def test_review_requires_bound_written_evidence_and_resource_measurement(tmp_pat
     changed["compute"]["maximum_wall_seconds"] = 6 * 3600 + 1
     assert "expanded_compute_resource_authorization_missing" in review_issues(
         admission, admission_hash, changed, tmp_path, note_hash)
+    invalid_actions = deepcopy(admission)
+    invalid_actions["split_actions"] = [{"date": "2026-07-01", "ratio": 2.0}]
+    assert "candidate_split_actions_invalid" in review_issues(
+        invalid_actions, admission_hash, review, tmp_path, note_hash)
 
 
 def test_locked_protocol_requires_exact_tasks_sources_and_eligible_folds():
@@ -109,7 +114,7 @@ def test_locked_protocol_requires_exact_tasks_sources_and_eligible_folds():
                 "analysis": {"block_lengths_by_profile": {"annual": [12, 24], "quarterly": [3, 6],
                                                             "monthly": [21, 42], "hourly": [2, 5], "minute": [1, 5]}, "resamples": 100,
                              "seed": 2026, "confidence": .95, "development_p_values": False,
-                             "annual_nonoverlap": True},
+                             "annual_nonoverlap": True, "split_event_sensitivity": SPLIT_SENSITIVITY_RULE},
                 "training": {"max_epochs": 20, "patience": 3, "batch_size": 128,
                              "seed": 2026, "learning_rate": .001, "ridge_alphas": [.1, 1.0, 10.0]}}
     assert locked_protocol_issues(admission, "a" * 64, protocol, "b" * 64) == []
@@ -131,6 +136,9 @@ def test_locked_protocol_requires_exact_tasks_sources_and_eligible_folds():
     assert "frozen_protocol_identity_or_scope_invalid" in issues and "frozen_job_insufficient_origins" in issues
     changed = deepcopy(protocol); changed["source_code_sha256"][REQUIRED_SOURCE_FILES[0]] = "0" * 64
     assert "frozen_source_code_identity_changed" in locked_protocol_issues(admission, "a" * 64, changed, "b" * 64)
+    changed = deepcopy(protocol); changed["analysis"].pop("split_event_sensitivity")
+    assert "frozen_split_sensitivity_rule_missing_or_changed" in locked_protocol_issues(
+        admission, "a" * 64, changed, "b" * 64)
 
 
 def test_io_evidence_is_bound_to_source_host_and_selected_scales(tmp_path):

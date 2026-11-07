@@ -35,7 +35,10 @@ CSV_FIELDS = ("data_kind", "profile", "frequency", "horizon", "target", "primary
               "squared_error_unit", "absolute_error_unit", *METRICS,
               "primary_block_length", "primary_loss_difference_lower", "primary_loss_difference_upper",
               "sensitivity_block_length", "sensitivity_loss_difference_lower", "sensitivity_loss_difference_upper",
-              "annual_nonoverlapping_origins")
+              "annual_nonoverlapping_origins", "split_events_in_evaluated_paths",
+              "cross_split_origins", "cross_split_endpoint_mse", "cross_split_endpoint_mae", "cross_split_path_mse",
+              "cross_split_relative_improvement", "no_split_origins", "no_split_endpoint_mse",
+              "no_split_endpoint_mae", "no_split_path_mse", "no_split_relative_improvement")
 TRAINING_FIELDS = ("data_kind", "profile", "frequency", "horizon", "target", "fold", "model", "fit",
                    "fit_origins", "stop_origins", "validation_origins", "ridge_alpha", "max_epochs", "epochs",
                    "best_epoch", "steps", "stopped_early", "budget_cap_reached", "training_status",
@@ -90,6 +93,15 @@ def _validate_summary(summary, task, completed, protocol_hash, admission_hash, d
     reference_count = baseline_values.get("origins")
     if isinstance(baseline, bool) or not isinstance(baseline, (float, int)) or not math.isfinite(baseline) or baseline < 0:
         raise ValueError("Invalid baseline error")
+    split_reference = baseline_values.get("split_event_sensitivity")
+    event_count = summary.get("split_events_in_evaluated_paths")
+    if (not isinstance(split_reference, dict) or set(split_reference) != {"crosses_split", "no_split"} or
+            any(not isinstance(split_reference[name], dict) or type(split_reference[name].get("origins")) is not int or
+                split_reference[name]["origins"] < 0 for name in split_reference) or
+            sum(row["origins"] for row in split_reference.values()) != reference_count or
+            type(event_count) is not int or event_count < 0 or
+            (event_count == 0) != (split_reference["crosses_split"]["origins"] == 0)):
+        raise ValueError("Invalid split-event subgroup counts")
     for model, values in summary["models"].items():
         if (not isinstance(values, dict) or type(values.get("origins")) is not int or values["origins"] < 1 or
                 values["origins"] != reference_count):
@@ -134,6 +146,38 @@ def _validate_summary(summary, task, completed, protocol_hash, admission_hash, d
         if ((expected is None) != (improvement is None) or
                 (expected is not None and not math.isclose(improvement, expected, rel_tol=1e-10, abs_tol=1e-15))):
             raise ValueError(f"Relative baseline improvement disagrees for {model}")
+        split_groups = values.get("split_event_sensitivity")
+        if not isinstance(split_groups, dict) or set(split_groups) != set(split_reference):
+            raise ValueError(f"Missing split-event subgroups for {model}")
+        weighted = {name: 0.0 for name in ("endpoint_mse", "endpoint_mae", "path_mse")}
+        for group_name, reference in split_reference.items():
+            subgroup = split_groups.get(group_name)
+            n_group = reference["origins"]
+            if (not isinstance(subgroup, dict) or type(subgroup.get("origins")) is not int or
+                    subgroup["origins"] != n_group or
+                    subgroup.get("status") != ("descriptive_development_only" if n_group else "no_origins")):
+                raise ValueError(f"Invalid split-event subgroup for {model}")
+            for metric in weighted:
+                value = subgroup.get(metric)
+                if n_group:
+                    if isinstance(value, bool) or not isinstance(value, (float, int)) or not math.isfinite(value) or value < 0:
+                        raise ValueError(f"Invalid split-event {metric} for {model}")
+                    weighted[metric] += n_group * value
+                elif value is not None:
+                    raise ValueError(f"An empty split-event subgroup has a {metric} for {model}")
+            base_group_mse = reference.get("endpoint_mse")
+            expected_group = (1 - subgroup["endpoint_mse"] / base_group_mse
+                              if n_group and isinstance(base_group_mse, (int, float)) and base_group_mse > 0 else None)
+            observed_group = subgroup.get("relative_improvement_vs_persistence")
+            if ((expected_group is None) != (observed_group is None) or
+                    (expected_group is not None and
+                     (isinstance(observed_group, bool) or not isinstance(observed_group, (int, float)) or
+                      not math.isfinite(observed_group) or
+                      not math.isclose(observed_group, expected_group, rel_tol=1e-10, abs_tol=1e-15)))):
+                raise ValueError(f"Split-event relative improvement disagrees for {model}")
+        if any(not math.isclose(weighted[name] / values["origins"], values[name], rel_tol=1e-10, abs_tol=1e-15)
+               for name in weighted):
+            raise ValueError(f"Split-event and pooled errors disagree for {model}")
         intervals = values.get("descriptive_block_intervals")
         expected_lengths = analysis["block_lengths_by_profile"][task["profile"]]
         if (not isinstance(intervals, list) or any(not isinstance(x, dict) for x in intervals) or
@@ -441,6 +485,14 @@ def rows(report):
                 row[label + "_loss_difference_upper"] = limits[1] if limits else None
             nonoverlap = values.get("annual_nonoverlapping_origins") or {}
             row["annual_nonoverlapping_origins"] = nonoverlap.get("origins")
+            row["split_events_in_evaluated_paths"] = summary.get("split_events_in_evaluated_paths") if summary else None
+            split_groups = values.get("split_event_sensitivity") or {}
+            for name, label in (("crosses_split", "cross_split"), ("no_split", "no_split")):
+                subgroup = split_groups.get(name) or {}
+                row[label + "_origins"] = subgroup.get("origins")
+                for metric in ("endpoint_mse", "endpoint_mae", "path_mse"):
+                    row[label + "_" + metric] = subgroup.get(metric)
+                row[label + "_relative_improvement"] = subgroup.get("relative_improvement_vs_persistence")
             result.append(row)
     return result
 

@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from . import aggregate_development as aggregate_module
+from .corporate_actions import SPLIT_SENSITIVITY_RULE
 from .spec import MODELS, PROFILES
 
 
@@ -15,13 +16,15 @@ def test_synthetic_fold_pooling_and_nonoverlap_do_not_claim_confirmation(tmp_pat
     jobs = [{"profile": "annual", "frequency": "month", "horizon": 12,
              "target": "future_log_return", "fold": number} for number in range(1, 6)]
     analysis = {"block_lengths_by_profile": {"annual": [12, 24]}, "resamples": 100, "seed": 2026,
-                "confidence": .95, "development_p_values": False, "annual_nonoverlap": True}
+                "confidence": .95, "development_p_values": False, "annual_nonoverlap": True,
+                "split_event_sensitivity": SPLIT_SENSITIVITY_RULE}
     protocol = {"data_kind": "synthetic_test", "jobs": jobs, "analysis": analysis,
                 "selected_profiles": [profile.name for profile in PROFILES], "matrix_scope": "full", "omitted_profiles": {}}
-    monkeypatch.setattr(aggregate_module, "load_reviewed", lambda *args, **kwargs: ({}, admission_hash, tmp_path, {}, review_hash, None))
+    admission = {"split_actions": [{"date": "2019-02-28", "ratio": 2.0}]}
+    monkeypatch.setattr(aggregate_module, "load_reviewed", lambda *args, **kwargs: (admission, admission_hash, tmp_path, {}, review_hash, None))
     monkeypatch.setattr(aggregate_module, "_json_inside", lambda *args: (protocol, protocol_hash, None))
     monkeypatch.setattr(aggregate_module, "locked_protocol_issues", lambda *args: [])
-    labels = pd.date_range("2018-01-31", periods=50, freq="ME").strftime("%Y-%m-%d").to_numpy()
+    labels = np.asarray(pd.date_range("2018-01-31", periods=50, freq="ME").strftime("%Y-%m-%d"), dtype="<U10")
     monkeypatch.setattr(aggregate_module, "session_labels", lambda *args: labels)
     run = tmp_path / "synthetic_matrix_validation" / "runs" / protocol_hash[:24]
     run.mkdir(parents=True)
@@ -58,6 +61,11 @@ def test_synthetic_fold_pooling_and_nonoverlap_do_not_claim_confirmation(tmp_pat
     assert result["independent_test"] is False and result["development_p_values_reported"] is False
     assert result["models"]["mlp"]["relative_improvement_vs_persistence"] == pytest.approx(.75)
     assert result["models"]["mlp"]["annual_nonoverlapping_origins"]["origins"] == 4
+    assert result["split_events_in_evaluated_paths"] == 1
+    event_groups = result["models"]["mlp"]["split_event_sensitivity"]
+    assert event_groups["crosses_split"]["origins"] == 3 and event_groups["no_split"]["origins"] == 5
+    assert event_groups["crosses_split"]["relative_improvement_vs_persistence"] == pytest.approx(.75)
+    assert event_groups["crosses_split"]["endpoint_mse"] == pytest.approx((4 + 9 + 169) / 12)
     assert result["models"]["last_close"]["direction_coverage"] == 0
     assert all("centered_one_sided_p_improvement" not in interval
                for interval in result["models"]["mlp"]["descriptive_block_intervals"])

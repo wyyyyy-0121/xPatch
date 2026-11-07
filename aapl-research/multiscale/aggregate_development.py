@@ -13,6 +13,7 @@ from pathlib import Path
 import numpy as np
 
 from .bars import file_digest
+from .corporate_actions import split_event_dates, split_event_flags
 from .evaluation import paired_block_bootstrap
 from .matrix_executor import _job_key, _json_inside, load_reviewed
 from .matrix_gate import locked_protocol_issues, profile_selection
@@ -81,19 +82,30 @@ def aggregate(admission_dir: Path, review_path: Path, protocol_path: Path, run_d
         raise ValueError("All five folds must be complete unless partial reporting is explicitly requested")
     frequency = requested[0]["frequency"]
     labels = session_labels(source, admission, frequency)
+    events = split_event_dates(admission.get("split_actions"))
     accum = {model: {"n": 0, "step_squared": np.zeros(horizon), "step_absolute": np.zeros(horizon),
                      "direction_active": 0, "direction_correct": 0, "endpoint_differences": [],
                      "fold_endpoint_mse": [], "nonoverlap_squared": 0.0,
-                     "nonoverlap_absolute": 0.0} for model in MODELS}
+                     "nonoverlap_absolute": 0.0,
+                     "split_groups": {name: {"n": 0, "endpoint_squared": 0.0,
+                                              "endpoint_absolute": 0.0, "path_squared": 0.0}
+                                      for name in ("crosses_split", "no_split")}} for model in MODELS}
     groups, prior_origin, nonoverlap_count = [], None, 0
+    crossed_events = set()
     prior_decision = None
     for job, folder, verified in complete:
         with np.load(folder / "targets.npz", allow_pickle=False) as saved:
             actual, anchor, origins, decisions = (saved[key].copy() for key in ("actual", "anchor", "origins", "decision_ns"))
-        if (origins[-1] >= len(labels) or (prior_decision is not None and decisions[0] <= prior_decision)):
+        if (origins[-1] + horizon >= len(labels) or
+                (prior_decision is not None and decisions[0] <= prior_decision)):
             raise ValueError("Saved folds overlap or contain out-of-range origins")
         prior_decision = int(decisions[-1])
         groups.append(labels[origins])
+        origin_sessions, target_sessions = labels[origins], labels[origins + horizon]
+        crosses_split = split_event_flags(origin_sessions, target_sessions, events)
+        for event in np.datetime_as_string(events, unit="D"):
+            if ((origin_sessions < event) & (target_sessions >= event)).any():
+                crossed_events.add(event)
         nonoverlap = []
         if profile == "annual":
             for position, origin in enumerate(origins):
@@ -122,12 +134,18 @@ def aggregate(admission_dir: Path, review_path: Path, protocol_path: Path, run_d
             data["fold_endpoint_mse"].append({"fold": job["fold"],
                                                "endpoint_mse": verified["models"][model]["metrics"]["endpoint_mse"],
                                                "origins": len(actual)})
+            for group_name, mask in (("crosses_split", crosses_split), ("no_split", ~crosses_split)):
+                bucket = data["split_groups"][group_name]
+                bucket["n"] += int(mask.sum())
+                bucket["endpoint_squared"] += float(squared[mask, -1].sum())
+                bucket["endpoint_absolute"] += float(absolute[mask, -1].sum())
+                bucket["path_squared"] += float(squared[mask].sum())
             if profile == "annual":
                 data["nonoverlap_squared"] += float(squared[nonoverlap, -1].sum())
                 data["nonoverlap_absolute"] += float(absolute[nonoverlap, -1].sum())
-    group = np.concatenate(groups)
+    session_groups = np.concatenate(groups)
     full_grid = np.unique(labels)
-    full_grid = full_grid[(full_grid >= group[0]) & (full_grid <= group[-1])]
+    full_grid = full_grid[(full_grid >= session_groups[0]) & (full_grid <= session_groups[-1])]
     analysis = protocol["analysis"]
     base_mse = float(accum["last_close"]["step_squared"][-1] / accum["last_close"]["n"])
     baseline_nonoverlap = (accum["last_close"]["nonoverlap_squared"] / nonoverlap_count
@@ -150,7 +168,7 @@ def aggregate(admission_dir: Path, review_path: Path, protocol_path: Path, run_d
             if length > len(full_grid):
                 summary["descriptive_block_intervals"].append({"block_length": length, "status": "insufficient_groups"})
                 continue
-            interval = paired_block_bootstrap(difference, group, block_length=length,
+            interval = paired_block_bootstrap(difference, session_groups, block_length=length,
                                               resamples=analysis["resamples"], seed=analysis["seed"],
                                               confidence=analysis["confidence"], group_order=full_grid)
             interval.pop("centered_one_sided_p_improvement")
@@ -164,6 +182,20 @@ def aggregate(admission_dir: Path, review_path: Path, protocol_path: Path, run_d
                 "endpoint_mae": data["nonoverlap_absolute"] / nonoverlap_count,
                 "relative_improvement_vs_persistence": 1 - mse / baseline_nonoverlap if baseline_nonoverlap else None,
                 "selection": "earliest eligible origin, then at least H completed monthly bars apart"}
+        split_summary = {}
+        for group_name, bucket in data["split_groups"].items():
+            n_group = bucket["n"]
+            baseline_group = accum["last_close"]["split_groups"][group_name]
+            baseline_group_mse = baseline_group["endpoint_squared"] / n_group if n_group else None
+            group_mse = bucket["endpoint_squared"] / n_group if n_group else None
+            split_summary[group_name] = {
+                "status": "descriptive_development_only" if n_group else "no_origins",
+                "origins": n_group, "endpoint_mse": group_mse,
+                "endpoint_mae": bucket["endpoint_absolute"] / n_group if n_group else None,
+                "path_mse": bucket["path_squared"] / (n_group * horizon) if n_group else None,
+                "relative_improvement_vs_persistence":
+                    1 - group_mse / baseline_group_mse if baseline_group_mse and baseline_group_mse > 0 else None}
+        summary["split_event_sensitivity"] = split_summary
         models[model] = summary
     return {"status": "synthetic_test_results_only" if data_kind == "synthetic_test" else "historical_development_only",
             "data_kind": data_kind, "independent_test": False, "development_p_values_reported": False,
@@ -172,9 +204,10 @@ def aggregate(admission_dir: Path, review_path: Path, protocol_path: Path, run_d
             "protocol_sha256": protocol_hash, "admission_sha256": admission_hash,
             "completed_folds": [job["fold"] for job, _, _ in complete], "missing_folds": missing,
             "partial": bool(missing), "group_grid": "all candidate source sessions between first and last evaluated origin",
-            "analysis": analysis, "models": models,
+            "analysis": analysis, "split_events_in_evaluated_paths": len(crossed_events), "models": models,
             "limitations": ["This aggregates historical development folds, not independent confirmation.",
                             "Block intervals are descriptive and do not establish model superiority or trading profitability.",
+                            "Split-event groups are post-score descriptions; overlapping origins are not independent events.",
                             "A complete result requires all five frozen folds and admitted data rights."]}
 
 

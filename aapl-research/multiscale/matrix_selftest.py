@@ -22,6 +22,7 @@ from .admission import save_bars
 from .aggregate_development import aggregate
 from .bars import eligible_origins, file_digest
 from .benchmark_matrix_synthetic import synthetic_bars
+from .corporate_actions import SPLIT_SENSITIVITY_RULE
 from .matrix_executor import execute, freeze
 from .spec import DEV_END, OUT, PROFILES, TARGETS
 
@@ -72,11 +73,14 @@ def main():
             for mode in TARGETS:
                 rows.append({"profile": profile.name, "frequency": profile.frequency,
                              "horizon": horizon, "target": mode, "minimum_history_met": True})
+    # This event is deliberately invented for the fictional smooth price series.
+    # It exercises crossing and non-crossing paths; it is not an AAPL action.
+    fictional_actions = [{"date": "2015-01-01", "ratio": 2.0}]
     admission = {"schema_version": 1, "data_kind": "synthetic_test", "status": "synthetic_test_only",
                  "scope": "SYNTHETIC PRICES; no provider data and no research results",
                  "development_cutoff_new_york": DEV_END, "Q3_values_read": False, "experiment_scored": False,
                  "legacy_test_exposure": {"sha256": hashlib.sha256(b"synthetic ledger only").hexdigest()},
-                 "split_actions": [], "tasks": rows, "files": files}
+                 "split_actions": fictional_actions, "tasks": rows, "files": files}
     admission_path = source / "admission.json"
     write_json(admission_path, admission)
     admission_hash = file_digest(admission_path)
@@ -125,7 +129,8 @@ def main():
               "analysis": {"block_lengths_by_profile": {"annual": [12, 24], "quarterly": [3, 6],
                                                          "monthly": [21, 42], "hourly": [2, 5], "minute": [1, 5]},
                            "resamples": 100, "seed": 2026, "confidence": .95,
-                           "development_p_values": False, "annual_nonoverlap": True},
+                           "development_p_values": False, "annual_nonoverlap": True,
+                           "split_event_sensitivity": SPLIT_SENSITIVITY_RULE},
               "training": {"max_epochs": 1, "patience": 1, "batch_size": 128, "learning_rate": .001,
                            "seed": 2026, "ridge_alphas": [.1, 1.0, 10.0]}}
     recipe_path = work / "synthetic_recipe.json"
@@ -144,6 +149,10 @@ def main():
             summary["completed_folds"] != [1, 2] or len(summary["models"]) != 8 or
             summary["development_p_values_reported"] is not False):
         raise ValueError("Synthetic partial-fold summary is incorrectly labeled")
+    groups = summary["models"]["last_close"]["split_event_sensitivity"]
+    if (summary["split_events_in_evaluated_paths"] != 1 or
+            not groups["crosses_split"]["origins"] or not groups["no_split"]["origins"]):
+        raise ValueError("Synthetic split-event groups were not both exercised")
     aggregate_path = work / "synthetic_aggregate.json"
     write_json(aggregate_path, summary)
     partial_selected = ["hourly", "minute"]
@@ -174,6 +183,7 @@ def main():
                "jobs_frozen": len(json.loads(protocol_path.read_text(encoding="utf8"))["jobs"]),
                "completed_synthetic_folds": count, "queue_resumed_after_job_limit": True,
                "synthetic_aggregate": str(aggregate_path), "partial_aggregate_correctly_labeled": True,
+               "fictional_split_grouping_exercised": True,
                "partial_scale_protocol": str(partial_protocol_path), "partial_scale_jobs_frozen": len(partial_protocol["jobs"]),
                "partial_scale_folds_executed": 1, "omitted_scale_status_preserved": True,
                "consumed_wall_seconds": second["consumed_wall_seconds"],

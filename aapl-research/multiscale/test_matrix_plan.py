@@ -27,7 +27,7 @@ def synthetic_admission():
                              "minimum_history_met": True, "minimum_inner_fit_origins": 10,
                              "known_legacy_overlap_origins": 0, "folds": folds,
                              "proposed_warmup_folds": None})
-    return {"Q3_values_read": False, "experiment_scored": False,
+    return {"Q3_values_read": False, "experiment_scored": False, "split_actions": [],
             "development_cutoff_new_york": DEV_END, "tasks": rows}
 
 

@@ -38,6 +38,11 @@
     "seed": 2026,
     "confidence": 0.95,
     "development_p_values": false,
-    "annual_nonoverlap": true
+    "annual_nonoverlap": true,
+    "split_event_sensitivity": {
+      "grouping": "origin_session_lt_effective_date_lte_target_session",
+      "metrics": ["endpoint_mse", "endpoint_mae", "path_mse"],
+      "use": "descriptive_development_only_no_model_selection"
+    }
   }
 }
