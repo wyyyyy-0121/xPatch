@@ -78,11 +78,11 @@ def inspect(archive,receipt,manifest):
     if names!=set(receipt['members']):raise ValueError('Return member inventory is incomplete')
 
 
-def remote_return_program(manifest):
+def remote_return_program(manifest,accounting=False):
     """SSH starts in the account home, so bind imports to the admitted root."""
     remote_receipt='outputs/fusion_followup/runs/'+manifest['identity']+'/return/receipt.json'
     # The source supervisor and complete worker group must actually be gone.
-    return """import json,os,pathlib,sys
+    program="""import json,os,pathlib,sys
 root=pathlib.Path(%r).resolve();os.chdir(root);sys.path.insert(0,str(root))
 from scripts import fusion_9h_guard as guard
 run=root/'outputs/fusion_followup/runs'/%r
@@ -91,8 +91,66 @@ dispatch=json.loads((run/'scheduler_dispatch.json').read_text())
 assert state['stage']=='completed' and state['worker_returncode']==0
 assert not guard.exact_alive(state['guard']) and not guard.group_members(state['worker'])
 assert not guard.exact_alive(dispatch['scheduler']), 'Return scheduler still active'
-print((root/%r).read_text())
-"""%(REMOTE_ROOT,manifest['identity'],remote_receipt)
+"""%(REMOTE_ROOT,manifest['identity'])
+    if not accounting:return program+"print((root/%r).read_text())\n"%remote_receipt
+    return program+"""import hashlib
+paths=list((run/'delivery_fit/usage_events').glob('*.json'))
+assert len(paths)==3,'Need all three completed engineering usage events'
+parent=root/'outputs/fusion_followup/runs'/%r
+for name in ('probe_01','probe_02','probe_03'):
+ for filename in ('guard_request.json','guard_state.json','probe_result.json'):
+  paths.append(parent/'attempts'/name/filename)
+files={}
+for path in sorted(paths):
+ assert path.is_file() and not path.is_symlink()
+ content=path.read_text();data=content.encode()
+ files[str(path.relative_to(root))]={'content':content,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+value={'manifest_identity':%r,'return_receipt_identity':json.loads((root/%r).read_text())['identity'],'files':files}
+print(json.dumps(value))
+"""%(manifest['parent_identity'],manifest['identity'],remote_receipt)
+
+
+def fetch_accounting(manifest,receipt):
+    """Return small immutable usage/probe evidence omitted from the GPU bundle."""
+    directory=focus.FOLLOW/'returns'/manifest['identity'];proof_path=directory/'accounting_receipt.json'
+    if proof_path.exists():proof=identified(proof_path)
+    else:
+        result=subprocess.run(['ssh','-p','19046',*SSH_OPTIONS,HOST,REMOTE_ROOT+'/.venv/bin/python -'],
+            input=remote_return_program(manifest,accounting=True),text=True,capture_output=True,timeout=30,check=True)
+        proof=json.loads(result.stdout);proof['identity']=identity(proof)
+    if proof['manifest_identity']!=manifest['identity'] or proof['return_receipt_identity']!=receipt['identity']:
+        raise ValueError('Accounting return is not bound to the exact formal archive receipt')
+    expected_probes={'outputs/fusion_followup/runs/'+manifest['parent_identity']+'/attempts/'+name+'/'+filename
+        for name in ('probe_01','probe_02','probe_03') for filename in ('guard_request.json','guard_state.json','probe_result.json')}
+    usage_prefix='outputs/fusion_followup/runs/'+manifest['identity']+'/delivery_fit/usage_events/'
+    usage_names=set(proof['files'])-expected_probes
+    if (not expected_probes.issubset(proof['files']) or len(usage_names)!=3
+            or any(not name.startswith(usage_prefix) or Path(name).parent.as_posix()!=usage_prefix.rstrip('/')
+                   or not name.endswith('.json') for name in usage_names)):
+        raise ValueError('Accounting supplement differs from its fixed file allowlist')
+    for name,row in proof['files'].items():
+        safe_relative(name);data=row['content'].encode();json.loads(row['content'])
+        if len(data)!=row['bytes'] or hashlib.sha256(data).hexdigest()!=row['sha256']:
+            raise ValueError('Accounting supplement bytes differ')
+        target=ROOT/name
+        if target.is_symlink() or (target.exists() and digest(target)!=row['sha256']):
+            raise ValueError('Preserve different local accounting evidence')
+        for ancestor in target.parents:
+            if ancestor==ROOT:break
+            if ancestor.is_symlink():raise ValueError('Accounting evidence crosses a symlink')
+    # Check every conflict before persisting any restored usage/probe source.
+    for name,row in proof['files'].items():
+        target=ROOT/name
+        if not target.exists():
+            target.parent.mkdir(parents=True,exist_ok=True)
+            partial=target.with_name(target.name+'.accounting_partial')
+            if partial.exists():partial.rename(partial.with_name(partial.name+'.'+str(time.time_ns())))
+            with partial.open('xb') as output:
+                output.write(row['content'].encode());output.flush();os.fsync(output.fileno())
+            if digest(partial)!=row['sha256']:raise ValueError('Persisted accounting evidence differs')
+            partial.rename(target)
+    focus.immutable(proof_path,proof)
+    return proof
 
 
 def fetch(path,manifest):
@@ -130,6 +188,7 @@ def fetch(path,manifest):
     restored={'manifest_identity':manifest['identity'],'receipt_identity':receipt['identity'],
         'archive_sha256':receipt['sha256'],'all_file_hashes_verified':True,'Q2_Q3_scored':False}
     restored['identity']=identity(restored);focus.immutable(directory/'restored_receipt.json',restored)
+    fetch_accounting(manifest,receipt)
     return receipt,restored
 
 
@@ -152,6 +211,7 @@ def binding(path,manifest,parent):
     restored=identified(focus.FOLLOW/'returns'/manifest['identity']/'restored_receipt.json')
     body={'manifest_identity':manifest['identity'],'matrix_sha256':digest(path),
         'return_binding':restored,'entry_sha256':digest(ENTRY),
+        'accounting_receipt_sha256':digest(focus.FOLLOW/'returns'/manifest['identity']/'accounting_receipt.json'),
         'outcome':{'new_model_exported':True,'deployment_identity':exported['identity'],
             'development_qualification_passed':review['development_qualification_passed']},
         'source_identity':parent['source_identity'],'plan_sha256':parent['plan_sha256'],'limit':parent['limit'],
