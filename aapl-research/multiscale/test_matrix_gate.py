@@ -3,7 +3,8 @@ from copy import deepcopy
 import hashlib
 import json
 
-from .matrix_gate import BENCHMARK_SHAPES, REQUIRED_SOURCE_FILES, locked_protocol_issues, review_issues, task_inventory
+from .matrix_gate import (BENCHMARK_SHAPES, REQUIRED_SOURCE_FILES, _source_io_evidence,
+                          locked_protocol_issues, review_issues, task_inventory)
 from .spec import DEV_END, MODELS, PROFILES, ROOT, TARGETS
 from .test_matrix_plan import synthetic_admission
 
@@ -130,3 +131,18 @@ def test_locked_protocol_requires_exact_tasks_sources_and_eligible_folds():
     assert "frozen_protocol_identity_or_scope_invalid" in issues and "frozen_job_insufficient_origins" in issues
     changed = deepcopy(protocol); changed["source_code_sha256"][REQUIRED_SOURCE_FILES[0]] = "0" * 64
     assert "frozen_source_code_identity_changed" in locked_protocol_issues(admission, "a" * 64, changed, "b" * 64)
+
+
+def test_io_evidence_is_bound_to_source_host_and_selected_scales(tmp_path):
+    from .source_io_benchmark import SOURCE_FILES
+    source_hashes = {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest() for name in SOURCE_FILES}
+    report = {"scope": "fictional test fixture", "status": "candidate_read_only_io_not_admitted",
+              "admission_sha256": "a" * 64, "host": "synthetic-host", "frequencies": ["hour", "minute"],
+              "Q3_values_read": False, "model_trained": False, "experiment_scored": False,
+              "source_sha256_at_start": source_hashes, "source_sha256_at_end": source_hashes,
+              "records": [{"frequency": "hour"}, {"frequency": "minute"}]}
+    item = evidence(tmp_path / "synthetic-io.json", json.dumps(report))
+    assert _source_io_evidence(item, tmp_path, "a" * 64, ["hourly", "minute"], "synthetic-host")
+    assert not _source_io_evidence(item, tmp_path, "b" * 64, ["hourly", "minute"], "synthetic-host")
+    assert not _source_io_evidence(item, tmp_path, "a" * 64, ["monthly", "minute"], "synthetic-host")
+    assert not _source_io_evidence(item, tmp_path, "a" * 64, ["hourly", "minute"], "another-host")

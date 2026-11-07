@@ -23,6 +23,7 @@
 - `acquire_kibot_candidate.py`、`audit_kibot_candidate.py`：通过官方公开访客接口获取截止日期内日线并仅在本机核查来源及价格口径；发表权和早期价格口径未确认，数据不用于训练。源数据及派生诊断只留在忽略目录。
 - `benchmark_matrix_synthetic.py`：对五尺度四种神经模型运行受限合成吞吐测量，包含验证与检查点写入；合成价格和本机速度不能证明正式训练收敛、真实数据 I/O 或云端速度。
 - `benchmark_projection.py`：依据合成测量和候选矩阵做有明确遗漏项的时间示例，不构成预算批准或运行保证。
+- `source_io_benchmark.py`：对已生成的截止前候选柱做只读身份校验和加载计时，不训练或输出行情值；回执绑定来源、设备主机和测量代码。系统缓存未清空，不能当作冷盘速度。
 - `coverage_alpha_dates.py`：用候选日期并集和人工常数价格估算年度／季度起点与折数；不拼接真实行情、不训练、不冻结协议。
 - `smoke.py`、`benchmark_local.py`：只作受限本机工程检查，不选择模型或作为预测效果证据。
 
@@ -65,7 +66,8 @@ AAPL_TEST_DIR="$(mktemp -d "$PWD/tmp/multiscale-pytest.XXXXXXXX")"
 AAPL_CPU_IDS='0-11,14-17' AAPL_CPU_THREADS=2 bash scripts/python.sh -m pytest -q \
   --basetemp "$AAPL_TEST_DIR/run" tests/test_core.py multiscale/test_foundations.py \
   multiscale/test_kibot_candidate.py multiscale/test_matrix_plan.py \
-  multiscale/test_matrix_gate.py multiscale/test_matrix_executor.py multiscale/test_aggregate_development.py
+  multiscale/test_matrix_gate.py multiscale/test_matrix_executor.py \
+  multiscale/test_aggregate_development.py multiscale/test_source_io_benchmark.py
 ```
 
 以上 CPU 亲和性避开现有原任务预留的 12、13 号逻辑核心。每次使用新的测试目录，避免 pytest 默认轮换已有 `tmp/pytest-of-ayaka` 会话；新目录保留供用户决定是否清理。市场数据、权重、预测、供应商原始响应和机器收据均在 `outputs/` 忽略目录，不提交 Git。

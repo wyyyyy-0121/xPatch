@@ -21,6 +21,7 @@ REQUIRED_SOURCE_FILES = (
     "multiscale/ridge.py", "multiscale/splits.py", "multiscale/spec.py",
     "multiscale/training.py", "multiscale/mechanism.py", "multiscale/matrix_gate.py",
     "multiscale/matrix_executor.py", "multiscale/verify_development.py", "multiscale/aggregate_development.py",
+    "multiscale/source_io_benchmark.py",
     "aapl/models.py", "aapl/vendor/xpatch_network.py",
 )
 PERIODS = {"minute": 390, "hour": 6, "day": 252, "month": 12}
@@ -133,6 +134,31 @@ def _representative_benchmark(item, workspace: Path, expected_device: str, *, re
         return False
 
 
+def _source_io_evidence(item, workspace: Path, admission_hash: str, selected, host: str, *, synthetic=False):
+    if not _evidence(item, workspace, require_quote=False):
+        return False
+    if synthetic:
+        return True  # Only the separately labeled synthetic self-test uses this fixture.
+    try:
+        from .source_io_benchmark import SOURCE_FILES
+        report = json.loads(Path(item["path"]).read_text(encoding="utf8"))
+        sources = report.get("source_sha256_at_start")
+        needed = {p.frequency for p in PROFILES if p.name in selected}
+        if (report.get("status") != "candidate_read_only_io_not_admitted" or
+                report.get("admission_sha256") != admission_hash or report.get("host") != host or
+                report.get("Q3_values_read") is not False or report.get("model_trained") is not False or
+                report.get("experiment_scored") is not False or
+                not isinstance(report.get("frequencies"), list) or not needed.issubset(set(report["frequencies"])) or
+                not isinstance(sources, dict) or set(sources) != set(SOURCE_FILES) or
+                sources != report.get("source_sha256_at_end") or
+                any(not _digest(digest) or file_digest(ROOT / name) != digest for name, digest in sources.items())):
+            return False
+        measured = {row.get("frequency") for row in report.get("records", []) if isinstance(row, dict)}
+        return needed.issubset(measured)
+    except (OSError, UnicodeError, ValueError, TypeError):
+        return False
+
+
 def review_issues(admission, admission_sha256, review, evidence_root: Path, exposure_note_sha256,
                   *, selected_profiles=None):
     issues = []
@@ -206,7 +232,9 @@ def review_issues(admission, admission_sha256, review, evidence_root: Path, expo
             budget.get("real_source_io_reviewed") is not True or
             not _representative_benchmark(budget.get("benchmark_evidence"), evidence_root, budget.get("device_name"),
                                           require_runtime_source=admission.get("data_kind", "market") != "synthetic_test") or
-            not _evidence(budget.get("real_source_io_evidence"), evidence_root, require_quote=False) or
+            not _source_io_evidence(budget.get("real_source_io_evidence"), evidence_root, admission_sha256,
+                                    selected, budget.get("host"),
+                                    synthetic=admission.get("data_kind", "market") == "synthetic_test") or
             not _evidence(budget.get("projection_evidence"), evidence_root, require_quote=False)):
         issues.append("representative_benchmark_or_resource_budget_incomplete")
     needs_authorization = (budget.get("location") == "explicitly_authorized_cloud" or
