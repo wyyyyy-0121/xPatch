@@ -72,6 +72,10 @@ opened. The original prediction batch size of 512 is retained because a
 different batch shape can change floating-point arithmetic. The fixed
 tolerances are reported together with exact equality and maximum differences.
 `--admission` can select the original matching admission directory explicitly.
+For the original H60-return first fold, the audit retains the separate control
+and neural-stage check identities instead of requiring a schema-2 receipt that
+the original run did not create. Its fresh process restores all four neural
+predictors on all original validation origins using that layout.
 
 These checks measure different things: inventory integrity, arithmetic
 recalculation, and predictor restoration. None changes the historical

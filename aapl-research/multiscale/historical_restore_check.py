@@ -150,15 +150,114 @@ def check_fold(folder, expected_receipt, source=SOURCE):
             'runtime': {'python': sys.version.split()[0], 'numpy': np.__version__, 'torch': str(torch.__version__)}}
 
 
+def check_first_minute_fold(controls_check, neural_check, source=SOURCE):
+    """Audit the original H60-return fold whose controls and neural stage split files."""
+    import numpy as np
+    import torch
+    from multiscale.bars import Bars
+    from multiscale.features import CloseWindows
+    from multiscale.historical_coverage import NEURAL as neural_dir, verify_first_minute_fold
+    from multiscale.matrix_executor import read_bars
+    from multiscale.training import digest_indices, predict_best
+
+    require(1 <= len(os.sched_getaffinity(0)) <= 2 and
+            os.environ.get('CUDA_VISIBLE_DEVICES') == '-1', 'Use at most two CPUs with GPU hidden')
+    torch.set_num_threads(min(2, len(os.sched_getaffinity(0))))
+    torch.set_num_interop_threads(1)
+    torch.use_deterministic_algorithms(True)
+    evidence = verify_first_minute_fold()
+    require(evidence['controls_check_sha256'] == controls_check and
+            evidence['neural_check_sha256'] == neural_check,
+            'First-fold independent-check identities differ from the selected coverage snapshot')
+    plan = load(neural_dir / 'PRIVATE_PROTOCOL.json')
+    result = load(neural_dir / 'PRIVATE_RESULT.json')
+    source = Path(source).resolve()
+    require(source.is_relative_to(OUT) and digest(source / 'admission.json') == plan['admission_sha256'],
+            'First-fold admission identity differs')
+    admission = load(source / 'admission.json')
+    bars = read_bars(source, admission, 'minute')
+    require(admission['Q3_values_read'] is False and str(bars.session_date[-1]) <= '2026-06-30',
+            'First-fold source crosses the protected cutoff')
+    model_results, common_origins = [], None
+    for name in NEURAL:
+        record = result['models'][name]
+        checkpoint = neural_dir / name / 'best.pt'
+        prediction_path = neural_dir / ('prediction_' + name + '.npz')
+        require(digest(checkpoint) == record['best_checkpoint_sha256'] and
+                digest(prediction_path) == record['prediction_sha256'], 'First-fold predictor changed')
+        saved = torch.load(checkpoint, map_location='cpu', weights_only=True)
+        require(saved['identity'] == record['training_identity'] and
+                saved['config']['model'] == name and saved['config']['horizon'] == 60 and
+                saved['config']['target'] == 'future_log_return', 'First-fold checkpoint task differs')
+        for key in ('lookback', 'max_epochs', 'patience', 'batch_size', 'learning_rate', 'seed'):
+            require(saved['config'][key] == plan[key], 'First-fold checkpoint configuration differs: ' + key)
+        with np.load(prediction_path, allow_pickle=False) as stored:
+            require(set(stored.files) == {'origins', 'decision_ns', 'prediction'}, 'Unexpected prediction fields')
+            origins, decisions, expected = (stored[key].copy() for key in ('origins', 'decision_ns', 'prediction'))
+        require(len(origins) == evidence['validation_origins'] and
+                digest_indices(origins) == evidence['validation_sha256'] and
+                np.array_equal(decisions, bars.end_ns[origins]), 'First-fold origins differ')
+        if common_origins is None:
+            common_origins = origins
+        require(np.array_equal(origins, common_origins), 'First-fold model origins differ')
+        end = int(origins[-1]) + 1
+        historical = Bars(bars.frequency, bars.start_ns[:end], bars.end_ns[:end], bars.close[:end],
+                          bars.observed[:end], bars.session_date[:end])
+        windows = CloseWindows(historical, plan['lookback'], admission['split_actions'])
+        window_indices = origins[:, None] + np.arange(1 - plan['lookback'], 1)
+        require(np.all(historical.end_ns[window_indices] <= decisions[:, None]), 'Post-decision input detected')
+        actual = predict_best(checkpoint, windows, origins, record['training_identity'],
+                              device='cpu', batch_size=512)
+        require(actual.shape == expected.shape and np.isfinite(actual).all() and
+                np.allclose(actual, expected, rtol=RTOL, atol=ATOL), 'First-fold restored forecasts differ')
+        require(digest(checkpoint) == record['best_checkpoint_sha256'], 'Audit changed first-fold checkpoint')
+        model_results.append({'model': name, 'checkpoint_sha256': digest(checkpoint),
+                              'training_identity': record['training_identity'], 'origins_checked': len(origins),
+                              'horizon': 60, 'max_absolute_difference': float(np.max(np.abs(actual - expected))),
+                              'exact_array_equal': bool(np.array_equal(actual, expected)),
+                              'same_saved_forecasts_within_tolerance': True,
+                              'post_decision_values_used_in_input_windows': False})
+    return {'status': 'saved_neural_restore_checked', 'fold_directory': str(neural_dir),
+            'source_layout': 'separate_original_controls_and_neural_stage',
+            'controls_check_sha256': controls_check, 'neural_check_sha256': neural_check,
+            'profile': 'minute', 'horizon': 60, 'target': 'future_log_return',
+            'validation_origins_checked': len(common_origins), 'models': model_results,
+            'rtol': RTOL, 'atol': ATOL, 'training_started': False, 'saved_target_arrays_opened': False,
+            'Q3_values_read': False, 'device': 'cpu', 'logical_cpu_set': sorted(os.sched_getaffinity(0)),
+            'runtime': {'python': sys.version.split()[0], 'numpy': np.__version__, 'torch': str(torch.__version__)}}
+
+
+def fold_worker_command(row, output, admission):
+    """Select the original source layout without creating a replacement fold receipt."""
+    evidence = row['evidence']
+    command = [sys.executable, '-m', 'multiscale.historical_restore_check']
+    if 'fold_directory' in evidence:
+        command += ['--fold', evidence['fold_directory'], '--receipt-sha256', evidence['receipt_sha256']]
+    else:
+        require((row['profile'], row['horizon'], row['target'], row['fold']) ==
+                ('minute', 60, 'future_log_return', 1), 'Unexpected nonstandard fold source layout')
+        command += ['--first-minute-fold', '--controls-check-sha256', evidence['controls_check_sha256'],
+                    '--neural-check-sha256', evidence['neural_check_sha256']]
+    return command + ['--output', str(output), '--admission', str(admission.resolve())]
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--coverage', type=Path)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--fold', type=Path)
     parser.add_argument('--receipt-sha256')
+    parser.add_argument('--first-minute-fold', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('--controls-check-sha256', help=argparse.SUPPRESS)
+    parser.add_argument('--neural-check-sha256', help=argparse.SUPPRESS)
     parser.add_argument('--admission', type=Path, default=SOURCE,
                         help='Original cutoff-limited admission directory')
     args = parser.parse_args()
+    require(not (args.fold and args.first_minute_fold), 'Choose only one fold source layout')
+    if args.first_minute_fold:
+        write_new(args.output, check_first_minute_fold(args.controls_check_sha256,
+                                                      args.neural_check_sha256, args.admission))
+        return
     if args.fold:
         write_new(args.output, check_fold(args.fold, args.receipt_sha256, args.admission))
         return
@@ -185,12 +284,9 @@ def main():
                OPENBLAS_NUM_THREADS='1', MKL_NUM_THREADS='1', PYTHONPATH=str(ROOT))
     for row in rows:
         evidence = row['evidence']
-        require('fold_directory' in evidence, 'A completed task lacks a schema-2 fold')
         name = f"{row['profile']}_h{row['horizon']}_{row['target']}_f{row['fold']}.json"
         path = checks / name
-        command = [sys.executable, '-m', 'multiscale.historical_restore_check', '--fold', evidence['fold_directory'],
-                   '--receipt-sha256', evidence['receipt_sha256'], '--output', str(path),
-                   '--admission', str(args.admission.resolve())]
+        command = fold_worker_command(row, path, args.admission)
         child = subprocess.run(command, cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
         require(child.returncode == 0, 'Fresh-process restore failed: ' + name + '\n' + child.stderr[-3000:])
         results.append({'fold': row['fold'], 'check': str(path.resolve()),
