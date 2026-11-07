@@ -69,7 +69,7 @@ Alpaca 文档说明日柱按纽约自然日聚合 [4]。本工作暂将日柱最
 
 1. Stitsyuk, A. & Choi, J. *xPatch: Dual-Stream Time Series Forecasting with Exponential Seasonal-Trend Decomposition*. AAAI, 2025. https://ojs.aaai.org/index.php/AAAI/article/view/34270
 2. Zhang, Z., Zohren, S. & Roberts, S. *DeepLOB: Deep Convolutional Neural Networks for Limit Order Books*. https://arxiv.org/abs/1808.03668v6
-3. Ballarin, G., Capra, J. & Dellaportas, P. *Multi-Horizon Echo State Network Prediction of Intraday Stock Returns*. https://arxiv.org/abs/2504.19623v2
+3. Ballarin, G., Capra, J. & Dellaportas, P. *Multi-Horizon Echo State Network Prediction of Intraday Stock Returns*. arXiv version 1, 2025. https://arxiv.org/abs/2504.19623v1
 4. Alpaca, *Market Data FAQ: How are bars aggregated?* https://docs.alpaca.markets/us/docs/market-data-faq
 
 已有来源阅读范围与版本记录见上级目录的 `METHOD_REVIEW.md`、`FUSION_RELATED_WORK.md` 和 `FUSION_REFERENCES.bib`。当前参考资料尚不足以证明方法新颖性或支持完整综述。
