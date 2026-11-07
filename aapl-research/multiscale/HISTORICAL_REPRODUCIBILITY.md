@@ -2,7 +2,9 @@
 
 These commands verify the local AAPL multiscale cohort started on 7 November
 2026. They preserve the original source, protocol, checkpoint and exposure
-identities. They do not train models or access the sealed 2026Q3 observations.
+identities. Inventory, scoring and prediction checks do not train models.
+The separate restart check performs eight bounded optimizer updates on copies
+of archived training checkpoints. None accesses sealed 2026Q3 observations.
 The permission update is recorded separately in `DATA_PERMISSION_STATUS.md`.
 
 The fixed inventory has 20 tasks and 100 chronological task-folds. Its paths
@@ -28,7 +30,7 @@ receipts to relocate or relabel a run.
 
 All examples use at most two logical CPUs and hide CUDA. Set the CPU IDs to two
 available processors on the execution machine. On the current workstation,
-the shared set `24,26` is used for the night restriction. Use a new output name
+the shared set `24,26` is reserved for these checks. Use a new output name
 for each run; verification commands do not overwrite earlier receipts.
 
 ```bash
@@ -76,6 +78,60 @@ recalculation, and predictor restoration. None changes the historical
 development status, establishes convergence, or completes the final inference
 package or an interrupted training recovery test.
 
+## All-task result compilation
+
+```bash
+AAPL_CPU_IDS=24,26 AAPL_CPU_THREADS=2 CUDA_VISIBLE_DEVICES=-1 \
+  bash scripts/python.sh -m multiscale.historical_results \
+  --coverage outputs/multiscale/reproduction/coverage_run1.json \
+  --output outputs/multiscale/reproduction/full_results_run1
+```
+
+The default requires all 100 verified folds. Add `--allow-partial` to create an
+explicit interim compilation. All 20 tasks, 160 pooled model slots, 800 model
+folds, 400 planned neural fits and 320 model/block interval slots remain in the
+tables. Pending cells stay empty. Completed evidence must still match the
+verified inventory; later completions do not alter the saved snapshot.
+
+The compiler recalculates endpoint and path metrics from the original arrays,
+including every path step. It checks paired origin identities and weights by
+the number of origins when pooling. It reproduces the existing descriptive
+analysis: 5,000 non-circular moving-block draws, seed 2026, nominal 95% percentile
+intervals on the full original source session grid. Annual, quarterly, monthly,
+hourly and minute block pairs are 12/24 months, 3/6 months, 21/42 sessions,
+2/5 sessions and 1/5 sessions. It reports no development p-values; degenerate or
+insufficient intervals remain undefined. Annual nonoverlapping label windows
+are a separate descriptive subset, not an effective independent sample size.
+
+`TRAINING_MODELS.csv` records actual epoch caps, early stopping, optimizer steps
+and hashed learning histories. `FOLD_ELAPSED.csv` records each completed stage
+once, rather than repeating its cost for all eight models. The first H60-return
+fold has separate control and neural stages. Original raw elapsed receipts are
+unchanged. Live workers suspended during the night include that suspension in
+their monotonic wall envelope, despite the original receipt's active-time
+label. A separate estimate subtracts the recorded pause envelope for those
+workers; it is not exact CPU time. Parallel stage sums are not the study's
+elapsed duration, and original queue budgets are accounted separately.
+
+## Real archived-checkpoint process restart
+
+```bash
+AAPL_CPU_IDS=24,26 AAPL_CPU_THREADS=2 CUDA_VISIBLE_DEVICES=-1 \
+  bash scripts/python.sh -m multiscale.historical_training_restart \
+  --output outputs/multiscale/historical_training_recovery/new_run
+```
+
+This checks two immutable real-data mid-epoch snapshots: GRU H60-return fold 4
+and xPatch H60-return fold 5. Each case compares two continuous updates with one
+update, exit code 73, and a second update in a fresh process. It reconstructs
+the original training identity, purged inner split and scaler. All checkpoint
+fields, including optimizer, permutation, cursor and RNG, must agree exactly.
+The source snapshots remain unchanged; original workers and deadlines are not
+modified. The check uses six fresh processes and eight updates in total, with
+a 180-second overall admission and 60-second per-process cap. It reads training
+labels but scores no validation targets. This is a bounded CPU engineering
+check, separate from full-fold real-data recovery and synthetic CUDA recovery.
+
 ## Focused tests
 
 ```bash
@@ -84,7 +140,8 @@ AAPL_CPU_IDS=24,26 AAPL_CPU_THREADS=2 CUDA_VISIBLE_DEVICES=-1 \
   --basetemp tmp/historical-tools-pytest-new-run \
   multiscale/test_historical_coverage.py \
   multiscale/test_historical_minute_check.py \
-  multiscale/test_historical_restore_check.py
+  multiscale/test_historical_restore_check.py \
+  multiscale/test_historical_results.py
 ```
 
 The completion checks exercise mismatched receipts, origins, protocols,
@@ -92,3 +149,6 @@ protected-period flags, changed source files and stale verification selection.
 Metric checks cover directional abstentions, weighting, overlap and the strict
 cutoff. Source-path checks reject traversal and changed bytes. The current
 inventory check is skipped when its local research outputs are absent.
+Compilation checks also cover duplicate or missing cells, changed completed
+evidence, unequal fold sizes, missing session groups, degenerate intervals and
+the distinction between raw elapsed envelopes and pause-adjusted estimates.
