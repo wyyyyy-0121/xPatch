@@ -14,7 +14,7 @@
 2. 直接以价格为目标，与直接以累计 log 收益为目标，是否在各自的评价单位和期限下表现不同？
 3. 在分钟尺度，以共享编码器预测多个跨度，是否能在配对数据及成本约束下改善独立训练？该项只有在实际完成对照后才能回答。
 
-xPatch 使用指数移动平均分解和趋势/残差双流网络；其原论文通用时间序列结果不能直接证明 AAPL 金融预测有效 [1]。DeepLOB 使用限价订单簿和方向分类标签，与本研究使用的收盘价及固定交易柱跨度不同 [2]。多跨度收益预测已有相关研究 [3, 6]；金融 K 线预训练生成模型 Kronos 使用不同的多变量信息 [5]，指数与成分股预测协调也是不同的跨序列设置 [7]。当前主矩阵没有运行这些扩展方法。最终贡献和新颖性须在完成直接相关文献检索及实验后判断。
+xPatch 使用指数移动平均分解和趋势/残差双流网络；其原论文通用时间序列结果不能直接证明 AAPL 金融预测有效 [1]。DeepLOB 使用限价订单簿和方向分类标签，与本研究使用的收盘价及固定交易柱跨度不同 [2]。多跨度收益预测已有相关研究 [3, 6]；金融 K 线预训练生成模型 Kronos 使用不同的多变量信息 [5]。Mattera 等的作者版还对包含 AAPL 的道指成分股开展日线多跨度预测，并比较随机游走及跨序列预测协调 [7]；本研究不使用其跨股票信息或执行该协调方法，不能直接比较数值。当前主矩阵没有运行这些扩展方法。最终贡献和新颖性须在完成直接相关文献检索及实验后判断。
 
 ## 2. 任务定义
 
@@ -42,6 +42,8 @@ Alpaca 文档说明日柱按纽约自然日聚合 [4]。本工作暂将日柱最
 ## 4. 方法与评价方案
 
 所有模型使用同一任务的合法起点和历史信息。无训练基线为最后收盘价、漂移和固定历史周期；Ridge 使用带 L2 正则的多输出回归。神经模型为 MLP、GRU、LSTM 和基于原生 xPatch 网络的适配。当前 xPatch 适配新增价格锚点读出；H=1 时使用网络的 H=2 输出头并取第一步，须在最终实验设置中披露，不能称为对原论文实验的完全复现。
+
+当前实现的价格漂移按预测时点股数单位的价格线性外推并设正数下限；收益漂移则在对数收益尺度线性外推，两者不是同一预测的简单变换。季节性基线重复预测时点前已知、按当时股数单位调整的完整周期。具体回看长度和周期须在正式评分前冻结，比较目标表示时须披露基线定义差异。
 
 预定评价为按时间向前的五折开发比较。训练标签的实际完成时间必须严格早于验证开始时刻；内层早停尾段同样隔离，所有标准化参数只由内层拟合数据估计。短历史导致无法形成有意义的折时，应在评分前修订并记录，不在看到分数后挑选折。训练预算、学习曲线、种子、拟合次数和未收敛状态必须公开。
 
@@ -73,6 +75,6 @@ Alpaca 文档说明日柱按纽约自然日聚合 [4]。本工作暂将日柱最
 4. Alpaca, *Market Data FAQ: How are bars aggregated?* https://docs.alpaca.markets/us/docs/market-data-faq
 5. Shi, Y. 等，*Kronos: A Foundation Model for the Language of Financial Markets*. arXiv version 1, 2025. https://arxiv.org/abs/2508.02739v1
 6. Kroujiline, D. 等，*Forecasting Stock Market Returns Over Multiple Time Horizons*. arXiv version 1, 2015. https://arxiv.org/abs/1508.04332v1
-7. Mattera, R., Athanasopoulos, G. & Hyndman, R. J. “Improving Out-of-Sample Forecasts of Stock Price Indexes with Forecast Reconciliation and Clustering.” *Quantitative Finance*, 24(11), 1641–1667, 2024. https://doi.org/10.1080/14697688.2024.2412687
+7. Mattera, R., Athanasopoulos, G. & Hyndman, R. J. “Improving Out-of-Sample Forecasts of Stock Price Indexes with Forecast Reconciliation and Clustering.” *Quantitative Finance*, 24(11), 1641–1667, 2024. https://doi.org/10.1080/14697688.2024.2412687；本次核对的作者稿：https://robjhyndman.com/papers/dow_hts.pdf
 
 已有来源阅读范围与版本记录见上级目录的 `METHOD_REVIEW.md`、`FUSION_RELATED_WORK.md` 和 `FUSION_REFERENCES.bib`。当前参考资料尚不足以证明方法新颖性或支持完整综述。
