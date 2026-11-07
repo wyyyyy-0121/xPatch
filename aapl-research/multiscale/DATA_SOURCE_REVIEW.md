@@ -10,7 +10,7 @@
 
 | 来源 | 已核实的信息 | 尚缺的条件 |
 | --- | --- | --- |
-| 现有 Alpaca SIP/raw 分钟数据 | 2021 年至 2026 年 6 月的开发资料，既有身份及分钟覆盖已核对；可构建完整交易小时柱。[官网条款](https://s3.amazonaws.com/files.alpaca.markets/disclosures/library/TermsAndConditions.pdf)规定个人、非商业使用，并引用适用的额外数据协议。 | 本轮新任务的来源、口径、论文发表权限和切分仍须冻结；旧准入不自动证明多尺度预测有效。 |
+| 现有 Alpaca SIP/raw 分钟数据 | 2021 年至 2026 年 6 月的开发资料，既有身份及分钟覆盖已核对；可构建完整交易小时柱。[官网条款](https://s3.amazonaws.com/files.alpaca.markets/disclosures/library/TermsAndConditions.pdf)规定个人、非商业使用，并引用适用的额外数据协议。官网披露的 [Nasdaq 协议](https://files.alpaca.markets/disclosures/library/NASDAQ+OMX+Global+Subscriber+Agreement.pdf)将适用非专业用户的信息限定为个人使用；[NYSE 协议](https://files.alpaca.markets/disclosures/library/NYSE+Market+Data+Display+Services+Agreement.pdf)对市场数据及其衍生信息有向他人提供的限制。 | 这些公开文件并不确认该账号实际签署的版本或具体发表权；论文、图表、模型权重及衍生统计是否可向第三方提供仍须书面核实。旧数据准入不自动证明多尺度预测有效。 |
 | Alpaca 日线 | 实际返回 2016-01-04 至 2026-06-30；末日日柱在保护边界之后才完整。 | 约 10.4 年，低于年度原定十五年；季度首折样本也过少。 |
 | [Kaggle：Kenil Patel](https://www.kaggle.com/datasets/kpatel00/apple-stock-prices-updated-15-august-2024) | 上传页标注 CC0，说明可用于教育和研究；日线为 1980-12-12 至 2024-09-20，另有分红和拆股表。 | 上传者仅称来自公开金融记录，未列出原始行情供应商；原始权利链和复权规则未完整核实，尚不能作为名义价格准入。 |
 | [Kaggle：Rishabh K](https://www.kaggle.com/datasets/rishabhkmr/appleaapl-historical-share-price-since-listing) | 上传页标注 CC0，日线为 1980-12-12 至 2022-07-15。 | 与上项重合的 10,486 个交易日收盘价逐值相同；不能视为两份独立行情。原始来源未确认。 |
@@ -34,6 +34,8 @@
 CRSP/WRDS 信息仅为公开产品及账号说明，本次没有登录、请求行情或认定个人可用。供咨询学校图书馆或指导教师的英文草稿在本机 `outputs/multiscale/CRSP_WRDS_LIBRARY_QUERY_EN.md`；原网页与哈希回执在 `outputs/multiscale/source_references/crsp_wrds_20261107.bXKgllpL/`。这条机构渠道可与 Kibot、Alpaca 书面询问并行，但不能保证在六天内开通。
 
 2026-11-07 查询时，Norgate 美国股票官网列示 Gold 六个月 198 美元、Platinum 六个月 346.50 美元；具体费用及适用许可可能变化，未核实税费。[官方 FAQ](https://norgatedata.com/data-package-faq.php)说三周试用仅含两年历史，不能仅凭试用满足年度最低历史要求，亦提示 Nasdaq 1992 年前覆盖较有限。Gold 的最近 20 年可能满足原定 15 年下限，但不能据产品级说明保证具体 AAPL 日期可用；Platinum 的历史更长且成本更高。个人学术使用、论文及复现权限的可选询问信在本机 `outputs/multiscale/NORGATE_PUBLICATION_QUERY_EN.md`，仅备用户选择，尚未发送；官方页面的提取摘要和响应哈希在 `outputs/multiscale/source_references/vendor_public_docs_20261107T132240Z/` 与 `vendor_public_docs_20261107T132100Z/`。这些回执不含实际行情。
+
+2026-11-07 另从 Alpaca 的[公开披露页](https://alpaca.markets/disclosures)取得 Nasdaq Global Subscriber Agreement 和 NYSE Market Data Display Services Agreement。前者第 1 节对非专业用户写明个人使用，第 12 节将可还原信息纳入 Information；后者第 1、5、11 节分别定义包含衍生信息的市场数据、限制向他人提供、将非专业用户限定为个人非业务用途。文件所列版本较旧，是否适用于实际账号、历史 API 和非可还原论文统计不能仅凭这些页面断定。两份 PDF、文本及响应哈希在本机 `outputs/multiscale/source_docs/alpaca_exchange_agreements_20261107/`；本次没有读取账户凭据、提交申请或请求新行情。
 
 ## 追加的公开数据集元数据核对
 
