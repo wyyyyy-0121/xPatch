@@ -73,10 +73,13 @@ def paired_block_bootstrap(loss_difference, groups, *, block_length: int, resamp
         if (inverse >= len(unique)).any() or not np.array_equal(unique[inverse], group):
             raise ValueError("An observed group is absent from the supplied full order")
         grid_status = "caller_supplied_full_order"
-    if not 1 <= block_length <= len(unique):
-        raise ValueError("Block length must fit the number of observed groups")
+    if not 1 <= block_length < len(unique):
+        raise ValueError("Block length must allow at least two distinct block starts")
     sums = np.bincount(inverse, weights=diff, minlength=len(unique))
     counts = np.bincount(inverse, minlength=len(unique))
+    observed_groups = int(np.count_nonzero(counts))
+    if observed_groups < 2:
+        raise ValueError("At least two observed groups are required for block resampling")
     observed = float(diff.mean())
     rng = np.random.default_rng(seed)
     block_count = int(np.ceil(len(unique) / block_length))
@@ -93,15 +96,23 @@ def paired_block_bootstrap(loss_difference, groups, *, block_length: int, resamp
             continue
         draws[i] = sums[sample].sum() / counts[sample].sum()
         i += 1
-    tail = (1.0 - confidence) / 2
-    lo, hi = np.quantile(draws, [tail, 1 - tail])
-    p = (1 + np.count_nonzero(draws - observed <= observed)) / (resamples + 1)
-    return {"groups": len(unique), "origins": len(diff), "block_length": block_length,
+    varying = bool(np.any(draws != draws[0]))
+    if varying:
+        tail = (1.0 - confidence) / 2
+        lo, hi = np.quantile(draws, [tail, 1 - tail])
+        interval = [float(lo), float(hi)]
+        p = float((1 + np.count_nonzero(draws - observed <= observed)) / (resamples + 1))
+        interpretation = "Negative loss difference favors the model; apply only to prespecified independent comparisons."
+    else:
+        interval = p = None
+        interpretation = "All resampled means are identical; no interval or p-value is reported."
+    return {"groups": len(unique), "observed_groups": observed_groups, "origins": len(diff),
+            "block_length": block_length, "possible_block_starts": len(unique) - block_length + 1,
+            "blocks_per_resample": block_count, "bootstrap_status": "ok" if varying else "no_resample_variation",
             "resamples": resamples, "empty_resamples_skipped": attempts - resamples,
             "group_grid": grid_status, "seed": seed, "confidence": confidence,
-            "mean_paired_loss_difference": observed, "confidence_interval": [float(lo), float(hi)],
-            "centered_one_sided_p_improvement": float(p),
-            "interpretation": "Negative loss difference favors the model; apply only to prespecified independent comparisons."}
+            "mean_paired_loss_difference": observed, "confidence_interval": interval,
+            "centered_one_sided_p_improvement": p, "interpretation": interpretation}
 
 
 def holm(p_values):

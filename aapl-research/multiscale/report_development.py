@@ -33,8 +33,10 @@ METRICS = ("origins", "endpoint_mse", "endpoint_rmse", "endpoint_mae", "path_mse
 CSV_FIELDS = ("data_kind", "profile", "frequency", "horizon", "target", "primary_endpoint", "model",
               "task_status", "completed_folds", "missing_folds", "omission_reason", "seed",
               "squared_error_unit", "absolute_error_unit", *METRICS,
-              "primary_block_length", "primary_loss_difference_lower", "primary_loss_difference_upper",
-              "sensitivity_block_length", "sensitivity_loss_difference_lower", "sensitivity_loss_difference_upper",
+              "primary_block_length", "primary_interval_status", "primary_groups", "primary_observed_groups",
+              "primary_loss_difference_lower", "primary_loss_difference_upper", "sensitivity_block_length",
+              "sensitivity_interval_status", "sensitivity_groups", "sensitivity_observed_groups",
+              "sensitivity_loss_difference_lower", "sensitivity_loss_difference_upper",
               "annual_nonoverlapping_origins", "annual_first_origin_session", "annual_last_origin_session",
               "annual_first_target_session", "annual_last_target_session", "split_events_in_evaluated_paths",
               "cross_split_origins", "cross_split_endpoint_mse", "cross_split_endpoint_mae", "cross_split_path_mse",
@@ -227,7 +229,10 @@ def _validate_summary(summary, task, completed, protocol_hash, admission_hash, d
                         any(isinstance(v, bool) or not isinstance(v, (float, int)) or not math.isfinite(v)
                             for v in limits) or limits[0] > limits[1]):
                     raise ValueError(f"Invalid descriptive interval for {model}")
-            elif interval.get("status") != "insufficient_groups":
+            elif interval.get("status") in ("insufficient_groups", "degenerate_bootstrap"):
+                if interval.get("confidence_interval") is not None:
+                    raise ValueError(f"Unavailable block interval contains limits for {model}")
+            else:
                 raise ValueError(f"Unexpected block interval status for {model}")
 
 
@@ -518,6 +523,9 @@ def rows(report):
                 interval = intervals[index] if len(intervals) > index else {}
                 limits = interval.get("confidence_interval") if interval.get("status") == "descriptive_development_only" else None
                 row[label + "_block_length"] = interval.get("block_length")
+                row[label + "_interval_status"] = interval.get("status")
+                row[label + "_groups"] = interval.get("groups")
+                row[label + "_observed_groups"] = interval.get("observed_groups")
                 row[label + "_loss_difference_lower"] = limits[0] if limits else None
                 row[label + "_loss_difference_upper"] = limits[1] if limits else None
             nonoverlap = values.get("annual_nonoverlapping_origins") or {}

@@ -152,6 +152,7 @@ def aggregate(admission_dir: Path, review_path: Path, protocol_path: Path, run_d
     session_groups = np.concatenate(groups)
     full_grid = np.unique(labels)
     full_grid = full_grid[(full_grid >= session_groups[0]) & (full_grid <= session_groups[-1])]
+    observed_groups = len(np.unique(session_groups))
     analysis = protocol["analysis"]
     base_mse = float(accum["last_close"]["step_squared"][-1] / accum["last_close"]["n"])
     baseline_nonoverlap = (accum["last_close"]["nonoverlap_squared"] / nonoverlap_count
@@ -171,15 +172,21 @@ def aggregate(admission_dir: Path, review_path: Path, protocol_path: Path, run_d
                    "per_fold_endpoint_mse": data["fold_endpoint_mse"], "descriptive_block_intervals": []}
         difference = np.concatenate(data["endpoint_differences"])
         for length in analysis["block_lengths_by_profile"][profile]:
-            if length > len(full_grid):
-                summary["descriptive_block_intervals"].append({"block_length": length, "status": "insufficient_groups"})
+            if length >= len(full_grid) or observed_groups < 2:
+                summary["descriptive_block_intervals"].append(
+                    {"block_length": length, "status": "insufficient_groups", "groups": len(full_grid),
+                     "observed_groups": observed_groups})
                 continue
             interval = paired_block_bootstrap(difference, session_groups, block_length=length,
                                               resamples=analysis["resamples"], seed=analysis["seed"],
                                               confidence=analysis["confidence"], group_order=full_grid)
             interval.pop("centered_one_sided_p_improvement")
-            interval["status"] = "descriptive_development_only"
-            interval["interpretation"] = "Negative paired loss difference favors the model; this is not independent confirmation."
+            if interval["bootstrap_status"] == "no_resample_variation":
+                interval["status"] = "degenerate_bootstrap"
+                interval["interpretation"] = "All resampled means are identical; no interval is reported."
+            else:
+                interval["status"] = "descriptive_development_only"
+                interval["interpretation"] = "Negative paired loss difference favors the model; this is not independent confirmation."
             summary["descriptive_block_intervals"].append(interval)
         if profile == "annual" and nonoverlap_count:
             mse = data["nonoverlap_squared"] / nonoverlap_count

@@ -74,3 +74,13 @@ def test_synthetic_fold_pooling_and_nonoverlap_do_not_claim_confirmation(tmp_pat
     assert result["models"]["last_close"]["direction_coverage"] == 0
     assert all("centered_one_sided_p_improvement" not in interval
                for interval in result["models"]["mlp"]["descriptive_block_intervals"])
+    assert all(interval["status"] == "degenerate_bootstrap" and interval["confidence_interval"] is None
+               for interval in result["models"]["last_close"]["descriptive_block_intervals"])
+
+    # A single possible block cannot supply a resampling interval.
+    analysis["block_lengths_by_profile"]["annual"] = [37, 38]
+    unavailable = aggregate_module.aggregate(tmp_path, tmp_path, tmp_path, run, "annual", 12,
+                                             "future_log_return", allow_partial=True)
+    intervals = unavailable["models"]["mlp"]["descriptive_block_intervals"]
+    assert [item["status"] for item in intervals] == ["insufficient_groups", "insufficient_groups"]
+    assert all(item["groups"] == 37 and item["observed_groups"] == 8 for item in intervals)

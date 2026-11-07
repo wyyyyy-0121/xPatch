@@ -294,14 +294,24 @@ def test_group_bootstrap_and_holm_use_prespecified_units():
     result = paired_block_bootstrap(np.full(30, -1.0), groups, block_length=3, resamples=200, seed=5)
     assert result["groups"] == 10 and result["origins"] == 30
     assert result["group_grid"] == "observed_groups_only; gaps not checked"
-    np.testing.assert_allclose(result["confidence_interval"], [-1.0, -1.0])
-    assert result["centered_one_sided_p_improvement"] == pytest.approx(1 / 201)
+    assert result["observed_groups"] == 10 and result["possible_block_starts"] == 8
+    assert result["blocks_per_resample"] == 4 and result["bootstrap_status"] == "no_resample_variation"
+    assert result["confidence_interval"] is None and result["centered_one_sided_p_improvement"] is None
+    varied = paired_block_bootstrap(-np.repeat(np.arange(1, 11, dtype=float), 3), groups,
+                                    block_length=3, resamples=200, seed=5)
+    assert varied["bootstrap_status"] == "ok"
+    assert varied["confidence_interval"][0] < varied["confidence_interval"][1]
+    assert varied["centered_one_sided_p_improvement"] is not None
     np.testing.assert_allclose(holm([0.04, 0.001, 0.02]), [0.04, 0.003, 0.04])
     missing_day = paired_block_bootstrap([-1.0, -2.0], [1, 3], block_length=2,
                                          resamples=200, group_order=[1, 2, 3])
     assert missing_day["groups"] == 3 and missing_day["group_grid"] == "caller_supplied_full_order"
     with pytest.raises(ValueError, match="absent"):
         paired_block_bootstrap([-1.0, -2.0], [1, 3], block_length=2, resamples=200, group_order=[1, 2])
+    with pytest.raises(ValueError, match="two distinct block starts"):
+        paired_block_bootstrap([-1.0, -2.0, -3.0, -4.0], [1, 2, 3, 4], block_length=4, resamples=200)
+    with pytest.raises(ValueError, match="two observed groups"):
+        paired_block_bootstrap([-1.0, -2.0], [1, 1], block_length=1, resamples=200, group_order=[1, 2, 3])
 
 
 def test_shared_horizon_objective_weights_prefix_paths_equally():

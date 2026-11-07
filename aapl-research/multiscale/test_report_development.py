@@ -133,6 +133,32 @@ def test_report_rejects_inconsistent_metrics_and_p_values():
                                allow_partial=True, aggregate_task=bad_subgroup)
 
 
+def test_unavailable_block_intervals_remain_blank_in_report():
+    protocol = fictional_protocol(); state = one_partial_state(protocol)
+    def aggregate_task(task, partial):
+        summary = fictional_summary(task, [1, 2], protocol["analysis"])
+        intervals = summary["models"]["mlp"]["descriptive_block_intervals"]
+        intervals[0] = {"block_length": 1, "status": "degenerate_bootstrap", "confidence_interval": None,
+                        "groups": 2, "observed_groups": 2}
+        intervals[1] = {"block_length": 2, "status": "insufficient_groups", "groups": 2, "observed_groups": 2}
+        return summary
+    report = report_module.assemble(protocol, state, PROTOCOL_HASH, ADMISSION_HASH, REVIEW_HASH,
+                                    allow_partial=True, aggregate_task=aggregate_task)
+    row = next(row for row in report_module.rows(report) if row["model"] == "mlp" and row["endpoint_mse"] is not None)
+    assert row["primary_interval_status"] == "degenerate_bootstrap" and row["primary_observed_groups"] == 2
+    assert row["sensitivity_interval_status"] == "insufficient_groups" and row["sensitivity_groups"] == 2
+    assert row["primary_loss_difference_lower"] is None and row["primary_loss_difference_upper"] is None
+    assert row["sensitivity_loss_difference_lower"] is None and row["sensitivity_loss_difference_upper"] is None
+
+    def bad_interval(task, partial):
+        summary = aggregate_task(task, partial)
+        summary["models"]["mlp"]["descriptive_block_intervals"][0]["confidence_interval"] = [0.0, 0.0]
+        return summary
+    with pytest.raises(ValueError, match="Unavailable block interval"):
+        report_module.assemble(protocol, state, PROTOCOL_HASH, ADMISSION_HASH, REVIEW_HASH,
+                               allow_partial=True, aggregate_task=bad_interval)
+
+
 def test_complete_task_is_not_misrepresented_as_complete_study():
     protocol = fictional_protocol()
     jobs = [job for job in protocol["jobs"] if job["profile"] == "hourly" and

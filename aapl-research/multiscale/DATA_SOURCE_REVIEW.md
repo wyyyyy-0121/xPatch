@@ -20,6 +20,8 @@
 | [Twelve Data](https://twelvedata.com/terms) | 先前取得的开发截止内诊断数据覆盖 1980 年至 2026 年 6 月。 | 其条款区分内部使用、非展示使用、不可还原的派生数据和向第三方展示；是否允许当前订阅／演示方式用于论文训练与发布结果尚未确认。 |
 | [Alpha Vantage](https://www.alphavantage.co/documentation/) | 官方文档称月线覆盖 25 年以上；[支持页面](https://www.alphavantage.co/support/)列出免费 API 额度和经过验证的教育项目。 | 月线端点是否可用、价格复权、论文发表权以及截止日期参数均未确认；其[条款](https://www.alphavantage.co/terms_of_service/)将个人许可限定为私人、个人性质的非商业使用。未注册账号，也未请求可能包含封存期行情的最新数据。 |
 | [Massive 股票接口](https://massive.com/docs/rest/stocks/overview) | 官方概览说明可按自定义日期区间请求历史股票 OHLC；其[个人服务条款](https://massive.com/legal/individuals-terms-of-service)将使用限定为本人个人、非商业、非业务用途。 | 尚未确认 AAPL 日线的最早可得日期、适用方案及费用、价格调整口径和论文发表聚合结果的权利。仅检查网页片段，响应未完整读取；没有注册账户或请求市场行情，不能认定候选已准入。 |
+| [Norgate Data](https://norgatedata.com/stockmarketpackages.php) | 美国股票 Gold 方案说明提供最近 20 年历史，Platinum 方案说明追溯到 1990 年；[数据 FAQ](https://norgatedata.com/data-package-faq.php)列出未复权价格，并说明美国日 OHLC 一般来自常规交易时间内符合条件的合并成交。[许可](https://norgatedata.com/subscribe/eula.php)将个人非商业学术研究列入 Personal Use，允许在条件内导出和处理数据。 | 具体 AAPL 覆盖及历史价格质量未验证；个人研究许可不自动证明可向期刊发表误差表、图或权重。Content 与 Derived Data 的定义、论文署名／引用及期刊发表须向供应商确认；订阅到期须删除 Content 和 Information，影响复现。没有注册、订阅、下载或准入行情。 |
+| [Financial Modeling Prep](https://site.financialmodelingprep.com/developer/docs/stable/historical-price-eod-non-split-adjusted) | 官方介绍未按拆股调整的日度 OHLC 数据接口。[服务条款](https://site.financialmodelingprep.com/terms-of-service)第 2.2.1 节将个人许可限定为个人非商业用途，第 2.6.1 节限制向第三方提供服务及衍生信息。 | AAPL 具体历史年限、账户级许可及论文聚合结果发表权未确认；第 6.2 节的终止后删除条款还涉及衍生信息。没有注册、订阅、下载或准入行情。 |
 | [FinMultiTime，论文 v1](https://arxiv.org/html/2506.05019v1) | 论文的资产表将 AAPL 标为具备时间序列；总体覆盖被描述为 2009—2025。美国股票价格序列在表 2 中标为日线，“分钟级”对应新闻文本，不是分钟价格柱；论文称美国日线来自 Yahoo Finance。 | 未核实 AAPL 自身的实际起止日期、调整口径及上游训练／发表授权。论文的 CC BY 4.0 不自动授权第三方行情；本次 Hugging Face 元数据访问超时，未下载数据，不能准入。 |
 | [Kibot 官方访客接口](https://www.kibot.com/api/api-access.html) | 官方说明访客可获取美国股票日线；[历史接口](https://www.kibot.com/api/history-request.html)文档列出日期上下界及 `unadjusted=1` 选项。 | [许可](https://www.kibot.com/license.html)将数据和相关或派生信息用于许可人内部，论文发表聚合结果的权限未确认。实际历史价格口径仍需调查，内部诊断回执留在本机，尚未准入训练。 |
 | [QuantConnect](https://www.quantconnect.com/terms) | 条款描述平台数据可在托管环境内用于研究与算法开发。 | 平台数据导出受到明确限制，学术用途不自动例外；购买的 CLI 数据或机构派生数据协议有单独规定。尚无适合本地研究及发表的适用许可，不取得或绕过平台数据。 |
@@ -30,6 +32,8 @@
 另有一个 [Kaggle 长期数据集](https://www.kaggle.com/datasets/adamvakar/apple-comprehensive-financial-dataset-1980-2026) 标注 CC BY-NC-SA，但其说明明确称行情来自 Yahoo Finance，且保留原数据提供方权利。这说明上传页的开放许可标签不能单独证明上游行情权利；没有下载或准入该候选。
 
 CRSP/WRDS 信息仅为公开产品及账号说明，本次没有登录、请求行情或认定个人可用。供咨询学校图书馆或指导教师的英文草稿在本机 `outputs/multiscale/CRSP_WRDS_LIBRARY_QUERY_EN.md`；原网页与哈希回执在 `outputs/multiscale/source_references/crsp_wrds_20261107.bXKgllpL/`。这条机构渠道可与 Kibot、Alpaca 书面询问并行，但不能保证在六天内开通。
+
+2026-11-07 查询时，Norgate 美国股票官网列示 Gold 六个月 198 美元、Platinum 六个月 346.50 美元；具体费用及适用许可可能变化，未核实税费。[官方 FAQ](https://norgatedata.com/data-package-faq.php)说三周试用仅含两年历史，不能仅凭试用满足年度最低历史要求，亦提示 Nasdaq 1992 年前覆盖较有限。Gold 的最近 20 年可能满足原定 15 年下限，但不能据产品级说明保证具体 AAPL 日期可用；Platinum 的历史更长且成本更高。个人学术使用、论文及复现权限的可选询问信在本机 `outputs/multiscale/NORGATE_PUBLICATION_QUERY_EN.md`，仅备用户选择，尚未发送；官方页面的提取摘要和响应哈希在 `outputs/multiscale/source_references/vendor_public_docs_20261107T132240Z/` 与 `vendor_public_docs_20261107T132100Z/`。这些回执不含实际行情。
 
 ## 追加的公开数据集元数据核对
 
