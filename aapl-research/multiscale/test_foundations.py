@@ -612,6 +612,51 @@ def test_shared_fold_uses_common_h60_purged_samples_for_every_model(tmp_path):
     assert len(receipt["models"]) == 5
 
 
+@pytest.mark.parametrize("invalid_partition", ["train", "fit", "stop", "validation", "missing_history", "missing_target"])
+def test_shared_fold_rejects_ineligible_h60_origins_before_training(tmp_path, monkeypatch, invalid_partition):
+    from . import shared_development
+    from .development import validate_split
+
+    days = pd.bdate_range("2024-01-02", periods=6).strftime("%Y-%m-%d").tolist()
+    missing = (0,) if invalid_partition == "missing_history" else (30,) if invalid_partition == "missing_target" else ()
+    bars = make_minutes([100] * len(days), days, missing=missing)
+    fit = np.arange(11, 19, dtype=np.int64)
+    stop = np.array([201], dtype=np.int64)
+    validation = np.array([401], dtype=np.int64)
+    if invalid_partition == "fit":
+        fit = np.r_[fit, 40]
+    if invalid_partition == "stop":
+        stop = np.array([240], dtype=np.int64)
+    if invalid_partition == "validation":
+        validation = np.array([440], dtype=np.int64)
+    train = np.sort(np.r_[fit, stop, [40] if invalid_partition == "train" else []]).astype(np.int64)
+    fold = {"train": train, "inner": {"fit": fit, "stop": stop}, "validation": validation}
+    validate_split(bars, fold, 60)  # Chronology alone does not establish full H60 eligibility.
+    monkeypatch.setattr(shared_development, "run_fit", lambda *args, **kwargs: pytest.fail("Training started"))
+    cfg = shared_development.SharedConfig(12, 1, 1, 16, 1e-3, 2026, "synthetic-matched-protocol")
+    destination = tmp_path / "must_not_start"
+    with pytest.raises(ValueError, match="eligible H60"):
+        shared_development.run_shared_fold(bars, fold, [], cfg, destination, "synthetic-matched-bars")
+    assert not destination.exists()
+
+
+def test_shared_fold_rejects_out_of_scope_split_before_training(tmp_path, monkeypatch):
+    from . import shared_development
+
+    days = pd.bdate_range("2024-01-02", periods=6).strftime("%Y-%m-%d").tolist()
+    bars = make_minutes([100] * len(days), days)
+    fit = np.arange(11, 19, dtype=np.int64)
+    stop, validation = np.array([201]), np.array([401])
+    fold = {"train": np.r_[fit, stop], "inner": {"fit": fit, "stop": stop}, "validation": validation}
+    monkeypatch.setattr(shared_development, "run_fit", lambda *args, **kwargs: pytest.fail("Training started"))
+    cfg = shared_development.SharedConfig(12, 1, 1, 16, 1e-3, 2026, "synthetic-matched-protocol")
+    destination = tmp_path / "must_not_start"
+    with pytest.raises(ValueError, match="out-of-scope split"):
+        shared_development.run_shared_fold(bars, fold, [{"date": "2026-07-01", "ratio": 2.0}], cfg,
+                                           destination, "synthetic-matched-bars")
+    assert not destination.exists()
+
+
 @pytest.mark.parametrize("name", ["mlp", "gru", "lstm", "xpatch"])
 @pytest.mark.parametrize("horizon", [1, 3, 12, 21, 60])
 def test_neural_models_support_each_horizon_and_have_gradients(name, horizon):

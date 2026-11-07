@@ -54,6 +54,8 @@ Stooq 的数据库说明页面在本次普通访问时返回浏览器验证页�
 
 Zenodo 日线与已检查的 Kenil Patel 候选有 10,987 个共同日期，`Close` 的最大相对差异约为 5.82×10⁻⁸，数值接近但不全为逐值相同；两份文件的 `Adj Close` 在全部共同日期的相对差异均超过 0.1%，原因尚未确定。这些相似性不能证明独立来源或授权，也不能把两份文件当作互相独立的价格真值。仓库元数据回执见本机 `outputs/multiscale/source_references/repository_metadata_20261107T084634213624Z/receipt.json`；文件和逐列比较回执见 `outputs/multiscale/daily_sources/zenodo_12747720_candidate_20261107T084543152731Z/`。
 
+后续仅查看了 Zenodo 的另外四个 AAPL 记录（[12744132](https://zenodo.org/records/12744132)、[12563394](https://zenodo.org/records/12563394)、[12551255](https://zenodo.org/records/12551255)、[12545767](https://zenodo.org/records/12545767)）。它们与上述 12747720 记录列出同一组上传者，均标注 CC0，但说明未识别行情上游，文件哈希各异。未下载这些文件，不能推断其覆盖、调整方式或逐值相同，也不能把它们当作已获上游授权的独立来源；元数据回执见本机 `outputs/multiscale/source_references/zenodo_followup_20261107T113659873961Z/`。
+
 ## 价格与公司行动检查
 
 - Kenil Patel 候选的 11,035 个日期与所用 XNYS 代理日历一致。其收盘价与此前候选完全一致；2016–2024 的重叠部分和 Nasdaq/Alpaca 诊断也高度接近，但数据商之间可能共享上游，不能据此假设彼此独立。

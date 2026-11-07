@@ -14,7 +14,8 @@ import time
 
 import numpy as np
 
-from .bars import Bars, file_digest, targets
+from .bars import Bars, eligible_origins, file_digest, targets
+from .corporate_actions import split_event_dates
 from .development import validate_split
 from .evaluation import endpoint_improvement, path_metrics
 from .features import CloseWindows
@@ -46,9 +47,15 @@ def run_shared_fold(bars: Bars, fold: dict, actions, cfg: SharedConfig, director
     cfg.validate()
     if bars.frequency != "minute" or not data_identity:
         raise ValueError("A minute series and verified data identity are required")
-    _, fit, stop, validation = validate_split(bars, fold, 60)
-    if not np.all(bars.session_date[validation] == bars.session_date[validation + 60]):
-        raise ValueError("Minute mechanism paths cannot cross sessions")
+    train, fit, stop, validation = validate_split(bars, fold, 60)
+    eligible = eligible_origins(bars, cfg.lookback, 60, same_session=True)
+    invalid = [name for name, origins in (("train", train), ("fit", fit), ("stop", stop),
+                                            ("validation", validation))
+               if not np.isin(origins, eligible, assume_unique=True).all()]
+    if invalid:
+        raise ValueError("Every matched origin must have an eligible H60 history and same-session path: " +
+                         ", ".join(invalid))
+    split_event_dates(actions)
     windows = CloseWindows(bars, cfg.lookback, actions)
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=False)
