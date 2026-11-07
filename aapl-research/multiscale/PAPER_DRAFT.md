@@ -14,7 +14,7 @@
 2. 直接以价格为目标，与直接以累计 log 收益为目标，是否在各自的评价单位和期限下表现不同？
 3. 在分钟尺度，以共享编码器预测多个跨度，是否能在配对数据及成本约束下改善独立训练？该项只有在实际完成对照后才能回答。
 
-xPatch 使用指数移动平均分解和趋势/残差双流网络；其原论文通用时间序列结果不能直接证明 AAPL 金融预测有效 [1]。DeepLOB 使用限价订单簿和方向分类标签，与本研究使用的收盘价及固定交易柱跨度不同 [2]。多跨度日内收益预测也已有相关研究 [3]；最终贡献和新颖性须在完成直接相关文献检索及实验后判断。
+xPatch 使用指数移动平均分解和趋势/残差双流网络；其原论文通用时间序列结果不能直接证明 AAPL 金融预测有效 [1]。DeepLOB 使用限价订单簿和方向分类标签，与本研究使用的收盘价及固定交易柱跨度不同 [2]。多跨度收益预测已有相关研究 [3, 6]；金融 K 线预训练生成模型 Kronos 使用不同的多变量信息 [5]，指数与成分股预测协调也是不同的跨序列设置 [7]。当前主矩阵没有运行这些扩展方法。最终贡献和新颖性须在完成直接相关文献检索及实验后判断。
 
 ## 2. 任务定义
 
@@ -71,5 +71,8 @@ Alpaca 文档说明日柱按纽约自然日聚合 [4]。本工作暂将日柱最
 2. Zhang, Z., Zohren, S. & Roberts, S. *DeepLOB: Deep Convolutional Neural Networks for Limit Order Books*. https://arxiv.org/abs/1808.03668v6
 3. Ballarin, G., Capra, J. & Dellaportas, P. *Multi-Horizon Echo State Network Prediction of Intraday Stock Returns*. arXiv version 1, 2025. https://arxiv.org/abs/2504.19623v1
 4. Alpaca, *Market Data FAQ: How are bars aggregated?* https://docs.alpaca.markets/us/docs/market-data-faq
+5. Shi, Y. 等，*Kronos: A Foundation Model for the Language of Financial Markets*. arXiv version 1, 2025. https://arxiv.org/abs/2508.02739v1
+6. Kroujiline, D. 等，*Forecasting Stock Market Returns Over Multiple Time Horizons*. arXiv version 1, 2015. https://arxiv.org/abs/1508.04332v1
+7. Mattera, R., Athanasopoulos, G. & Hyndman, R. J. “Improving Out-of-Sample Forecasts of Stock Price Indexes with Forecast Reconciliation and Clustering.” *Quantitative Finance*, 24(11), 1641–1667, 2024. https://doi.org/10.1080/14697688.2024.2412687
 
 已有来源阅读范围与版本记录见上级目录的 `METHOD_REVIEW.md`、`FUSION_RELATED_WORK.md` 和 `FUSION_REFERENCES.bib`。当前参考资料尚不足以证明方法新颖性或支持完整综述。
