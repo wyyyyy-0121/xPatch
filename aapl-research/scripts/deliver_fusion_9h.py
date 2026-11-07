@@ -78,14 +78,14 @@ def inspect(archive,receipt,manifest):
     if names!=set(receipt['members']):raise ValueError('Return member inventory is incomplete')
 
 
-def fetch(path,manifest):
-    directory=focus.FOLLOW/'returns'/manifest['identity'];directory.mkdir(parents=True,exist_ok=True)
-    receipt_path=directory/'receipt.json';archive=directory/'bundle.tar'
+def remote_return_program(manifest):
+    """SSH starts in the account home, so bind imports to the admitted root."""
     remote_receipt='outputs/fusion_followup/runs/'+manifest['identity']+'/return/receipt.json'
     # The source supervisor and complete worker group must actually be gone.
-    program="""import json,pathlib,psutil
+    return """import json,os,pathlib,sys
+root=pathlib.Path(%r).resolve();os.chdir(root);sys.path.insert(0,str(root))
 from scripts import fusion_9h_guard as guard
-root=pathlib.Path(%r);run=root/'outputs/fusion_followup/runs'/%r
+run=root/'outputs/fusion_followup/runs'/%r
 state=json.loads((run/'attempts/gpu_01/guard_state.json').read_text())
 dispatch=json.loads((run/'scheduler_dispatch.json').read_text())
 assert state['stage']=='completed' and state['worker_returncode']==0
@@ -93,8 +93,13 @@ assert not guard.exact_alive(state['guard']) and not guard.group_members(state['
 assert not guard.exact_alive(dispatch['scheduler']), 'Return scheduler still active'
 print((root/%r).read_text())
 """%(REMOTE_ROOT,manifest['identity'],remote_receipt)
+
+
+def fetch(path,manifest):
+    directory=focus.FOLLOW/'returns'/manifest['identity'];directory.mkdir(parents=True,exist_ok=True)
+    receipt_path=directory/'receipt.json';archive=directory/'bundle.tar'
     result=subprocess.run(['ssh','-p','19046',*SSH_OPTIONS,HOST,REMOTE_ROOT+'/.venv/bin/python -'],
-        input=program,text=True,capture_output=True,timeout=30,check=True)
+        input=remote_return_program(manifest),text=True,capture_output=True,timeout=30,check=True)
     receipt=json.loads(result.stdout)
     if receipt['identity']!=identity({k:v for k,v in receipt.items() if k!='identity'}):raise ValueError('Remote receipt identity differs')
     expected_archive='outputs/fusion_followup/runs/'+manifest['identity']+'/return/bundle.tar'

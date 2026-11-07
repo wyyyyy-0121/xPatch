@@ -83,3 +83,20 @@ def test_duplicate_archive_member_is_refused_before_restoration(tmp_path):
     receipt={'manifest_identity':'fixture','sha256':digest(path),'bytes':path.stat().st_size,
         'Q2_Q3_scored':False,'members':{name:{'bytes':2,'sha256':hashlib.sha256(b'{}').hexdigest()}}}
     with pytest.raises(ValueError,match='duplicate'):nine.inspect(path,receipt,{'identity':'fixture'})
+
+
+def test_remote_return_imports_from_admitted_root_when_SSH_starts_elsewhere(tmp_path,monkeypatch):
+    root=tmp_path/'cloud';scripts=root/'scripts';scripts.mkdir(parents=True)
+    (scripts/'__init__.py').write_text('')
+    (scripts/'fusion_9h_guard.py').write_text('def exact_alive(row): return False\ndef group_members(row): return []\n')
+    run=root/'outputs/fusion_followup/runs/fixture'
+    write_json(run/'attempts/gpu_01/guard_state.json',{'stage':'completed','worker_returncode':0,'guard':{},'worker':{}})
+    write_json(run/'scheduler_dispatch.json',{'scheduler':{}})
+    write_json(run/'return/receipt.json',{'synthetic_receipt_only':True})
+    monkeypatch.setattr(nine,'REMOTE_ROOT',str(root))
+    env={k:v for k,v in os.environ.items() if k!='PYTHONPATH'}
+    result=subprocess.run([sys.executable,'-'],input=nine.remote_return_program({'identity':'fixture'}),
+        cwd=tmp_path,env=env,capture_output=True,text=True,timeout=10)
+    assert result.returncode==0,result.stderr
+    import json
+    assert json.loads(result.stdout)=={'synthetic_receipt_only':True}
