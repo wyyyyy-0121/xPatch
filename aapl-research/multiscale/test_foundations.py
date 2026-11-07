@@ -459,6 +459,143 @@ def test_complete_synthetic_development_fold_has_eight_aligned_models(tmp_path, 
         check_fold(tmp_path / "fold")
 
 
+def test_fold_resume_after_abrupt_process_exit_matches_uninterrupted(tmp_path):
+    import fcntl
+    import json
+    import subprocess
+    import sys
+    from .development import FoldConfig, run_development_fold
+    from .verify_development import check_fold
+
+    program = r'''
+import os, sys
+from pathlib import Path
+import pandas as pd
+import torch
+import multiscale.development as development
+from multiscale.bars import eligible_origins
+from multiscale.development import FoldConfig
+from multiscale.splits import rolling_folds
+from multiscale.test_foundations import make_minutes
+
+torch.set_num_threads(2)
+dates = pd.bdate_range("2024-01-02", periods=18).strftime("%Y-%m-%d").tolist()
+bars = make_minutes([30] * len(dates), dates)
+origins = eligible_origins(bars, 6, 3, same_session=True)
+fold = rolling_folds(bars, origins, 3)[0]
+cfg = FoldConfig("minute", 3, "future_log_return", 6, 6, (0.1, 1.0),
+                 2, 2, 8, 1e-3, 2026, "synthetic-resume-protocol")
+if sys.argv[2] in ("interrupt", "before_checkpoint"):
+    original = development.run_fit
+    def interrupt_after_checkpoint(windows, fit, stop, config, directory, identity, **kwargs):
+        if config.model == "mlp":
+            if sys.argv[2] == "before_checkpoint":
+                directory.mkdir(parents=True, exist_ok=False)
+                os._exit(74)
+            result = original(windows, fit, stop, config, directory, identity,
+                              stop_after_steps=3, **kwargs)
+            assert result["status"] == "interrupted_for_test"
+            os._exit(73)
+        return original(windows, fit, stop, config, directory, identity, **kwargs)
+    development.run_fit = interrupt_after_checkpoint
+if sys.argv[2] == "after_training":
+    original_predict = development.predict_best
+    def interrupt_after_training(checkpoint, *args, **kwargs):
+        if Path(checkpoint).parent.name == "mlp":
+            os._exit(75)
+        return original_predict(checkpoint, *args, **kwargs)
+    development.predict_best = interrupt_after_training
+development.run_development_fold(bars, fold, [], cfg, Path(sys.argv[1]), "synthetic-resume-data",
+                                 resume=(sys.argv[2] == "resume"))
+'''
+    interrupted = tmp_path / "interrupted"
+    stopped = subprocess.run([sys.executable, "-c", program, str(interrupted), "interrupt"],
+                             capture_output=True, text=True, timeout=45)
+    assert stopped.returncode == 73, stopped.stderr
+    state = json.loads((interrupted / "fold_state.json").read_text())
+    assert state["status"] == "running" and list(state["models"]) == list(MODELS[:4])
+    assert (interrupted / "mlp/latest.pt").is_file() and not (interrupted / "fold_receipt.json").exists()
+
+    dates = pd.bdate_range("2024-01-02", periods=18).strftime("%Y-%m-%d").tolist()
+    bars = make_minutes([30] * len(dates), dates)
+    origins = eligible_origins(bars, 6, 3, same_session=True)
+    fold = rolling_folds(bars, origins, 3)[0]
+    wrong_cfg = FoldConfig("minute", 3, "future_log_return", 6, 6, (0.1, 1.0),
+                           2, 2, 8, 1e-3, 2027, "synthetic-resume-protocol")
+    correct_cfg = FoldConfig("minute", 3, "future_log_return", 6, 6, (0.1, 1.0),
+                             2, 2, 8, 1e-3, 2026, "synthetic-resume-protocol")
+    with (interrupted / "fold.lock").open("a+") as lock:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        with pytest.raises(ValueError, match="already active"):
+            run_development_fold(bars, fold, [], correct_cfg, interrupted, "synthetic-resume-data", resume=True)
+        fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+    with pytest.raises(ValueError, match="data, split, source, runtime or configuration changed"):
+        run_development_fold(bars, fold, [], wrong_cfg, interrupted, "synthetic-resume-data", resume=True)
+    changed_close = bars.close.copy()
+    changed_close[0] += 1.0
+    changed_bars = Bars(bars.frequency, bars.start_ns, bars.end_ns, changed_close, bars.observed, bars.session_date)
+    with pytest.raises(ValueError, match="data, split, source, runtime or configuration changed"):
+        run_development_fold(changed_bars, fold, [], correct_cfg, interrupted, "synthetic-resume-data", resume=True)
+
+    resumed = subprocess.run([sys.executable, "-c", program, str(interrupted), "resume"],
+                             capture_output=True, text=True, timeout=60)
+    assert resumed.returncode == 0, resumed.stderr
+    fresh_dir = tmp_path / "uninterrupted"
+    fresh = subprocess.run([sys.executable, "-c", program, str(fresh_dir), "fresh"],
+                           capture_output=True, text=True, timeout=60)
+    assert fresh.returncode == 0, fresh.stderr
+    assert check_fold(interrupted)["status"] == "verified_saved_fold"
+    assert check_fold(fresh_dir)["status"] == "verified_saved_fold"
+    result = json.loads((interrupted / "fold_receipt.json").read_text())
+    reference = json.loads((fresh_dir / "fold_receipt.json").read_text())
+    assert result["resume_count"] == 1 and result["fold_identity"] == reference["fold_identity"]
+    for name in MODELS:
+        with np.load(interrupted / f"prediction_{name}.npz", allow_pickle=False) as left:
+            with np.load(fresh_dir / f"prediction_{name}.npz", allow_pickle=False) as right:
+                np.testing.assert_array_equal(left["prediction"], right["prediction"])
+        assert result["models"][name]["metrics"] == reference["models"][name]["metrics"]
+
+    from .bars import file_digest
+    completed_identity = file_digest(interrupted / "fold_receipt.json")
+    rerun = subprocess.run([sys.executable, "-c", program, str(interrupted), "resume"],
+                           capture_output=True, text=True, timeout=45)
+    assert rerun.returncode == 0, rerun.stderr
+    assert file_digest(interrupted / "fold_receipt.json") == completed_identity
+
+    early = tmp_path / "before_initial_checkpoint"
+    stopped_early = subprocess.run([sys.executable, "-c", program, str(early), "before_checkpoint"],
+                                   capture_output=True, text=True, timeout=45)
+    assert stopped_early.returncode == 74, stopped_early.stderr
+    assert (early / "mlp").is_dir() and not (early / "mlp/latest.pt").exists()
+    resumed_early = subprocess.run([sys.executable, "-c", program, str(early), "resume"],
+                                   capture_output=True, text=True, timeout=60)
+    assert resumed_early.returncode == 0, resumed_early.stderr
+    assert (early / "mlp").is_dir()  # Incomplete attempt is retained rather than overwritten.
+    assert check_fold(early)["status"] == "verified_saved_fold"
+    early_receipt = json.loads((early / "fold_receipt.json").read_text())
+    assert early_receipt["models"]["mlp"]["checkpoint_dir"] == "mlp-retry-001"
+    for name in MODELS:
+        with np.load(early / f"prediction_{name}.npz", allow_pickle=False) as left:
+            with np.load(fresh_dir / f"prediction_{name}.npz", allow_pickle=False) as right:
+                np.testing.assert_array_equal(left["prediction"], right["prediction"])
+
+    after_training = tmp_path / "after_training"
+    stopped_after = subprocess.run([sys.executable, "-c", program, str(after_training), "after_training"],
+                                   capture_output=True, text=True, timeout=45)
+    assert stopped_after.returncode == 75, stopped_after.stderr
+    assert (after_training / "mlp/training_summary.json").is_file()
+    checkpoint_before = file_digest(after_training / "mlp/latest.pt")
+    resumed_after = subprocess.run([sys.executable, "-c", program, str(after_training), "resume"],
+                                   capture_output=True, text=True, timeout=60)
+    assert resumed_after.returncode == 0, resumed_after.stderr
+    assert file_digest(after_training / "mlp/latest.pt") == checkpoint_before
+    assert check_fold(after_training)["status"] == "verified_saved_fold"
+    for name in MODELS:
+        with np.load(after_training / f"prediction_{name}.npz", allow_pickle=False) as left:
+            with np.load(fresh_dir / f"prediction_{name}.npz", allow_pickle=False) as right:
+                np.testing.assert_array_equal(left["prediction"], right["prediction"])
+
+
 def test_shared_fold_uses_common_h60_purged_samples_for_every_model(tmp_path):
     import torch
     from .shared_development import SharedConfig, run_shared_fold

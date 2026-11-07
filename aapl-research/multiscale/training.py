@@ -88,6 +88,24 @@ def atomic_torch_save(value, path: Path):
         raise
 
 
+def atomic_json_save(value, path: Path):
+    with tempfile.NamedTemporaryFile(mode="w", encoding="utf8", prefix=".summary-", dir=path.parent,
+                                     delete=False) as stream:
+        temporary = Path(stream.name)
+        try:
+            json.dump(value, stream, indent=2, allow_nan=False)
+            stream.flush()
+            os.fsync(stream.fileno())
+        except BaseException:
+            temporary.unlink(missing_ok=True)
+            raise
+    try:
+        os.replace(temporary, path)
+    except BaseException:
+        temporary.unlink(missing_ok=True)
+        raise
+
+
 def standardized_batch(windows, scaler, indices, horizon, target, device):
     x, anchor = windows.arrays(indices)
     x, anchor = scaler.transform_x(x, anchor)
@@ -182,6 +200,11 @@ def run_fit(windows: CloseWindows, fit_origins, stop_origins, config: TrainConfi
                            "cuda_rng": torch.cuda.get_rng_state() if device == "cuda" else None},
                           directory / "latest.pt")
 
+    # Persist the initial state before the first batch so an interrupted fold
+    # can resume even if no periodic checkpoint has yet been reached.
+    if not resume:
+        checkpoint()
+
     steps_in_call = 0
     while state["epoch"] < config.max_epochs and state["stale_epochs"] < config.patience:
         if state["permutation"] is None:
@@ -240,7 +263,7 @@ def run_fit(windows: CloseWindows, fit_origins, stop_origins, config: TrainConfi
               "inner_stop_definition": ("equal mean standardized endpoint MSE across shared horizons" if config.shared_horizons
                                         else "raw terminal endpoint MSE"), "history": state["history"],
               "stopped_early": state["stale_epochs"] >= config.patience}
-    (directory / "training_summary.json").write_text(json.dumps(result, indent=2, allow_nan=False), encoding="utf-8")
+    atomic_json_save(result, directory / "training_summary.json")
     return result
 
 

@@ -139,10 +139,14 @@ def check_fold(directory: Path):
             require_digest(directory / "ridge_coefficients.npz", details["coefficients_sha256"])
             require_digest(directory / "ridge_scaler.json", details["scaler_sha256"])
         elif name in ("mlp", "gru", "lstm", "xpatch"):
+            rel = details.get("checkpoint_dir", name)
+            if (not isinstance(rel, str) or Path(rel).name != rel or
+                    (rel != name and not (rel.startswith(name + "-retry-") and rel[len(name) + 7:].isdigit()))):
+                raise ValueError(f"Invalid checkpoint directory for {name}")
             for filename, key in (("best.pt", "best_checkpoint_sha256"),
                                   ("latest.pt", "latest_checkpoint_sha256"),
                                   ("training_summary.json", "training_summary_sha256")):
-                require_digest(directory / name / filename, details[key])
+                require_digest(directory / rel / filename, details[key])
     baseline = predictions["last_close"]
     _, baseline_loss = independent_metrics(actual, baseline, cfg["target"], anchor)
     calculated = {}
