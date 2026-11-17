@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="518.4pt" height="241.2pt" viewBox="0 0 518.4 241.2" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-11-04T20:19:40.656188</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.9, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 241.2 
+L 518.4 241.2 
+L 518.4 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="line2d_1">
+    <path d="M 46.656 79.199198 
+L 80.352 79.199198 
+" clip-path="url(#p03eb44e7a5)" style="fill: none; stroke: #137f79; stroke-width: 7"/>
+   </g>
+   <g id="line2d_2">
+    <path d="M 80.352 79.199198 
+L 93.312 79.199198 
+" clip-path="url(#p03eb44e7a5)" style="fill: none; stroke: #d5a33b; stroke-width: 7"/>
+   </g>
+   <g id="line2d_3">
+    <path d="M 93.312 79.199198 
+L 482.112 79.199198 
+" clip-path="url(#p03eb44e7a5)" style="fill: none; stroke: #6688ba; stroke-width: 7"/>
+   </g>
+   <g id="line2d_4">
+    <path d="M 80.352 83.031945 
+L 80.352 74.72766 
+" clip-path="url(#p03eb44e7a5)" style="fill: none; stroke: #344658; stroke-width: 0.7; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_5">
+    <path d="M 93.312 83.031945 
+L 93.312 74.72766 
+" clip-path="url(#p03eb44e7a5)" style="fill: none; stroke: #344658; stroke-width: 0.7; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_6">
+    <path d="M 482.112 83.031945 
+L 482.112 74.72766 
+" clip-path="url(#p03eb44e7a5)" style="fill: none; stroke: #344658; stroke-width: 0.7; stroke-linecap: square"/>
+   </g>
+   <g id="patch_2">
+    <path d="M 47.36127 79.199198 
+Q 273.456924 79.199198 498.434545 79.199198 
+" style="fill: none; stroke: #344658; stroke-linecap: round"/>
+    <path d="M 495.034545 77.499198 
+L 498.434545 79.199198 
+L 495.034545 80.899198 
+" style="fill: none; stroke: #344658; stroke-linecap: round"/>
+   </g>
+   <g id="text_1">
+    <text style="font-size: 8px; font-family: 'DejaVu Sans'" transform="translate(33.962 93.262837)">Input cutoff</text>
+    <text style="font-size: 8px; font-family: 'DejaVu Sans'" transform="translate(62.22075 102.221087)">u - 1</text>
+   </g>
+   <g id="text_2">
+    <text style="font-size: 8px; font-family: 'DejaVu Sans'" transform="translate(93.312 93.262837)">Origin</text>
+    <text style="font-size: 8px; font-family: 'DejaVu Sans'" transform="translate(93.312 102.221087)">u</text>
+   </g>
+   <g id="text_3">
+    <text style="font-size: 8px; font-family: 'DejaVu Sans'" transform="translate(460.927625 93.262837)">Target end</text>
+    <text style="font-size: 8px; font-family: 'DejaVu Sans'" transform="translate(468.592625 102.221087)">u + 30</text>
+   </g>
+   <g id="text_4">
+    <text style="font-size: 8px; font-family: 'DejaVu Sans'; text-anchor: middle" x="287.712" y="64.826399" transform="rotate(-0 287.712 64.826399)">Future RV30: sum of 30 within-session squared returns</text>
+   </g>
+   <g id="text_5">
+    <text style="font-size: 8px; font-family: 'DejaVu Sans'; text-anchor: start" x="47.952" y="44.065688" transform="rotate(-0 47.952 44.065688)">History through u - 1; latest bar starts at u - 2</text>
+   </g>
+   <g id="text_6">
+    <text style="font-size: 8px; font-family: 'DejaVu Sans'; text-anchor: start" x="300.672" y="44.065688" transform="rotate(-0 300.672 44.065688)">Example: origin 09:45; target ends 10:15 ET</text>
+   </g>
+   <g id="text_7">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="41.472" y="15.708" transform="rotate(-0 41.472 15.708)">(a) One forecast origin: time measured in minutes</text>
+   </g>
+  </g>
+  <g id="axes_2">
+   <g id="patch_3">
+    <path d="M 41.472 214.990214 
+L 218.7648 214.990214 
+L 218.7648 187.602046 
+L 41.472 187.602046 
+z
+" clip-path="url(#pb20ee8b166)" style="fill: #d5eae7; stroke: #ffffff; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 218.7648 214.990214 
+L 260.7552 214.990214 
+L 260.7552 187.602046 
+L 218.7648 187.602046 
+z
+" clip-path="url(#pb20ee8b166)" style="fill: #f2dfc0; stroke: #ffffff; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 260.7552 214.990214 
+L 363.3984 214.990214 
+L 363.3984 187.602046 
+L 260.7552 187.602046 
+z
+" clip-path="url(#pb20ee8b166)" style="fill: #dce5f1; stroke: #ffffff; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 363.3984 214.990214 
+L 405.3888 214.990214 
+L 405.3888 187.602046 
+L 363.3984 187.602046 
+z
+" clip-path="url(#pb20ee8b166)" style="fill: #f2dfc0; stroke: #ffffff; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 405.3888 214.990214 
+L 508.032 214.990214 
+L 508.032 187.602046 
+L 405.3888 187.602046 
+z
+" clip-path="url(#pb20ee8b166)" style="fill: #e8deef; stroke: #ffffff; stroke-linejoin: miter"/>
+   </g>
+   <g id="text_8">
+    <text style="font-size: 7.5px; font-family: 'DejaVu Sans'; text-anchor: middle" x="130.1184" y="203.365661" transform="rotate(-0 130.1184 203.365661)">Fitting history</text>
+   </g>
+   <g id="text_9">
+    <text style="font-size: 7.5px; font-family: 'DejaVu Sans'" transform="translate(229.023867 199.166481)">Purge</text>
+    <text style="font-size: 7.5px; font-family: 'DejaVu Sans'" transform="translate(222.301406 207.564841)">1 session</text>
+   </g>
+   <g id="text_10">
+    <text style="font-size: 7.5px; font-family: 'DejaVu Sans'" transform="translate(291.673284 199.166481)">Calibration</text>
+    <text style="font-size: 7.5px; font-family: 'DejaVu Sans'" transform="translate(290.278753 207.564841)">20 sessions</text>
+   </g>
+   <g id="text_11">
+    <text style="font-size: 7.5px; font-family: 'DejaVu Sans'" transform="translate(373.657467 199.166481)">Purge</text>
+    <text style="font-size: 7.5px; font-family: 'DejaVu Sans'" transform="translate(366.935006 207.564841)">1 session</text>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 7.5px; font-family: 'DejaVu Sans'" transform="translate(436.923877 199.166481)">Evaluation</text>
+    <text style="font-size: 7.5px; font-family: 'DejaVu Sans'" transform="translate(442.794384 207.564841)">quarter</text>
+   </g>
+   <g id="text_13">
+    <text style="font-size: 8px; font-family: 'DejaVu Sans'; text-anchor: start" x="46.1376" y="169.995366" transform="rotate(-0 46.1376 169.995366)">Three expanding inner folds select parameters using earlier history only</text>
+   </g>
+   <g id="text_14">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="41.472" y="142.476092" transform="rotate(-0 41.472 142.476092)">(b) Outer evaluation: earlier dates on the left (not to scale)</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p03eb44e7a5">
+   <rect x="41.472" y="21.708" width="466.56" height="78.251908"/>
+  </clipPath>
+  <clipPath id="pb20ee8b166">
+   <rect x="41.472" y="148.476092" width="466.56" height="78.251908"/>
+  </clipPath>
+ </defs>
+</svg>

@@ -2,11 +2,13 @@
 -- This filter changes presentation only; cell values are retained.
 local table_number = 0
 local captions = {
-  'Historical regular-session bar coverage.',
+  'Historical regular-session bar coverage. AAPL is the only forecast target.',
   'Registered search sizes per information set and outer fold. Configurations have model-specific computing costs.',
   'Development results, 2023Q1--2025Q2. Gains are relative to the same-panel HAR; negative gains denote higher loss. All gates refers to the joint qualification rule.',
-  'Historical confirmation, 2025H2--2026H1. Intervals are five-session block intervals for Ridge minus HAR.',
-  'Development empirical coverage and mean width. Widths are on the RV scale, multiplied by $10^5$; quantities use equal session weights.'
+  'Annual-segment relative QLIKE improvements against the matching HAR. Better quarters counts negative daily-loss differences; the seed rule checks pooled and annual directions for the prescribed seeds.',
+  'Development empirical coverage and mean width. Widths are on the RV scale, multiplied by $10^5$; quantities use equal session weights.',
+  'Daily-mean observed-on-predicted regression. Intercepts use RV units multiplied by $10^5$. Slope standard errors use the saved five-lag HAC covariance; no new joint calibration test is performed.',
+  'Historical confirmation, 2025H2--2026H1. Intervals are five-session block intervals for Ridge minus HAR.'
 }
 local short_headers = {
   ['Information set'] = 'Inputs',
@@ -16,6 +18,13 @@ local short_headers = {
   ['80% width × 10⁵'] = '80\\% width $\\times10^5$',
   ['90% width × 10⁵'] = '90\\% width $\\times10^5$'
 }
+short_headers['2023 gain (%)'] = '2023 (\\%)'
+short_headers['2024 gain (%)'] = '2024 (\\%)'
+short_headers['2025H1 gain (%)'] = '2025H1 (\\%)'
+short_headers['Better quarters'] = 'Quarters'
+short_headers['Intercept × 10⁵'] = 'Intercept $\\times10^5$'
+short_headers['HAC SE(slope)'] = 'HAC SE'
+short_headers['Configurations'] = 'Configs.'
 
 local function cell_text(cell, header)
   local plain = pandoc.utils.stringify(cell.contents)
@@ -36,9 +45,13 @@ function Table(el)
   elseif table_number == 3 then
     spec = 'llrrrrl'
   elseif table_number == 4 then
-    spec = 'lrrrrl'
+    spec = 'llrrrrl'
   elseif table_number == 5 then
     spec = 'llrrrr'
+  elseif table_number == 6 then
+    spec = 'lllrrr'
+  elseif table_number == 7 then
+    spec = 'lrrrrl'
   end
   local parts = {'\\begin{'..environment..'}[!t]', '\\centering', '\\footnotesize',
     '\\caption{'..captions[table_number]..'}', '\\label{tab:results-'..table_number..'}',

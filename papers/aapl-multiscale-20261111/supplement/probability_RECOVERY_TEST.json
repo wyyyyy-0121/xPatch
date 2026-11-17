@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "real_child_terminated": true,
+  "returncode": -15,
+  "restarted_process": true,
+  "checkpoint_unchanged": true,
+  "resume_seconds": 1.4471323350444436,
+  "original_T0": "2026-11-11T07:14:50+00:00",
+  "original_deadline": "2026-11-11T16:14:50+00:00",
+  "tested_at": "2026-11-11T07:21:14.764411+00:00"
+}

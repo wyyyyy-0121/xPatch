@@ -3,7 +3,7 @@
   "scope": "bibliographic_identity_and_actual_reading_scope_not_a_completed_systematic_review",
   "reading_registry": {
     "path": "research/paper/SOURCES.md",
-    "sha256": "7fd85cdb622603c5acfd976b8c1dc47df7fdb9fa67af2eece56388cb57e32a32"
+    "sha256": "de700e2d2455faa3d91794b096a082de726ddf2109997b25b72ec288e8471892"
   },
   "retrieval_indices": [
     {
@@ -17,6 +17,14 @@
     {
       "path": "artifacts/rv30/paper_sources_20261104/lightgbm_sources.json",
       "sha256": "ddb069a86e25bc9990435e687b009c924dc2e9506d212827f6641de4720790cf"
+    },
+    {
+      "path": "artifacts/rv30/paper_rewrite_20261104/retrieval.json",
+      "sha256": "6c32ed066b68b5c1b5fd65e6f4cdc2ce353347ff0a7905bafd89ed40c8263973"
+    },
+    {
+      "path": "research/paper/framework_evidence.json",
+      "sha256": "92611af01e7e98f6ceece7ff83aef86f1940ea4d423ce369db1d90b120dc03f1"
     }
   ],
   "retrieval_records": {
@@ -105,6 +113,37 @@
       "url": "https://raw.githubusercontent.com/microsoft/LightGBM/master/README.md",
       "error": "<urlopen error [Errno 104] Connection reset by peer>",
       "content_status": "retrieval_failed"
+    },
+    "xpatch_landing": {
+      "url": "https://ojs.aaai.org/index.php/AAAI/article/view/34270",
+      "http_status": "200",
+      "exit": 0,
+      "bytes": 23147,
+      "path": "artifacts/rv30/paper_rewrite_20261104/xpatch_landing.html",
+      "error": "",
+      "sha256": "0eb448dbc861d1433ae66d465ebcc5874701e83a3b07543931196a3f55dc90d6",
+      "content_status": "official_bibliographic_landing_page"
+    },
+    "corsi_author_pdf": {
+      "url": "https://www.corsi.org/papers/HAR-RV.pdf",
+      "http_status": "200",
+      "exit": 0,
+      "bytes": 114,
+      "path": "artifacts/rv30/paper_rewrite_20261104/corsi_author_pdf.pdf",
+      "error": "",
+      "valid_pdf": false,
+      "reason": "Non-PDF response; not used as primary evidence",
+      "sha256": "6dc9c7fc93bb488bb0520a6c780a8d3c0fb5486a4711aca49b4c53fac7393023",
+      "content_status": "non_pdf_response_not_original_source"
+    },
+    "xpatch_original": {
+      "url": "https://ojs.aaai.org/index.php/AAAI/article/download/34270/36425",
+      "http_status": "200",
+      "exit": 0,
+      "valid_pdf": true,
+      "path": "artifacts/rv30/paper_rewrite_20261104/xpatch_original.pdf",
+      "sha256": "c914918f533df3270486ff086ae3513acfacb9a2318245085e4efa0d2d0b912e",
+      "content_status": "selected_original_passages_read_as_recorded_in_SOURCES.md"
     }
   },
   "prior_source_files": [
@@ -149,6 +188,11 @@
     {
       "path": "artifacts/rv30/paper_sources_20261104/lightgbm_author_pdf.txt",
       "sha256": "1df3ead04dd19872e63aa0b9c50169f38c20d897ab11be09d51e50cfadc127b1"
+    },
+    {
+      "path": "artifacts/rv30/paper_rewrite_20261104/xpatch_original.txt",
+      "sha256": "deafb5e3f1f97fb4e5e3e8cde42b44fa557cd41645d8f3d69cc21d0226122ba7",
+      "reading_scope": "Abstract; related portions of sections 3.1 and 3.2, printed pages 20601-20604"
     }
   ],
   "unresolved": {
@@ -157,5 +201,9 @@
     "holm": "Conventional citation remains pending original verification; challenge pages are not article retrieval.",
     "pretrained_contamination": "Not resolved by reading the Chronos-2 report."
   },
-  "protocol_and_model_changes": false
+  "protocol_and_model_changes": false,
+  "journal_source_registry": {
+    "path": "research/paper/framework_evidence.json",
+    "scope": "Selected original passages for references 13-15; NMI paper used for structure and layout only"
+  }
 }

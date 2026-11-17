@@ -1,0 +1,15 @@
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.py[cod]
+.venv*/
+outputs/
+.cache/
+tmp/
+holdout_sealed/
+sources/*.pdf
+sources/*.pdf.partial
+sources/*.html
+sources/*_paper.txt
+sources/*_api.json

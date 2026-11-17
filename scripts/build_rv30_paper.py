@@ -59,7 +59,7 @@ def main():
 
     images = PROJECT / 'images'
     images.mkdir(exist_ok=True)
-    image_pattern = r'!\[[^\]]+\]\(figures/([^\)]+)\.png\)\n\n\*\*Figure ([12])\.\*\* ([^\n]+)'
+    image_pattern = r'!\[[^\]]+\]\(figures/([^\)]+)\.png\)\n\n\*\*Figure (\d+)\.\*\* ([^\n]+)'
     count = 0
     def replace_image(match):
         nonlocal count
@@ -72,8 +72,9 @@ def main():
             '\\caption{' + latex_fragment(caption) + '}\n'
             '\\label{fig:result-' + number + '}\n\\end{figure*}')
     body = re.sub(image_pattern, replace_image, body)
-    if count != 2:
-        raise RuntimeError('Both manuscript figures and their captions must be retained')
+    expected_figures = len(re.findall(r'!\[[^\]]+\]\(figures/', body)) + count
+    if count != 3 or count != expected_figures:
+        raise RuntimeError('All three manuscript figures and their captions must be retained')
     # Preserve the working reference list while keeping editorial tasks out of the article.
     body += '\n\n\\endgroup\n'
     intermediate = PROJECT / 'article_body.md'

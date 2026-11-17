@@ -1,19 +1,28 @@
 {
-  "checked_utc": "2026-11-04T07:41:15.298377+00:00",
+  "checked_utc": "2026-11-04T12:35:42.431415+00:00",
   "passed": true,
-  "scope": "paper_export_source_and_typesetting_checks_not_new_model_or_statistical_validation",
-  "numeric_and_provenance_checks": 327,
-  "development_rows": 12,
-  "confirmation_rows": 4,
-  "references_per_language": 12,
-  "latex_tables": 5,
-  "latex_figures": 2,
-  "local_compile_pages": 6,
-  "local_compile_overfull_boxes": 0,
-  "local_compile_check": {
-    "path": "artifacts/rv30/paper_sources_20261104/source_compile_check.json",
-    "sha256": "bcf81ba24b4d15c8403495887a2b81891e47d44d4556116744320bd89f85336b"
+  "scope": "historical_manuscript_numeric_provenance_and_document_conversion_not_new_inference",
+  "checks": 248,
+  "english_source_sha256": "45def9518b1d080b6745da0c6e80ac377bf006796630486d51279286b6dfea3d",
+  "english_references": 15,
+  "chinese_version": "checking_digest_not_full_translation",
+  "manuscript_tables": 7,
+  "manuscript_figures": 3,
+  "latex_pages": 8,
+  "latex_overfull_boxes": 0,
+  "word_editable_math_objects": 31,
+  "word_document": {
+    "path": "/home/ayaka/xPatch/research/paper/AAPL_RV30_Wang_Yang.docx",
+    "sha256": "8f2c36afe298037ab14e42a8933abd73ae70e51f762aa681ddfae434555f3435"
+  },
+  "conversion_preservation": {
+    "raw_docx": "artifacts/rv30/paper_rewrite_20261104/raw.docx",
+    "raw_sha256": "36efbe835974504a4459e1b1b28a35f9fe6485cab3ff46a0240d5095a7629e73",
+    "prose_and_table_values_preserved": true,
+    "editable_math_preserved": true,
+    "image_bytes_preserved": true
   },
   "new_training_or_test_statistics": false,
+  "observer_scores_read": false,
   "final_research_acceptance": false
 }

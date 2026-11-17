@@ -21,8 +21,10 @@ CAPTIONS = (
     'Table 1. Historical regular-session bar coverage.',
     'Table 2. Registered search sizes per information set and outer fold. Configurations have model-specific computing costs.',
     'Table 3. Development results, 2023Q1–2025Q2. Improvements are relative to the corresponding HAR. All gates refers to the joint qualification rule.',
-    'Table 4. Historical confirmation, 2025H2–2026H1. Intervals are five-session block intervals for Ridge minus HAR.',
+    'Table 4. Annual-segment relative QLIKE improvements versus matching HAR; improving quarter counts and the prescribed seed rule.',
     'Table 5. Development empirical coverage and mean width. Widths are on the RV scale, multiplied by 10⁵; quantities use equal session weights.',
+    'Table 6. Daily-mean calibration regressions. Intercepts are multiplied by 10⁵; slope standard errors use the saved five-lag HAC covariance. No new joint test is performed.',
+    'Table 7. Historical confirmation, 2025H2–2026H1. Intervals are five-session block intervals for Ridge minus HAR.',
 )
 
 
@@ -59,10 +61,18 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     doc = Document(args.input)
+    # Pandoc adds an implicit caption from each Markdown image's alt text.
+    # Keep the explicit numbered captions supplied by the manuscript instead.
+    for paragraph in list(doc.paragraphs):
+        if paragraph.style.name == 'Image Caption' or (
+            paragraph.style.name == 'Caption' and
+            not paragraph.text.startswith(('Figure ', 'Table '))
+        ):
+            paragraph._element.getparent().remove(paragraph._element)
     author = json.loads((ROOT/'research/paper/author.json').read_text(encoding='utf-8'))
     doc.core_properties.author = author['name']
     doc.core_properties.last_modified_by = author['name']
-    doc.core_properties.title = 'Intraday Realized-Variance Forecasting for AAPL'
+    doc.core_properties.title = doc.paragraphs[0].text
     normal = doc.styles['Normal']
     normal.font.name = 'Times New Roman'
     normal.font.size = Pt(10)
@@ -125,7 +135,7 @@ def main():
                 p.clear()
                 run=p.add_run("*Corresponding author's e-mail: ")
                 set_run(run,9)
-                blank=p.add_run(' ' * 28)
+                blank=p.add_run('\u00a0' * 28)
                 set_run(blank,9)
                 blank.underline=True
             elif p.text == 'Abstract':
@@ -135,7 +145,7 @@ def main():
             else:
                 for run in p.runs:
                     set_run(run,9)
-            if p.text.startswith('We compare') or p.text.startswith('Keywords:'):
+            if p.text.startswith(('Short-horizon variance forecasts', 'Keywords:')):
                 p.alignment=WD_ALIGN_PARAGRAPH.JUSTIFY
         elif p.style.name.startswith('Heading'):
             p.alignment=WD_ALIGN_PARAGRAPH.LEFT
@@ -156,7 +166,7 @@ def main():
             # Exact text line heights clip tall inline figures in Word/Writer.
             p.paragraph_format.line_spacing=1.0
             p.paragraph_format.keep_with_next=True
-        if p.text.startswith(('Figure 1.', 'Figure 2.')):
+        if p.text.startswith(('Figure 1.', 'Figure 2.', 'Figure 3.')):
             captions.append(p._p)
             p.paragraph_format.first_line_indent=Mm(0)
             p.paragraph_format.line_spacing=Pt(9.5)
@@ -173,7 +183,9 @@ def main():
         shape.height=int(shape.width*ratio)
 
     table_elements=[]
-    widths=((13,16,16,14,24),(20,12,51),(16,23,18,20,46,21,25),(21,23,23,23,22,57),(18,24,26,38,26,37))
+    widths=((13,16,16,14,24),(20,14,49),(16,23,18,20,46,21,25),
+        (17,24,26,26,29,26,21),(18,24,26,38,26,37),(28,20,23,38,26,34),
+        (21,23,23,23,22,57))
     for number, table in enumerate(doc.tables):
         table_elements.append(table._tbl)
         table.alignment=WD_TABLE_ALIGNMENT.CENTER
@@ -197,7 +209,7 @@ def main():
                     p.paragraph_format.space_after=Pt(1)
                     p.paragraph_format.space_before=Pt(1)
                     p.paragraph_format.line_spacing=Pt(9.2)
-                    p.paragraph_format.keep_with_next=(row_index==0 or (number<2 and row_index<len(table.rows)-1))
+                    p.paragraph_format.keep_with_next=(row_index<len(table.rows)-1)
                     p.alignment=WD_ALIGN_PARAGRAPH.LEFT
                     for run in p.runs:set_run(run,8,bold=row_index==0)
         # Add a clear caption without changing table cell values.

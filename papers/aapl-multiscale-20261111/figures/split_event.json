@@ -1,0 +1,18 @@
+{
+  "announcement_date": "2020-07-30",
+  "eligibility_boundary": "2020-08-01T00:00:00-04:00",
+  "effective_date": "2020-08-31",
+  "split_factor": 4,
+  "origins_total": 1970,
+  "origins_eligible": 21,
+  "affected_path_coordinates_per_target": 231,
+  "price_reference_mse_reduction_pct": 76.809319,
+  "return_reference_mse_reduction_pct": 73.596588,
+  "candidate_old_price_gain_pct": 0.063,
+  "candidate_new_price_gain_pct": -330.938,
+  "candidate_old_return_gain_pct": 0.741,
+  "candidate_new_return_gain_pct": -275.931,
+  "scope": "Post-observation information-set reference; original nominal targets, predictions and assessment origins retained; one event, not independent events",
+  "source": "outputs/multiscale/manuscript/20261111_contribution_revision/SUPPLEMENT_EN.md",
+  "section": "S32"
+}

@@ -47,6 +47,40 @@ def main():
             files.append(path)
         plt.close(fig)
 
+    # Schematic only: no data-derived publication timestamps are implied.
+    fig, axes = plt.subplots(2, 1, figsize=(7.2, 3.35))
+    fig.subplots_adjust(left=.08, right=.98, top=.91, bottom=.06, hspace=.62)
+    ax = axes[0]
+    ax.set_xlim(-4, 32)
+    ax.set_ylim(-.65, 1.8)
+    ax.axis('off')
+    ax.set_title('(a) One forecast origin: time measured in minutes', loc='left', fontsize=9)
+    ax.annotate('', xy=(31.5, 0), xytext=(-3.7, 0),
+                arrowprops={'arrowstyle': '->', 'color': '#344658'})
+    ax.plot([-3.6, -1], [0, 0], color='#137F79', linewidth=7, solid_capstyle='butt')
+    ax.plot([-1, 0], [0, 0], color='#D5A33B', linewidth=7, solid_capstyle='butt')
+    ax.plot([0, 30], [0, 0], color='#6688BA', linewidth=7, solid_capstyle='butt')
+    for value, label in [(-1, 'Input cutoff\nu - 1'), (0, 'Origin\nu'), (30, 'Target end\nu + 30')]:
+        ax.plot([value, value], [-.12, .14], color='#344658', linewidth=.7)
+        ax.text(value, -.25, label, ha='right' if value == -1 else 'left' if value == 0 else 'center', va='top', fontsize=8)
+    ax.text(15, .45, 'Future RV30: sum of 30 within-session squared returns', ha='center', fontsize=8)
+    ax.text(-3.5, 1.1, 'History through u - 1; latest bar starts at u - 2', fontsize=8)
+    ax.text(16, 1.1, 'Example: origin 09:45; target ends 10:15 ET', fontsize=8)
+
+    ax = axes[1]
+    ax.set_xlim(0, 100)
+    ax.set_ylim(-.2, 1.8)
+    ax.axis('off')
+    ax.set_title('(b) Outer evaluation: earlier dates on the left (not to scale)', loc='left', fontsize=9)
+    from matplotlib.patches import Rectangle
+    for start, width, label, color in [(0, 38, 'Fitting history', '#D5EAE7'),
+        (38, 9, 'Purge\n1 session', '#F2DFC0'), (47, 22, 'Calibration\n20 sessions', '#DCE5F1'),
+        (69, 9, 'Purge\n1 session', '#F2DFC0'), (78, 22, 'Evaluation\nquarter', '#E8DEEF')]:
+        ax.add_patch(Rectangle((start, .1), width, .7, facecolor=color, edgecolor='white'))
+        ax.text(start + width/2, .45, label, ha='center', va='center', fontsize=7.5)
+    ax.text(1, 1.25, 'Three expanding inner folds select parameters using earlier history only', fontsize=8)
+    save(fig, 'task_and_validation')
+
     fig, axes = plt.subplots(1,2,figsize=(7.2,3.2),sharex=True,sharey=True)
     fig.subplots_adjust(left=.145,right=.98,top=.88,bottom=.23,wspace=.17)
     for ax,panel in zip(axes,panels):
@@ -71,24 +105,30 @@ def main():
     quarters = sorted(result['comparisons']['aapl/ridge']['quarter_differences'])
     if len(quarters)!=10:
         raise ValueError('All ten quarters must be present in the manuscript figure')
-    fig,axes = plt.subplots(2,1,figsize=(7.2,3.9),sharex=True,sharey=True)
-    fig.subplots_adjust(left=.105,right=.98,top=.85,bottom=.16,hspace=.38)
+    fig,axes = plt.subplots(2,1,figsize=(7.2,3.65),sharex=True,sharey=True)
+    fig.subplots_adjust(left=.14,right=.87,top=.91,bottom=.15,hspace=.5)
+    from matplotlib.colors import TwoSlopeNorm
+    norm = TwoSlopeNorm(vmin=-.05, vcenter=0, vmax=.065)
     for ax,panel in zip(axes,panels):
-        for name in ('ridge','lightgbm','xpatch','chronos2'):
+        candidates = ('ridge','lightgbm','xpatch','chronos2')
+        matrix = []
+        for name in candidates:
             values = result['comparisons'][f'{panel}/{name}']['quarter_differences']
             if sorted(values)!=quarters:
                 raise ValueError('Quarter coverage differs between candidates')
-            ax.plot(range(10),[values[q] for q in quarters],marker='o',markersize=4,
-                color=colors[name],linewidth=1.6,label={'ridge':'Ridge','lightgbm':'LightGBM',
-                    'xpatch':'xPatch','chronos2':'Chronos-2'}[name])
-        ax.axhline(0,color='#262F36',linewidth=.9,linestyle='--')
-        ax.set_ylabel('QLIKE difference')
-        ax.set_ylim(-.05,.065)
+            matrix.append([values[q] for q in quarters])
+        heat = ax.imshow(matrix, cmap='RdBu_r', norm=norm, aspect='auto')
+        ax.set_yticks(range(4), ['Ridge','LightGBM','xPatch','Chronos-2'])
+        for row in range(4):
+            for col in range(10):
+                value = matrix[row][col]
+                ax.text(col,row,f'{value:.3f}',ha='center',va='center',fontsize=6,
+                        color='white' if abs(value)>.035 else '#1F2933')
         ax.set_title('AAPL history' if panel=='aapl' else 'AAPL + SPY + QQQ history',fontsize=9,loc='left')
-        ax.grid(axis='y',alpha=.2)
     axes[-1].set_xticks(range(10),quarters,rotation=35,ha='right')
-    handles,legend_labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles,legend_labels,loc='upper center',bbox_to_anchor=(.54,.995),ncol=4,frameon=False)
+    cax=fig.add_axes([.9,.23,.016,.55])
+    colorbar=fig.colorbar(heat,cax=cax)
+    colorbar.set_label('QLIKE difference: candidate - HAR',fontsize=7)
     save(fig,'quarterly_loss_differences')
     manifest = {'source':str(SOURCE.relative_to(ROOT)),'source_sha256':digest(SOURCE),
         'script':str(Path(__file__).relative_to(ROOT)),'script_sha256':digest(Path(__file__)),
@@ -97,7 +137,7 @@ def main():
         'historical_exposure':True,'quarter_count':10,'information_sets':list(panels),
         'files':{str(p.relative_to(ROOT)):digest(p) for p in files}}
     (OUTPUT/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n')
-    print(json.dumps({'passed':True,'figures':2,'files':len(files),'directory':str(OUTPUT)}))
+    print(json.dumps({'passed':True,'figures':3,'files':len(files),'directory':str(OUTPUT)}))
 
 
 if __name__ == '__main__':

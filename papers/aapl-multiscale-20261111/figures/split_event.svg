@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="235.8pt" height="198.034781pt" viewBox="0 0 235.8 198.034781" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-11-11T22:02:16.513535</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.9, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 198.034781 
+L 235.8 198.034781 
+L 235.8 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="line2d_1">
+    <path d="M 13.604746 57.24864 
+L 220.899661 57.24864 
+" clip-path="url(#p04c3b991d4)" style="fill: none; stroke: #ced6d9; stroke-width: 1.2; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_2">
+    <path d="M 26.560678 57.24864 
+L 220.899661 57.24864 
+" clip-path="url(#p04c3b991d4)" style="fill: none; stroke: #176a68; stroke-width: 3"/>
+   </g>
+   <g id="line2d_3">
+    <path d="M 13.604746 57.24864 
+L 13.604746 29.27988 
+" clip-path="url(#p04c3b991d4)" style="fill: none; stroke: #243744; stroke-width: 0.7; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_4">
+    <path d="M 26.560678 57.24864 
+L 26.560678 82.32408 
+" clip-path="url(#p04c3b991d4)" style="fill: none; stroke: #243744; stroke-width: 0.7; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_5">
+    <path d="M 220.899661 57.24864 
+L 220.899661 29.27988 
+" clip-path="url(#p04c3b991d4)" style="fill: none; stroke: #243744; stroke-width: 0.7; stroke-linecap: square"/>
+   </g>
+   <g id="text_1">
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'; fill: #243744" transform="translate(13.604746 14.36678)">Jul 30</text>
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'; fill: #243744" transform="translate(13.604746 22.877117)">Split announced</text>
+   </g>
+   <g id="text_2">
+    <text style="font-size: 7.2px; font-family: 'DejaVu Sans'; fill: #243744" transform="translate(26.560678 94.546035)">Aug 1, 00:00 NY</text>
+    <text style="font-size: 7.2px; font-family: 'DejaVu Sans'; fill: #243744" transform="translate(26.560678 102.60846)">Information eligible</text>
+   </g>
+   <g id="text_3">
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'; fill: #243744" transform="translate(193.973099 14.36678)">Aug 31</text>
+    <text style="font-size: 7.6px; font-family: 'DejaVu Sans'; fill: #243744" transform="translate(156.957536 22.877117)">Split takes effect</text>
+   </g>
+   <g id="text_4">
+    <text style="font-size: 7.1px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #176a68" x="123.730169" y="47.092102" transform="rotate(-0 123.730169 47.092102)">Public information available</text>
+   </g>
+   <g id="PathCollection_1">
+    <defs>
+     <path id="mba722fd133" d="M 0 2.345208 
+C 0.621956 2.345208 1.218523 2.098102 1.658312 1.658312 
+C 2.098102 1.218523 2.345208 0.621956 2.345208 0 
+C 2.345208 -0.621956 2.098102 -1.218523 1.658312 -1.658312 
+C 1.218523 -2.098102 0.621956 -2.345208 0 -2.345208 
+C -0.621956 -2.345208 -1.218523 -2.098102 -1.658312 -1.658312 
+C -2.098102 -1.218523 -2.345208 -0.621956 -2.345208 0 
+C -2.345208 0.621956 -2.098102 1.218523 -1.658312 1.658312 
+C -1.218523 2.098102 -0.621956 2.345208 0 2.345208 
+z
+" style="stroke: #243744"/>
+    </defs>
+    <g clip-path="url(#p04c3b991d4)">
+     <use xlink:href="#mba722fd133" x="13.604746" y="57.24864" style="fill: #243744; stroke: #243744"/>
+    </g>
+   </g>
+   <g id="PathCollection_2">
+    <g clip-path="url(#p04c3b991d4)">
+     <use xlink:href="#mba722fd133" x="26.560678" y="57.24864" style="fill: #243744; stroke: #243744"/>
+    </g>
+   </g>
+   <g id="PathCollection_3">
+    <g clip-path="url(#p04c3b991d4)">
+     <use xlink:href="#mba722fd133" x="220.899661" y="57.24864" style="fill: #243744; stroke: #243744"/>
+    </g>
+   </g>
+  </g>
+  <g id="text_5">
+   <text style="font-size: 7.6px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #243744" x="8.28" y="113.022" transform="rotate(-0 8.28 113.022)">For eligible paths crossing the effective date:</text>
+  </g>
+  <g id="text_6">
+   <!-- $\hat P=P_t/4$ -->
+   <g style="fill: #176a68" transform="translate(20.88 131.49)">
+    <text>
+     <tspan x="7.597656" y="-4.40625" style="font-size: 12px; font-family: 'DejaVu Sans'; fill: #176a68">̂</tspan>
+     <tspan x="9.574219" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'; fill: #176a68">=</tspan>
+     <tspan x="32.824805" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'; fill: #176a68">/</tspan>
+     <tspan x="36.867773" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'; fill: #176a68">4</tspan>
+     <tspan x="0" y="-0.875" style="font-style: oblique; font-size: 12px; font-family: 'DejaVu Sans'; fill: #176a68">P</tspan>
+     <tspan x="21.966797" y="-0.875" style="font-style: oblique; font-size: 12px; font-family: 'DejaVu Sans'; fill: #176a68">P</tspan>
+     <tspan x="29.203125" y="1.09375" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'; fill: #176a68">t</tspan>
+    </text>
+   </g>
+  </g>
+  <g id="text_7">
+   <!-- $\hat R=-\log 4$ -->
+   <g style="fill: #176a68" transform="translate(129.24 131.49)">
+    <text>
+     <tspan x="7.59375" y="-4.40625" style="font-size: 12px; font-family: 'DejaVu Sans'; fill: #176a68">̂</tspan>
+     <tspan x="10.675781" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'; fill: #176a68">=</tspan>
+     <tspan x="23.068359" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'; fill: #176a68">−</tspan>
+     <tspan x="33.123047" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'; fill: #176a68">l</tspan>
+     <tspan x="36.457031" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'; fill: #176a68">o</tspan>
+     <tspan x="43.798828" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'; fill: #176a68">g</tspan>
+     <tspan x="53.364297" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'; fill: #176a68">4</tspan>
+     <tspan x="0" y="-0.875" style="font-style: oblique; font-size: 12px; font-family: 'DejaVu Sans'; fill: #176a68">R</tspan>
+    </text>
+   </g>
+  </g>
+  <g id="text_8">
+   <text style="font-size: 7.2px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #69757c" x="8.28" y="152.01" transform="rotate(-0 8.28 152.01)">Endpoint-MSE reduction vs persistence / zero</text>
+  </g>
+  <g id="text_9">
+   <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #176a68" x="20.88" y="171.504" transform="rotate(-0 20.88 171.504)">Price  76.81%</text>
+  </g>
+  <g id="text_10">
+   <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #176a68" x="129.24" y="171.504" transform="rotate(-0 129.24 171.504)">Return  73.60%</text>
+  </g>
+  <g id="text_11">
+   <text style="font-size: 7.4px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243744" x="114.12" y="193.05" transform="rotate(-0 114.12 193.05)">21 of 1,970 monthly paths  |  one split event</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p04c3b991d4">
+   <rect x="3.24" y="3.24" width="229.32" height="96.444"/>
+  </clipPath>
+ </defs>
+</svg>

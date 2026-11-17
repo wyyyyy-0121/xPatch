@@ -1,0 +1,11 @@
+task,initialization,anchor,method,mse,zero_mse,normalized_mse
+minute_h60_future_log_return,Default,Observed,anchor_random__trained,3.133859106217116e-05,2.4057279374307698e-05,1.3026656329077526
+minute_h60_future_log_return,Default,Removed,noanchor_random__trained,2.885419236708648e-05,2.4057279374307698e-05,1.1993954893295917
+minute_h60_future_log_return,Zero,Observed,anchor_baseline__trained,2.8330971263353447e-05,2.4057279374307698e-05,1.177646516987698
+minute_h60_future_log_return,Zero,Removed,noanchor_baseline__trained,2.806405094202404e-05,2.4057279374307698e-05,1.1665513171865738
+minute_h60_future_log_return,Zero + shrink,Observed,anchor_baseline__shrink,2.406643808224361e-05,2.4057279374307698e-05,1.000380704226501
+hourly_h8_future_log_return,Default,Observed,anchor_random__trained,0.000749107180867808,0.000413533814997022,1.8114774504551763
+hourly_h8_future_log_return,Default,Removed,noanchor_random__trained,0.000420680955806616,0.000413533814997022,1.0172830867764597
+hourly_h8_future_log_return,Zero,Observed,anchor_baseline__trained,0.00041868497645455963,0.000413533814997022,1.0124564455692087
+hourly_h8_future_log_return,Zero,Removed,noanchor_baseline__trained,0.0004180921112064679,0.000413533814997022,1.011022789537728
+hourly_h8_future_log_return,Zero + shrink,Observed,anchor_baseline__shrink,0.00041682166015671196,0.000413533814997022,1.0079506077627862

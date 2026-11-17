@@ -1,7 +1,7 @@
 \twocolumn[
 \begin{center}
-{\Large\bfseries Intraday Realized-Variance Forecasting for AAPL: A Reproducible
-Comparison of Regularized Regression, Trees, and Time-Series Models}\par
+{\Large\bfseries Forecasting 30-Minute AAPL Realized Variance: Temporal Stability and
+Calibration Across Model Families}\par
 \vspace{5pt}
 {\normalsize \paperauthor\textsuperscript{1,*}}\par
 {\small \textsuperscript{1}\paperaffiliation}\par
@@ -10,33 +10,31 @@ Comparison of Regularized Regression, Trees, and Time-Series Models}\par
 {\small Working manuscript -- 4 November 2026}\par
 \end{center}
 \begin{center}\begin{minipage}{0.96\textwidth}\small
-\textbf{Abstract.} We compare regularized regression, gradient-boosted trees, and
-time-series models for forecasting AAPL's realized variance over the
-next 30 minutes. Using SIP minute OHLCV data from January 2021 through
-June 2026, we evaluate an AAPL-only information set and a market
-information set that also includes SPY and QQQ history. The design
-combines ten quarterly expanding-window evaluations, three inner
-temporal validation folds, separate calibration windows, and
-whole-session purge gaps. The primary score is session-weighted QLIKE on
-the variance scale. Candidate qualification additionally requires
-dependence-aware inference, Holm adjustment across ten comparisons, and
-quarterly, annual-segment, and seed stability. The development sample
-contains 602 eligible sessions and 207,235 forecast origins per model.
-Ridge reduces QLIKE relative to the corresponding HAR baseline by 7.74\%
-and 7.41\% in the two information sets and meets all specified
-development gates. A subsequent historical confirmation sample of 251
-sessions yields improvements of 6.29\% and 7.97\%. The evaluated xPatch
-and fixed-weight Chronos-2 configurations do not meet the joint gates.
-AAPL-only LightGBM improves aggregate QLIKE but fails the annual and
-seed stability requirements. These findings support retaining carefully
-tuned regularized baselines for this particular task. The evidence
-remains limited to one target asset, previously exposed historical
-periods, and incompletely established pretraining contamination
-boundaries. It does not establish timely prospective performance or
-trading profitability.
+\textbf{Abstract.} Short-horizon variance forecasts require both accurate predictions and
+stable behavior across time. We examine these properties for AAPL's
+future 30-minute realized variance using minute OHLCV data from January
+2021 to June 2026. We compare HAR, Ridge, LightGBM, xPatch, a fixed
+Chronos-2 checkpoint, and a previous-variance reference under two
+historical input panels. Ten quarterly expanding-window evaluations use
+nested temporal model selection, separate calibration windows, and
+whole-session purge gaps. We evaluate session-weighted QLIKE,
+dependence-adjusted comparisons, temporal stability, and empirical
+calibration. Across 602 development sessions, Ridge lowers QLIKE
+relative to the corresponding HAR by 7.74\% with AAPL inputs and 7.41\%
+with additional market history. Both specifications satisfy the fixed
+joint qualification rule. AAPL-only LightGBM improves aggregate QLIKE by
+5.58\% but fails annual-segment and seed stability requirements;
+xPatch's 2.97\% mean improvement does not survive the joint statistical
+requirements. Ridge's advantage continues in 251 subsequent historical
+sessions, with improvements of 6.29\% and 7.97\%. However, lower point
+loss does not ensure adequate interval coverage within each period. The
+comparison supports evaluating accuracy, stability, and calibration
+separately. Its conclusions concern one target asset, previously exposed
+historical periods, and the evaluated representations and search
+budgets; prospective performance and economic value remain open.
 \par\vspace{4pt}
-\textbf{Keywords:} realized variance; intraday forecasting; HAR; Ridge; xPatch; temporal
-validation
+\textbf{Keywords:} realized variance; intraday forecasting; temporal validation; forecast
+calibration; regularization; xPatch
 \end{minipage}\end{center}
 \vspace{5pt}
 ]

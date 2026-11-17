@@ -2,9 +2,9 @@
   "source": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/evaluation.json",
   "source_sha256": "4b70aec00ea620ca28bb2db95dcb09f5a5eb6a4a077d344ba4ea7a8343b22bb4",
   "script": "scripts/plot_rv30_paper.py",
-  "script_sha256": "47a22eae8f067c6d939951adbef812e4709e699ce4efd0a9c2be1563d5dc9535",
-  "matplotlib_version": "3.11.2",
-  "numpy_version": "2.5.4",
+  "script_sha256": "a932f95c63c72e101ab9cd7ecebfc17e686902f4fcd2676279e7bb4d67e2fb30",
+  "matplotlib_version": "3.10.9",
+  "numpy_version": "2.4.6",
   "scope": "static_visualization_of_existing_results_no_new_scores_or_tests",
   "historical_exposure": true,
   "quarter_count": 10,
@@ -13,11 +13,14 @@
     "market"
   ],
   "files": {
-    "research/paper/figures/development_loss_differences.png": "ed7f69e6dd5226fe85c22a02a8c3f27d82e30bdcc121effc3b85d6f8224ab26f",
-    "research/paper/figures/development_loss_differences.pdf": "73ea2e1f2f081be490b801c04cf4c4a120453162937635139b58315179cc8e1d",
-    "research/paper/figures/development_loss_differences.svg": "5e8530269f072c65f4f12af24717667dd91cdcd983bdfbea56c83369760bb69c",
-    "research/paper/figures/quarterly_loss_differences.png": "c424bea699235497da5cb76f9739f84f885b9cdc87388bb57f7c3859ce122390",
-    "research/paper/figures/quarterly_loss_differences.pdf": "1c33cb2ed6ffb743ca07bb9e045b2ca767778df351f3db550890cf0d3001c5bc",
-    "research/paper/figures/quarterly_loss_differences.svg": "afb154d777fbd22a9a80a3db2d6e8daecf75d1cf0a80689728757e25f89ff2dd"
+    "research/paper/figures/task_and_validation.png": "1cea00492f1b1075d0b6aa736d80360b7a9e3c810b1d041cac830fb637846515",
+    "research/paper/figures/task_and_validation.pdf": "30802a578fa6de823620ab51fd72e2908c52cc9c35e090048c5aff25d909f2a8",
+    "research/paper/figures/task_and_validation.svg": "97ac9de6f921bb0d20bbbae82caa610b4668f4c5cb146133acd927ae26fa8899",
+    "research/paper/figures/development_loss_differences.png": "b27ad82056cf6f3458511a0da793d18addf15a84118a0ca489dfda4858c99b8c",
+    "research/paper/figures/development_loss_differences.pdf": "6e733780154d5551cdf101d963e4281d6d3f14a57c929ab56d5545e75ba33158",
+    "research/paper/figures/development_loss_differences.svg": "43fb9eab16c55ebe5b62f6c9276bc3edb595f4773bbe6f73997fd54edf6dfe63",
+    "research/paper/figures/quarterly_loss_differences.png": "cce1ba638fd935727f90591527a0f0d974e32c5a82b01249e94937e7044a0ad4",
+    "research/paper/figures/quarterly_loss_differences.pdf": "89563de3fa677d559f620e8907069fa4c826e4ced76fd6d27e7cf157d2683627",
+    "research/paper/figures/quarterly_loss_differences.svg": "4ecfdfc8c8e047fe9bfbbfc1c2799c1db62175acc29a58767ba75e43ffa627f7"
   }
 }

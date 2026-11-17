@@ -1,27 +1,24 @@
 {
   "source": "research/paper/MANUSCRIPT_EN.md",
-  "source_sha256": "7f694b5ccd33e0fb4d850760a6c94658ebd7a658c6e7d49d7cdccd13f5f54dfe",
+  "source_sha256": "45def9518b1d080b6745da0c6e80ac377bf006796630486d51279286b6dfea3d",
   "builder": "scripts/build_rv30_paper.py",
-  "builder_sha256": "9ff952e678c3a6dd42b5ccb8743d3fec2321a0f3be2a5d6c00a4f0d466bee10f",
+  "builder_sha256": "5697aaec668366827c9e3b32f96fba2a81c645bef379644bb13b793d4a9df60a",
   "purpose": "two_column_review_manuscript_not_final_submission_or_model_acceptance",
   "typesetting_versions": {
-    "pandoc": "pandoc 3.7.0.2"
+    "pandoc": "pandoc 3.7.0.2",
+    "pdflatex": "pdfTeX 3.141592653-2.6-1.40.28 (TeX Live 2025/Debian)"
   },
-  "figures": 2,
+  "figures": 3,
   "delivered_as": "latex_sources_only",
   "files": {
-    "research/paper/latex/main.tex": "924c1225dfc22fe29d2ec0e0b55bdfe70222f27d2cbd1b4c6a616adcfaf18d5d",
-    "research/paper/latex/body.tex": "ae036c9c346d882c7ccbea8755b213da92cf66648e67a670ccac6579244ed9dd",
-    "research/paper/latex/titleblock.tex": "f756e594b426a32703071559baa4cbde9b15a804d61664c62453fa08e98c9005",
-    "research/paper/latex/tables.lua": "3c5fbf870710e9520544b36da0e51052f4cd38a5528550ad6fae39fa38c10d5b",
-    "research/paper/latex/README.md": "73b6b432b3e8d8e7c2d668f7a463767eb5b61bb9d406612040add5f6d3280756",
+    "research/paper/latex/main.tex": "6b2e96545a638c1033adb6b679aa941a9c5e4ac104ff30ff377843290426f6b5",
+    "research/paper/latex/body.tex": "52b556a04dced6bd2a8947c4dffcf33f8b508c5cf5253edd55c92a5382987823",
+    "research/paper/latex/titleblock.tex": "1fbd12306d9b8714d81def3937c0ef9fcd68bedd1b6e9cf1c1fcb00b5bea0a19",
+    "research/paper/latex/tables.lua": "fe1efa0e8e6f376df7ad34404d7e603de4c43849d51403fe44e8ee3093581ab1",
+    "research/paper/latex/README.md": "43d9c06aaa3b33d68a5b695b1802817aeeeaa35003ba79be7a9315922b9c7e84",
     "research/paper/latex/.gitignore": "158834a89274dbbbbe61e6280a6e123dc758df39771eb06bef7411759af05d5a",
-    "research/paper/latex/images/development_loss_differences.pdf": "73ea2e1f2f081be490b801c04cf4c4a120453162937635139b58315179cc8e1d",
-    "research/paper/latex/images/quarterly_loss_differences.pdf": "1c33cb2ed6ffb743ca07bb9e045b2ca767778df351f3db550890cf0d3001c5bc"
-  },
-  "author": "Wang Yang",
-  "author_setting": "paperauthor in main.tex; shared by byline and PDF metadata",
-  "author_details": "research/paper/author.json",
-  "author_details_sha256": "a0b6b2dcbc0c1dab8abdf125cc5f6fe24e77c8d13ea46512743812bb77479adf",
-  "email_intentionally_blank": true
+    "research/paper/latex/images/development_loss_differences.pdf": "6e733780154d5551cdf101d963e4281d6d3f14a57c929ab56d5545e75ba33158",
+    "research/paper/latex/images/quarterly_loss_differences.pdf": "89563de3fa677d559f620e8907069fa4c826e4ced76fd6d27e7cf157d2683627",
+    "research/paper/latex/images/task_and_validation.pdf": "30802a578fa6de823620ab51fd72e2908c52cc9c35e090048c5aff25d909f2a8"
+  }
 }

@@ -1,0 +1,50 @@
+{
+  "scope": "small method implementation only; legacy imports are prohibited",
+  "files": [
+    {
+      "source_read_only": "/home/ayaka/wslcode/aapl-research/sources/xpatch_network.py",
+      "source_sha256": "616a93cb72a690bbe86d8e73a00255f6b964c90c6927416da74fa8da75e0d523",
+      "new_file": "xpatch_network.py",
+      "new_sha256": "616a93cb72a690bbe86d8e73a00255f6b964c90c6927416da74fa8da75e0d523",
+      "changes": "newline normalization only"
+    },
+    {
+      "source_read_only": "/home/ayaka/wslcode/aapl-research/sources/xpatch_license.txt",
+      "source_sha256": "90d526945f5c87e6a20f486fb963649afef7d4ae450b033f8972d6c1e38d62b0",
+      "new_file": "XPATCH_LICENSE.txt",
+      "new_sha256": "90d526945f5c87e6a20f486fb963649afef7d4ae450b033f8972d6c1e38d62b0",
+      "changes": "newline normalization only"
+    },
+    {
+      "source_read_only": "/home/ayaka/wslcode/aapl-research/sources/patchtst_license.txt",
+      "source_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "new_file": "PATCHTST_LICENSE.txt",
+      "new_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "changes": "newline normalization only"
+    },
+    {
+      "source": "https://github.com/yuqinie98/PatchTST/blob/main/PatchTST_supervised/layers/PatchTST_backbone.py",
+      "source_sha256": "df67173153787c2356bdfb6491159cd754332ef7382986efe879e1fbea8ebf26",
+      "git_blob_sha": "55f79561f33aa16e40a9080347c7bbce6dfd0b52",
+      "new_file": "patchtst_backbone.py",
+      "new_sha256": "af8c94e75850e754152a5723e552ff705c8fd8ec185d6924d7cef50dfe15f6eb",
+      "changes": "relative import namespace only"
+    },
+    {
+      "source": "https://github.com/yuqinie98/PatchTST/blob/main/PatchTST_supervised/layers/PatchTST_layers.py",
+      "source_sha256": "21c06c70a90c60ee2a269b5c600c702834dea22cdfd72915e6b0f8b4a28db3f6",
+      "git_blob_sha": "11b5bd68a94c25cfcacf2e1eb0b469ae24342408",
+      "new_file": "patchtst_layers.py",
+      "new_sha256": "21c06c70a90c60ee2a269b5c600c702834dea22cdfd72915e6b0f8b4a28db3f6",
+      "changes": "relative import namespace only"
+    },
+    {
+      "source": "https://github.com/yuqinie98/PatchTST/blob/main/PatchTST_supervised/layers/RevIN.py",
+      "source_sha256": "e64c0ccded9228b347134e7368420d3fb10f70c75145b5ff2d8bdd8c3af59df6",
+      "git_blob_sha": "f7fed8176617fd21063b30798e1d2931473c4b33",
+      "new_file": "revin.py",
+      "new_sha256": "e64c0ccded9228b347134e7368420d3fb10f70c75145b5ff2d8bdd8c3af59df6",
+      "changes": "relative import namespace only"
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 # 投稿准备顺序
 
-更新：2026-11-04。用户要求先参考 AI 顶级期刊原文并树立框架，再写正文。当前写作依据统一为 [PAPER_PLAN.md](PAPER_PLAN.md)，原文阅读依据为 [JOURNAL_READING.md](JOURNAL_READING.md)。现有英文、中文、LaTeX 和桌面 Word 均为待重构工作稿，尚未完成新框架下的改写。
+更新：2026-11-04。已按 [PAPER_PLAN.md](PAPER_PLAN.md) 完成历史实证稿改写；英文正文、中文核对摘要、双栏 LaTeX、Word、7 张表、3 幅图和补充材料保持一致。原文阅读依据为 [JOURNAL_READING.md](JOURNAL_READING.md)。匹配输入、多目标与受控仿真尚未完成，稿件未声称已消除这些证据限制。
 
-可执行细则见 [EXECUTION_PLAN.md](EXECUTION_PLAN.md)，包括八个阶段、匹配输入与多目标补证、仿真作业、性能准入、预算和停止规则。Codex Goal 替换正文已备妥，客户端写回状态仍为未完成；未修改原 `GOAL.md` 代替客户端操作。
+可执行细则见 [EXECUTION_PLAN.md](EXECUTION_PLAN.md)，包括八个阶段、匹配输入与多目标补证、仿真作业、性能准入、预算和停止规则。用户已更新客户端 Goal，本轮读取确认 active；原 `GOAL.md` 未作替代修改。当前先交付已有历史证据的稿件，后续补证独立推进。
 
 ## 研究定位
 
@@ -25,7 +25,7 @@
 |---|---|---|
 | 论证框架 | `PAPER_PLAN.md` | 当前写作和补证依据 |
 | 期刊阅读 | `JOURNAL_READING.md`、`framework_evidence.json` | 四篇原文身份、读取范围与迁移边界 |
-| 现有工作稿 | `MANUSCRIPT_EN.md`、`MANUSCRIPT_ZH.md` | 待按框架重构 |
+| 历史实证稿 | `MANUSCRIPT_EN.md`、`MANUSCRIPT_ZH.md`、`SUPPLEMENTARY.md` | 已按框架改写；中文为核对摘要；补证与投稿检查未完成 |
 | 排版源码 | `latex/main.tex`、`latex/body.tex`、`latex/titleblock.tex` | 通用双栏模板，尚非指定刊会官方格式 |
 | Word | `AAPL_RV30_Wang_Yang.docx` | 原工作稿，未同步新框架 |
 | 历史结果 | `RESULTS.md`、三个结果 CSV、`evidence.json` | 已保存历史评价的导出 |

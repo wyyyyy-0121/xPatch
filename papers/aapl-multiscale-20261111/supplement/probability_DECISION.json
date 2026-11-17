@@ -1,0 +1,179 @@
+{
+  "numerical_qualified": true,
+  "screen_passed": false,
+  "screen_gates": {
+    "minute": {
+      "C_below_B0_every_fold": true,
+      "pooled_reduction_B0_at_least_0.01": true,
+      "C_below_B1_every_fold": true,
+      "pooled_reduction_B1_at_least_0.01": true,
+      "pooled_C_no_worse_B2": true,
+      "coverage90_in_87_93": true,
+      "passed": true
+    },
+    "hourly": {
+      "C_below_B0_every_fold": true,
+      "pooled_reduction_B0_at_least_0.01": true,
+      "C_below_B1_every_fold": false,
+      "pooled_reduction_B1_at_least_0.01": false,
+      "pooled_C_no_worse_B2": true,
+      "coverage90_in_87_93": false,
+      "passed": false
+    }
+  },
+  "pooled": {
+    "minute": {
+      "B0": {
+        "NLL": -3.832499710283939,
+        "CRPS": 0.0028633986835681236,
+        "coverage50": 0.4684231378763867,
+        "coverage90": 0.8455758055995773,
+        "width50": 0.005096472249598321,
+        "width90": 0.014132137115049306,
+        "n_origins": 151440
+      },
+      "B1": {
+        "NLL": -3.9258644368054174,
+        "CRPS": 0.002815257204429413,
+        "coverage50": 0.4928816693079768,
+        "coverage90": 0.9027007395668252,
+        "width50": 0.006653168160376814,
+        "width90": 0.01844873867395942,
+        "n_origins": 151440
+      },
+      "B2": {
+        "NLL": -3.9488261218844842,
+        "CRPS": 0.0027685363693988954,
+        "coverage50": 0.4666006339144215,
+        "coverage90": 0.8933174854727945,
+        "width50": 0.00560923896320708,
+        "width90": 0.015554000935719254,
+        "n_origins": 151440
+      },
+      "C": {
+        "NLL": -3.95099485957353,
+        "CRPS": 0.0027669273774037274,
+        "coverage50": 0.46564976228209193,
+        "coverage90": 0.8935089804543054,
+        "width50": 0.005607464873710676,
+        "width90": 0.015549081517975042,
+        "n_origins": 151440
+      },
+      "A_clock": {
+        "NLL": -3.9488261218844842,
+        "CRPS": 0.0027685363693988954,
+        "coverage50": 0.4666006339144215,
+        "coverage90": 0.8933174854727945,
+        "width50": 0.00560923896320708,
+        "width90": 0.015554000935719254,
+        "n_origins": 151440
+      },
+      "A_gap": {
+        "NLL": -3.95099485957353,
+        "CRPS": 0.0027669273774037274,
+        "coverage50": 0.46564976228209193,
+        "coverage90": 0.8935089804543054,
+        "width50": 0.005607464873710676,
+        "width90": 0.015549081517975042,
+        "n_origins": 151440
+      }
+    },
+    "hourly": {
+      "B0": {
+        "NLL": -2.3605081019614214,
+        "CRPS": 0.012111007975104317,
+        "coverage50": 0.42457689477557026,
+        "coverage90": 0.8259749816041206,
+        "width50": 0.0212402426062391,
+        "width90": 0.058897607240369285,
+        "n_origins": 2718
+      },
+      "B1": {
+        "NLL": -2.430002256850576,
+        "CRPS": 0.01188305451918843,
+        "coverage50": 0.44628403237674763,
+        "coverage90": 0.8833701250919794,
+        "width50": 0.024569456976677773,
+        "width90": 0.0681292701758714,
+        "n_origins": 2718
+      },
+      "B2": {
+        "NLL": -2.413553791857309,
+        "CRPS": 0.011948053503888683,
+        "coverage50": 0.4091243561442237,
+        "coverage90": 0.8469462840323767,
+        "width50": 0.021351137803735137,
+        "width90": 0.0592051113451033,
+        "n_origins": 2718
+      },
+      "C": {
+        "NLL": -2.422849032705955,
+        "CRPS": 0.011915558651289584,
+        "coverage50": 0.4091243561442237,
+        "coverage90": 0.847682119205298,
+        "width50": 0.0214512810667216,
+        "width90": 0.05948280113803501,
+        "n_origins": 2718
+      },
+      "A_clock": {
+        "NLL": -2.4229098884435163,
+        "CRPS": 0.011915208712341493,
+        "coverage50": 0.4091243561442237,
+        "coverage90": 0.8491537895511405,
+        "width50": 0.02144907771103843,
+        "width90": 0.05947669139719805,
+        "n_origins": 2718
+      },
+      "A_gap": {
+        "NLL": -2.4219569143590034,
+        "CRPS": 0.011919524089819432,
+        "coverage50": 0.4094922737306843,
+        "coverage90": 0.8469462840323767,
+        "width50": 0.021429649352883752,
+        "width90": 0.059422818010291284,
+        "n_origins": 2718
+      }
+    }
+  },
+  "full_development_gates": null,
+  "completed": 24,
+  "planned": 24,
+  "stage": "completed_stage1_stop",
+  "failure_reason": "At least one frozen per-task screen condition failed",
+  "historical_development_only": true,
+  "Q3_read": false,
+  "original_mean_goal_completed": false,
+  "T0": "2026-11-11T07:14:50+00:00",
+  "finished_at": "2026-11-11T07:27:30.649428+00:00",
+  "elapsed_seconds": 760.649428,
+  "resources": {
+    "cpu_ids": [
+      0,
+      1
+    ],
+    "logical_cpu_limit": 16,
+    "actual_fit_processes": 1,
+    "threads_per_process": 2,
+    "GPU": false,
+    "paid": false,
+    "actual_cpu_affinity": [
+      0,
+      1
+    ],
+    "actual_concurrent_fit_processes": 1,
+    "BLAS_threads": 2,
+    "other_related_fit_processes_at_start": 0
+  },
+  "action": "STOP",
+  "scientific_status": "candidate_failed_frozen_gate",
+  "stage1_completed_positions": 24,
+  "stage1_planned_positions": 24,
+  "maximum_total_planned_positions": 60,
+  "unique_fits_completed": 22,
+  "reused_positions": 2,
+  "remaining_folds_started": false,
+  "sources_qualified_for_limited_methodology_motivation": true,
+  "HAR_full_text_review": false,
+  "batch_finished_at": "2026-11-11T07:26:03.527330+00:00",
+  "batch_elapsed_seconds": 673.52733
+}

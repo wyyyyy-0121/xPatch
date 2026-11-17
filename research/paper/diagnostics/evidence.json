@@ -1,0 +1,43 @@
+{
+  "scope": "export_of_saved_historical_diagnostics_not_new_inference",
+  "source": "65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8",
+  "inputs": {
+    "development": {
+      "path": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/evaluation.json",
+      "sha256": "4b70aec00ea620ca28bb2db95dcb09f5a5eb6a4a077d344ba4ea7a8343b22bb4"
+    },
+    "confirmation": {
+      "path": "artifacts/rv30/65a4daf1ebacb8a7dedca5e866010bd94cda25acc7124509ec81d1c14dc2fbf8/development/confirmation/evaluation.json",
+      "sha256": "fc24f9990c0f2b1c51a4024f97f28c42650d6908b1581432fbe3addf9b4e12aa"
+    }
+  },
+  "tables": {
+    "research/paper/diagnostics/annual.csv": {
+      "sha256": "721892b42f2aeab94dfb1563eda255512615c92cc5f0a190dd95043229ff40b3",
+      "rows": 44
+    },
+    "research/paper/diagnostics/seeds.csv": {
+      "sha256": "c3bfda1c00203ef922fa736b171fa0b3c17398929a7035cdcd12ca13908d20d6",
+      "rows": 78
+    },
+    "research/paper/diagnostics/clock.csv": {
+      "sha256": "694dbb20949ed1b351041eb39937797cd42165e501de3bc518b2ba47645ad4b8",
+      "rows": 48
+    },
+    "research/paper/diagnostics/calibration.csv": {
+      "sha256": "c938df3982fa73f7797329ece81e850d8f3367ca9707d56ac60c41578776eced",
+      "rows": 16
+    }
+  },
+  "derived_values": [
+    "relative QLIKE changes",
+    "square roots of saved HAC variances"
+  ],
+  "new_hypothesis_tests": false,
+  "new_training": false,
+  "observer_scores_read": false,
+  "exporter": {
+    "path": "scripts/export_rv30_paper_diagnostics.py",
+    "sha256": "b5ce3eced144e7c610adcd3043a63ab2f1092d6e2ab79d25953c5145d6e8cd33"
+  }
+}
